@@ -1,0 +1,7 @@
+# VS CODE Workspace file
+*.code-workspace
+
+# misc
+.DS_Store
+*.pem
+
