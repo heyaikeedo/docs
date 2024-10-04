@@ -1,50 +1,130 @@
 ---
-title: Installation Guide
-sidebarTitle: Installation Guide
-description: Follow these step-by-step instructions to install Aikeedo on your server and kickstart your AI-powered content creation journey.
+title: Main Installation Guide
+sidebarTitle: Main
+description: A comprehensive guide to install Aikeedo on your server, with detailed steps and solutions for common issues.
 ---
-<Warning>
-  cPanel users, please refer to the [Installation in cPanel](/installation/cpanel) page.
-</Warning>
 
-## Prerequisites
+Welcome to the Aikeedo installation guide. This tutorial will walk you through the process of setting up Aikeedo on your server.
 
-- Before you begin, ensure that you have configured your server. For more information, refer to the [Server Requirements](/get-started/server-requirements) guide.
-- Create a new database and grant all permissions to a database user. You can create a new user or use an existing one. Note your database name, username, and password.
+<Note>
+  If you're using cPanel, please follow our dedicated [cPanel Installation Guide](/get-started/installation/cpanel) as the steps may differ.
+</Note>
 
-## Installation steps
+## Before You Start
+
+1. Ensure your server meets our [requirements](/get-started/server-requirements).
+2. Prepare a database and note down its name, username, and password.
+
+## Understanding the Public Directory
+
+It's crucial to understand how Aikeedo's file structure works with your domain:
+
+- Aikeedo has a `public` directory that contains web-accessible files.
+- Your domain should point to this `public` directory, not the root of all Aikeedo files.
+- The `public` directory cannot be moved; it must remain within the Aikeedo file structure.
+
+Example:
+If you extract Aikeedo files to `/var/www/yourdomain.com`, your domain must point to `/var/www/yourdomain.com/public`.
+
+<Tip>
+  Consult your hosting provider's documentation on how to set the correct document root for your domain.
+</Tip>
+
+## Installation Steps
 
 <Steps>
-    <Step title="Upload Archive">
-    - Locate the archive named **aikeedo-server-files.zip** in the extracted package.
-    - If you couldn't find the file, refer to the [File Structure](/get-started/file-structure) guide for assistance.
-    - Upload the **aikeedo-server-files.zip** archive to your server to desired location other than the public directory. This step is crucial for security purposes.
-    </Step>
+  <Step title="Upload Aikeedo Files">
+    1. Locate the `aikeedo-server-files.zip` in your Aikeedo package.
+    2. Upload this zip file to your server, outside of any existing web-accessible directories.
 
-    <Step title="Extract Files on the Server">
-    - Unzip the contents of the archive on your server. This step is crucial for accessing the Aikeedo files and directories.
-    </Step>
+    <Note>
+      If you can't find the zip file, refer to our [File Structure](/get-started/file-structure) guide.
+    </Note>
+  </Step>
 
-    <Step title="Set Public Directory as the Root">
-    - You should find a directory named **public** inside the extracted archive. This directory contains all the files that should be accessible to the public. Point your domain or subdomain to this directory to set it as the root.
-    </Step>
+  <Step title="Extract Files">
+    Extract the contents of `aikeedo-server-files.zip` so that the `public` folder ends up in your domain's root directory.
+ 
+    Example:
+    ```
+    /var/www/yourdomain.com/
+    ├── bin/
+    ├── bootstrap/
+    ├── ci/
+    ├── config/
+    ├── ...
+    ├── public/
+    └── ... (other Aikeedo directories and files)
+    ```
+  </Step>
 
-    <Step title="Access Installation Page">
-    - Open a web browser and enter your domain or subdomain URL.
-    - It should automatically redirect you to the installation page located at `/install`. If not, manually go to `http://yourdomain.com/install`.
-    </Step>
+  <Step title="Configure Domain">
+    Set your domain's document root to point to the `public` directory within the extracted Aikeedo files.
 
-    <Step title="Follow On-Screen Instructions">
-    - The installation wizard will guide you through the setup process.
-    - You will be prompted to provide Database Credentials, Purchase Code, and Admin Account Details.
-    - Follow the instructions carefully to complete the installation.
-    </Step>
+    Example:
+    If Aikeedo is extracted to `/var/www/yourdomain.com`, set the document root to `/var/www/yourdomain.com/public`.
 
-    <Step title="Complete Installation">
-    - Once you have provided all the necessary information, the installation wizard will finalize the setup.
-    - Confirm that the installation was successful, and you're ready to explore Aikeedo.
-    </Step>
+    <Tip>
+      This step often requires configuration in your web server (e.g., Apache, Nginx) or hosting control panel.
+    </Tip>
+  </Step>
+
+  <Step title="Access the Install Page">
+    1. Open your web browser.
+    2. Navigate to `https://yourdomain.com`.
+    3. You should be automatically redirected to `https://yourdomain.com/install`.
+    4. If redirected successfully, you should see the Aikeedo installation wizard.
+
+    <Note>
+      If you're not automatically redirected to the install page, it's likely that your domain is not correctly pointing to the `public` directory. In this case, you might see a 403 error. Double-check your domain's document root configuration to ensure it's set to the `public` folder within your Aikeedo installation.
+    </Note>
+  </Step>
+
+  <Step title="Follow On-Screen Instructions">
+    The installation wizard will guide you through the setup process:
+    1. Provide Database Credentials:
+       - Enter the database name, username, and password.
+    2. Enter your Aikeedo Purchase Code:
+       - This is the unique code you received when you purchased Aikeedo.
+    3. Set up Admin Account Details:
+       - Create your administrator account for managing Aikeedo.
+    
+    Carefully follow each step of the wizard, ensuring all information is entered accurately. This will ensure a smooth and successful installation of your Aikeedo instance.
+  </Step>
+
+  <Step title="Complete Installation">
+    Once you have provided all the necessary information, the installation wizard will finalize the setup:
+
+    1. The wizard will process your inputs and configure Aikeedo accordingly.
+    2. Wait patiently as the system completes the installation process.
+    3. Upon completion, you'll see a success message confirming that Aikeedo has been successfully installed.
+    4. Verify that you can access the Aikeedo dashboard or main page without any errors.
+    5. Confirm that the installation was successful by checking key features or settings.
+
+    Congratulations! You're now ready to explore Aikeedo and leverage its powerful capabilities for your projects.
+
+    <Tip>
+      If you encounter any issues or have questions about your new installation, our support team is here to help. Don't hesitate to reach out!
+    </Tip>
+  </Step>
 </Steps>
 
-Congratulations! You've successfully installed Aikeedo.
+## Troubleshooting
 
+If you encounter any issues during the installation process:
+
+1. Double-check that you've followed each step correctly.
+2. Ensure all file permissions are set correctly.
+3. Verify that your server meets all the [requirements](/get-started/requirements).
+4. For more detailed troubleshooting steps, please refer to our dedicated [Troubleshooting Guide](/get-started/installation/troubleshooting).
+5. If you're still stuck after trying the solutions in the troubleshooting guide, don't hesitate to [reach out to our support team](mailto:support@aikeedo.com).
+
+## Next Steps
+
+After successfully installing Aikeedo:
+
+1. Follow our [Initial Setup Guide](/get-started/initial-setup) to configure your new installation.
+2. Explore [Website Basics](/website-basics/essentials) to learn about key Aikeedo features.
+3. Consider setting up [email](/email/mailer) for your Aikeedo instance.
+
+Congratulations on installing Aikeedo! We're excited for you to start leveraging its powerful features.

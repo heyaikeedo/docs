@@ -1,30 +1,80 @@
 ---
-title: Overview
+title: Billing Configuration Overview
+sidebarTitle: Overview
 description: Customize your billing settings in Aikeedo to align with your business model and user onboarding strategy.
 ---
 
-## Set Default Currency
+## General Settings
 
-Choose the default currency for your billing system. Ensure that your selected payment gateway supports the chosen currency to avoid any issues during transactions.
+### Default Currency
 
-## Define Trial Period Days
+Choose the default currency for your billing system. This setting affects how prices are displayed and transactions are processed throughout your Aikeedo platform.
 
-Set the trial period duration for new users. A value of 0 disables the trial period. Keep in mind that each user is eligible for a trial only once in any paid plan.
-
-## Sign Up Plan
-
-Select the plan to which new users will be automatically subscribed without providing payment details. This feature streamlines the onboarding process. Choose "None" to disable automatic subscription, requiring users to choose a plan themselves. It's important to note that only monthly or yearly recurring plans can be selected as the Sign-Up plan.
-
-<Warning>
-If selecting any paid plan for automatic subscription, it's highly recommended to enable the trial period. Otherwise, new users will be able to access the selected paid plan for free.
-</Warning>
-
-## Fallback Plan
-
-Define the plan that users will be automatically subscribed to if any subscription expires or fails to renew. This acts as a fallback mechanism. Choose "None" to disable automatic downgrading, requiring users to choose a new plan themselves. It's important to note that only monthly or yearly recurring plans can be selected as the Fallback plan.
+<Tip>
+  While it's important to choose a currency supported by your payment gateway, Aikeedo offers flexibility in currency handling. Each payment gateway provides a currency selector with supported currencies. If a selected currency isn't directly supported, Aikeedo can convert it to a supported currency during checkout, provided a currency rate provider is set up.
+</Tip>
 
 <Note>
-Ensure that you have created appropriate pricing plans before selecting the Sign-Up and Fallback plans to ensure a smooth user experience.
+  If the currency option is not set or is set to "Inherit" for payment gateways, the default currency will be used. Ensure you have a currency rate provider configured if you plan to use currencies not directly supported by your payment gateway.
 </Note>
 
-By configuring these billing settings, you can tailor the subscription process to meet the needs of your business and users.
+### Currency Rate Provider
+
+Select a provider for currency exchange rates. Options include:
+
+- **None**: No automatic currency conversion.
+- **CurrencyAPI**: Uses the CurrencyAPI service for up-to-date exchange rates.
+
+<Note>
+  Additional currency providers can be added through plugins, expanding your options for managing multi-currency transactions.
+</Note>
+
+## Trial Configuration
+
+### Trial Period Days
+
+Set the duration of the trial period for new users. 
+
+- Enter the number of days for the trial period.
+- Set to 0 to disable the trial feature.
+
+<Info>
+  Each user is eligible for a trial only once across any paid plan.
+</Info>
+
+### Trial Without Payment
+
+Toggle this option to allow users to start a trial without providing payment information upfront.
+
+- When enabled, users can upgrade to any paid plan during the trial without immediately providing payment details.
+- After the trial ends, a payment method will be required to continue the subscription.
+
+## Default & Fallback Plans
+
+### Sign Up Plan
+
+Select the plan to which new users will be automatically subscribed upon registration.
+
+- Choose "None" to disable automatic subscription, requiring users to select a plan themselves.
+- Only monthly or yearly recurring plans can be set as the Sign-Up plan.
+
+<Info>
+  New users are automatically subscribed to the Sign Up plan, regardless of the trial option. If a trial period is set, users will be downgraded to the Fallback plan after the trial ends. Without a trial, users continue on the Sign Up plan.
+</Info>
+
+<Warning>
+  If selecting a paid plan as the Sign Up plan, it's crucial to enable the trial period. Otherwise, new users will have immediate access to paid features without payment, which could lead to potential revenue loss.
+</Warning>
+
+### Fallback Plan
+
+Define the plan users will be automatically moved to if their current subscription expires or fails to renew.
+
+- Choose "None" to disable automatic downgrading, requiring users to manually select a new plan.
+- Only monthly or yearly recurring plans can be set as the Fallback plan.
+
+<Note>
+  Ensure you have created appropriate pricing plans before configuring the Sign-Up and Fallback plans to provide a smooth user experience.
+</Note>
+
+By carefully configuring these billing settings, you can tailor the subscription process to meet the specific needs of your business and users, creating a seamless onboarding and billing experience in your Aikeedo platform.

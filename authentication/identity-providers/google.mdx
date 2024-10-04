@@ -1,90 +1,104 @@
 ---
-title: Google
-description: Integrate Google OAuth 2.0 authentication into your Aikeedo application to provide users with the convenient "Login with Google" option. This tutorial will guide you through the setup process, including obtaining a Google Client ID and secret key, configuring the integration, and enabling the "Login with Google" feature.
+title: Google Identity Provider
+sidebarTitle: Google
+description: Seamlessly integrate Google OAuth 2.0 authentication into your Aikeedo application, allowing users to log in with their Google accounts. This guide walks you through the setup process, from creating a Google API project to configuring Aikeedo for a smooth "Login with Google" experience.
 ---
 
-## Prerequisites
+## Overview
 
-Before you begin, ensure you have the following:
+Integrating Google as an identity provider offers your users a convenient and secure way to access your Aikeedo application. This feature leverages Google's OAuth 2.0 protocol, ensuring a streamlined authentication process while maintaining high security standards.
 
-- Aikeedo application installed and accessible.
-- Google account for setting up OAuth integration.
+<Note>
+Before you begin, ensure you have admin access to your Aikeedo application and a Google account for setting up the OAuth integration.
+</Note>
 
-## Step 1: Create a Google API Project
+## Step-by-Step Integration Guide
 
-1. **Visit Google Cloud Console:**
+### 1. Create a Google API Project
 
-   - Go to [Google Cloud Console](https://console.cloud.google.com/).
+1. Navigate to the [Google Cloud Console](https://console.cloud.google.com/).
+2. Click on the project dropdown at the top of the page.
+3. Select "New Project" and provide a name for your project.
+4. Click "Create" to generate your new Google API project.
 
-2. **Create a New Project:**
-   - Click on the project drop-down and select "New Project."
-   - Enter a name for your project and click "Create."
+### 2. Set Up the OAuth Consent Screen
 
-## Step 2: Configure OAuth Consent Screen
+1. In the Google Cloud Console sidebar, go to "APIs & Services" > "OAuth consent screen".
+2. Choose the appropriate user type for your application (Internal or External).
+3. Fill in the required details:
+   - App name
+   - User support email
+   - Developer contact information
+4. Click "Save and Continue" to proceed.
 
-1. **Select OAuth Consent Screen:**
+### 3. Generate OAuth 2.0 Credentials
 
-   - In the left sidebar, navigate to "APIs & Services" > "OAuth consent screen."
+1. In the sidebar, navigate to "APIs & Services" > "Credentials".
+2. Click "Create Credentials" and select "OAuth client ID".
+3. Choose "Web application" as the application type.
+4. In the "Authorized redirect URIs" section, enter the callback URL provided by Aikeedo.
 
-2. **Set User Type:**
+<Tip>
+Look for a click-to-copy feature in Aikeedo for easy access to the correct callback URL.
+</Tip>
 
-   - Choose the appropriate user type for your application (Internal or External).
+<Warning>
+The callback URL is automatically generated based on your Site Domain and SSL settings. For more information, visit the [Website Essentials](/website-basics/essentials#site-domain) page.
+</Warning>
 
-3. **Configure App Details:**
+5. Click "Create" to generate your OAuth 2.0 client ID and secret.
+6. Make note of the generated "Client ID" and "Client Secret" - you'll need these for Aikeedo configuration.
 
-   - Fill out the required information such as "App name," "User support email," and "Developer contact information."
+### 4. Configure Aikeedo
 
-4. **Save and Continue:**
-   - Click "Save and Continue" to proceed.
+1. Log into your Aikeedo admin panel.
+2. Navigate to **Settings > Identity providers > Google**.
+3. Toggle the switch to enable "Login with Google".
+4. Enter the "Client ID" and "Client Secret" obtained from your Google API project.
+5. Click "Save changes" to apply your configuration.
 
-## Step 3: Create OAuth 2.0 Client ID
+## Testing Your Integration
 
-1. **Select Credentials:**
+After completing the setup, it's crucial to test the integration to ensure a smooth user experience:
 
-   - In the left sidebar, navigate to "APIs & Services" > "Credentials."
+1. Log out of your Aikeedo application.
+2. On the login page, look for the "Login with Google" option.
+3. Click the option and proceed through the Google authentication flow.
+4. Verify that you can successfully log in and access your Aikeedo account.
 
-2. **Create Credentials:**
+<Note>
+If you encounter any issues during testing, double-check your configuration settings in both the Google Cloud Console and Aikeedo admin panel.
+</Note>
 
-   - Click "Create Credentials" and select "OAuth client ID."
+## Video Tutorial
 
-3. **Configure OAuth Consent Screen:**
+For a visual guide through this process, check out our step-by-step video tutorial:
 
-   - Choose "Web application" as the application type.
+<iframe
+  className="w-full aspect-video"
+  src="https://www.youtube.com/embed/7wzN-Vr-Hfw"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowfullscreen
+></iframe>
 
-4. **Authorized Redirect URIs:**
+## Troubleshooting
 
-   - In the "Authorized redirect URIs" section, enter the callback URL provided by Aikeedo. This URL is often click-to-copyable for your convenience.
+If you experience any difficulties with the Google identity provider integration, consider the following:
 
-5. **Create Client ID:**
+- Ensure the callback URL in Google Cloud Console matches exactly with the one provided by Aikeedo.
+- Verify that you've enabled the necessary Google APIs for your project.
+- Check that your OAuth consent screen is properly configured and approved (if required).
 
-   - Click "Create" to generate the OAuth 2.0 Client ID.
+For further assistance, don't hesitate to reach out to our [support team](/get-started/introduction#support).
 
-6. **Client ID and Secret:**
-   - Note down the generated "Client ID" and "Client Secret" as you'll need them in the next steps.
+## Next Steps
 
-## Step 4: Configure Aikeedo
+Now that you've successfully integrated Google as an identity provider, consider exploring other authentication options to provide your users with more choices:
 
-1. **Log in as Admin:**
+- [Facebook Identity Provider](/authentication/identity-providers/facebook)
+- [LinkedIn Identity Provider](/authentication/identity-providers/linkedin)
+- [GitHub Identity Provider](/authentication/identity-providers/github)
 
-   - Access the Aikeedo admin panel using your administrator credentials.
-
-2. **Navigate to Google OAuth Settings:**
-
-   - In the admin panel, go to **Settings > Identity providers > Google**.
-
-3. **Enable "Login with Google":**
-
-   - Toggle the switch to enable or disable the "Login with Google" feature.
-
-4. **Enter Google Client ID and Secret:**
-
-   - Input the "Client ID" and "Client Secret" obtained from your Google API project.
-
-5. **Save Changes:**
-   - Save your configuration.
-
-## Testing and Usage
-
-Once configured, users will have the option to log in using their Google credentials. They can click "Login with Google," and the OAuth flow will authenticate and authorize them.
-
-By following these steps, you can seamlessly integrate Google OAuth 2.0 into your Aikeedo application.
+By offering multiple login options, you can enhance user experience and potentially increase user adoption of your Aikeedo application.

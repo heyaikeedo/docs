@@ -1,0 +1,79 @@
+---
+title: Google Tag Manager Integration
+sidebarTitle: Google Tag Manager
+description: Enhance your Aikeedo platform with Google Tag Manager to manage and deploy marketing tags on your website. This guide walks you through setting up Google Tag Manager for your Aikeedo website.
+---
+
+## Introduction
+
+Aikeedo's Google Tag Manager integration allows you to easily manage and deploy various marketing and analytics tags on your platform without modifying the code. By adding Google Tag Manager, you can efficiently implement tracking codes, conversion pixels, and other third-party scripts, providing flexibility in managing your website's tags.
+
+## Setting Up the Integration
+
+Follow these steps to connect Google Tag Manager with your Aikeedo platform:
+
+### Step 1: Create a Google Tag Manager Account and Container
+
+1. If you don't have a Google Tag Manager account, [sign up here](https://tagmanager.google.com/).
+2. Once logged in, create a new container for your Aikeedo website.
+3. Follow Google's prompts to set up your container and obtain your Container ID (it starts with "GTM-").
+
+<Tip>
+  If you're new to Google Tag Manager, consider exploring their documentation or tutorials to understand how to set up tags, triggers, and variables.
+</Tip>
+
+### Step 2: Configure Aikeedo
+
+1. Log in to your Aikeedo admin panel.
+2. Navigate to Settings.
+3. Find and click on "Script Tags" in the Integrations section.
+4. Look for the "Google Tag Manager" integration option.
+5. In the "Config" section, you'll see two important fields:
+   - **Status**: This is a toggle switch to enable or disable Google Tag Manager integration.
+   - **GTM Container ID**: This is where you'll enter your Google Tag Manager Container ID.
+6. Toggle the "Status" switch to enable the integration.
+7. Enter your Google Tag Manager Container ID (it should start with "GTM-") in the "GTM Container ID" field.
+8. Click the "Save changes" button to apply your configuration.
+
+<Check>
+  Great job! Google Tag Manager is now integrated with your Aikeedo platform.
+</Check>
+
+## What This Integration Does
+
+- Allows you to manage various marketing and analytics tags from a single interface
+- Enables easy implementation of tracking codes, conversion pixels, and other scripts
+- Provides flexibility to add, edit, or remove tags without directly modifying your website's code
+- Facilitates A/B testing and personalization through tag management
+
+## Best Practices
+
+To make the most of your Google Tag Manager integration:
+
+- Use Google Tag Manager to implement your Google Analytics tracking (if you're using it)
+- Create a clear naming convention for your tags, triggers, and variables
+- Use built-in templates when possible to reduce errors
+- Test your tags thoroughly in a non-production environment before publishing
+- Use workspaces and versions to manage changes and rollbacks
+- Regularly audit your tags to remove any that are no longer needed
+- Consider setting up user permissions to control who can make changes to your tags
+
+<Note>
+  While Google Tag Manager makes it easier to manage tags, it's important to understand the impact of each tag on your website's performance and user privacy.
+</Note>
+
+## Troubleshooting
+
+If you're experiencing issues with your Google Tag Manager integration:
+
+1. Verify that you've entered the correct Container ID in Aikeedo.
+2. Use Google Tag Manager's Preview mode to check if the container is loading correctly on your website.
+3. Check the browser console for any JavaScript errors that might be preventing tags from firing.
+4. Ensure that there are no conflicts between tags implemented via Google Tag Manager and any hardcoded scripts on your website.
+5. Verify that your tags are set up correctly in the Google Tag Manager interface, with appropriate triggers and variables.
+
+<Tip>
+  Google Tag Manager's Debug mode is a powerful tool for troubleshooting tag issues. Use it to see which tags are firing and why.
+</Tip>
+
+If you continue to experience issues, contact [Aikeedo support](mailto:support@aikeedo.com) for assistance.

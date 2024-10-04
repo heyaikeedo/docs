@@ -1,19 +1,93 @@
 ---
-title: How to Update
+title: How to Update Aikeedo
+sidebarTitle: How to Update
 description: Stay up-to-date with the latest features and improvements by following our straightforward update instructions for each new version of Aikeedo.
 ---
 
-**Guidance for Every Release**
-We are committed to providing comprehensive update guides with each new version of Aikeedo. Whether you're a seasoned user or just getting started, our step-by-step instructions make the updating process seamless.
+Keeping your Aikeedo installation current ensures you benefit from the latest features, security patches, and performance enhancements. This guide provides a comprehensive, step-by-step process for updating Aikeedo, suitable for users of all technical levels.
 
-**How to Update: Quick Steps**
+## Before You Begin
 
-1. **Check for Updates:** Visit our [official website](https://aikeedo.com) or [Envato Pofile](https://codecanyon.net/user/heyaikeedo) to find the latest version of Aikeedo.
-2. **Review Release Notes:** Understand the enhancements, bug fixes, and new features introduced in the latest version by reviewing the release notes.
-3. **Backup Your Data:** Before initiating the update, ensure that you have a backup of your Aikeedo data to prevent any potential data loss.
-4. **Follow Step-by-Step Instructions:** Navigate to the update instructions section provided for the specific version you are upgrading to. Follow the step-by-step instructions to ensure a smooth update process.
-5. **Test Your Installation:** After the update, thoroughly test your Aikeedo installation to verify that all functionalities are working as expected.
+Before initiating the update process, it's crucial to take a few preparatory steps:
 
-Keeping Aikeedo updated ensures that you benefit from the latest advancements, security patches, and performance enhancements.
+1. **Check for Updates**: Visit our [official website](https://aikeedo.com) to confirm the latest available version of Aikeedo.
 
-Thank you for choosing Aikeedo! Get ready to experience the future of AI-powered content creation!
+2. **Review the Changelog**: Familiarize yourself with the new features, improvements, and any potential breaking changes by reviewing our [changelog](https://aikeedo.com/changelog/).
+
+3. **Backup Your Data**: As a precautionary measure, create a complete backup of your Aikeedo data. This step is crucial to prevent any potential data loss during the update process.
+
+<Note>
+  Always perform updates in a staging environment first, if possible, to ensure compatibility with your specific setup.
+</Note>
+
+## Update Process
+
+Follow these steps to update your Aikeedo installation:
+
+1. **Download the Latest Version**:
+   - Obtain the latest Aikeedo package from the official source.
+   - Extract the downloaded zip file on your local machine.
+
+2. **Locate the Update File**:
+   - Find the `aikeedo-server-files.zip` file within the extracted contents.
+
+3. **Access the Admin Panel**:
+   - Log in to your Aikeedo admin panel.
+   - Navigate to the "Update" page in the admin dashboard.
+
+4. **Upload the Update File**:
+   - Click on the "Choose File" button.
+   - Select the `aikeedo-server-files.zip` file you located earlier.
+
+5. **Initiate the Update**:
+   - Click the "Install" button to begin the update process.
+   - Follow any on-screen instructions carefully.
+
+<Warning>
+  The update process may take several minutes to complete. Do not close your browser or interrupt the process until it's finished.
+</Warning>
+
+6. **Special Step for cPanel Users**:
+   If your installation environment requires the web root directory to be `public_html` instead of `public` (common in cPanel installations for the main domain), you'll need to take an additional manual step:
+
+   - Copy all files from the `public` directory to the `public_html` directory.
+   - Make sure to include hidden files and folders (such as `.htaccess` file or `.vite` directory).
+   - If necessary, enable the option to view hidden files in your file manager.
+
+<Note>
+  This step is crucial for ensuring all required files are in the correct location. Failing to copy hidden files may result in functionality issues.
+</Note>
+
+## Post-Update Steps
+
+After the update process completes:
+
+1. **Verify the Update**: Confirm that the update was successful by checking the version number in your admin panel.
+
+2. **Clear Cache**: In most cases, this step is not necessary. Aikeedo automatically manages its cache during updates. However, if you notice any display issues, you may want to clear your browser cache as a troubleshooting step.
+
+3. **Test Functionality**: Thoroughly test all aspects of your Aikeedo installation, including:
+   - User authentication
+   - AI-powered features
+   - Payment integrations (if applicable)
+   - Custom configurations or integrations
+
+4. **Review Settings**: Some updates may introduce new settings or change existing ones. Review your configuration to ensure everything is set up as desired.
+
+## Troubleshooting
+
+If you encounter any issues during or after the update:
+
+1. Check our [community forums](https://aikeedo.com/community) for similar issues and solutions.
+2. Review the update logs (if available) for any error messages.
+3. Ensure all [server requirements](/get-started/server-requirements) are still met after the update.
+4. If problems persist, don't hesitate to [contact our support team](mailto:support@aikeedo.com) for assistance.
+
+## Staying Informed
+
+To stay updated on the latest Aikeedo releases and announcements:
+
+- Follow us on [social media](https://x.com/heyaikeedo)
+- Regularly check our [changelog](https://aikeedo.com/changelog/)
+
+By following these update procedures and staying informed, you'll ensure your Aikeedo installation remains secure, efficient, and equipped with the latest features to serve your users best.

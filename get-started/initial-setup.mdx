@@ -1,32 +1,94 @@
 ---
 title: Initial Setup
-description: Ensure smooth and timely renewal of subscription usages in Aikeedo by configuring a proper cron task.
+description: Essential steps to configure your Aikeedo installation for optimal performance and functionality.
 ---
 
-## Frequency and Interval
+After successfully installing Aikeedo, there are a few crucial setup steps to ensure your application runs smoothly and securely. This guide will walk you through setting up a cron job, configuring your site domain, and completing the initial setup process.
 
-- **Frequency:** Subscription usages are intended to be renewed every 30 days.
-- **Interval:** The cron task should ideally run once per minute for timely renewals.
+## Setting Up the Cron Job
+
+A cron job is essential for automating recurring tasks in Aikeedo, particularly for renewing subscription usages.
+
+### Frequency and Interval
+
+- **Renewal Period:** Subscription usages are renewed every 30 days.
+- **Recommended Interval:** The cron task should run once per minute for optimal performance.
 
 <Note>
-In some servers, the minimum interval for running cron tasks is 15 minutes. If this is the case, subscriptions will still be renewed, but there might be a delay of up to approximately 15 minutes.
+Some servers may limit cron tasks to a minimum interval of 15 minutes. In such cases, subscriptions will still renew, but there might be a slight delay of up to 15 minutes.
 </Note>
 
-## Cron Task Configuration
+### Configuring the Cron Task
 
-Set up the cron task by creating an entry similar to the following in your server's crontab:
+To set up the cron job, add the following entry to your server's crontab:
 
 ```shell
 * * * * * /usr/bin/php /path/to/app/root/cron.php
 ```
 
-This cron task runs the specified PHP script (`cron.php`) using the PHP binary (`/usr/bin/php`). Ensure to replace `/path/to/app/root/` with the actual path to your Aikeedo application's root directory.
+This command runs the `cron.php` script in your Aikeedo installation directory every minute.
 
-## Troubleshooting
+<Note>
+Replace `/path/to/app/root/` with the actual path to your Aikeedo application's root directory.
+</Note>
 
-If you encounter issues with subscription renewals, consider the following:
+### Troubleshooting Cron Issues
 
-- Verify the correctness of the cron task configuration.
-- Check server logs for any error messages related to the renewal process.
+If you encounter problems with subscription renewals:
 
-By setting up and monitoring the cron task, you ensure that subscription usages are renewed in a timely manner, providing a seamless experience for your users. If you have any questions or need further assistance, refer to our documentation or contact our support team. Thank you for choosing Aikeedo!
+1. Verify the cron task configuration is correct.
+2. Check your server logs for any error messages related to the cron job or renewal process.
+3. Ensure the PHP path (`/usr/bin/php`) is correct for your server.
+
+If issues persist, consult with your server administrator. They can help diagnose server-specific problems, verify cron job configurations, and ensure proper file permissions. If you still need assistance after consulting your server administrator, please don't hesitate to contact our support team directly for further guidance. Our dedicated team is ready to help you resolve any remaining issues and ensure your Aikeedo installation is running smoothly.
+
+## Configuring Your Site Domain
+
+Properly setting your site domain is crucial for system functionality.
+
+### Steps to Set Your Site Domain
+
+1. **Access the Admin Panel:** Log in to your Aikeedo admin dashboard.
+2. **Navigate to Settings:** Click on **Settings** in the sidebar, then select **General**.
+3. **Locate the "Site Domain" Field:** You'll find this in the Website section.
+4. **Enter Your Domain:** Input your domain name without the protocol (http:// or https://) and without any paths.
+
+<Frame>
+  <img src="https://cdn.aikeedo.com/site-domain.png" alt="Site Domain Configuration" />
+</Frame>
+
+<Note>
+Include only the domain, subdomain (if any), and port number (if non-standard). Do not include protocols or paths. Omit the port number if it’s 80 (HTTP) or 443 (HTTPS).
+</Note>
+
+### SSL Configuration
+
+Enabling SSL is highly recommended for security and is required for certain features.
+
+1. Find the "Is SSL Enabled?" toggle in the General Settings.
+2. If you have an SSL certificate installed on your server, switch this to "Yes."
+
+<Warning>
+  Only enable SSL if you have properly installed an SSL certificate on your server. SSL is required for features like secure payment gateways.
+</Warning>
+
+<Tip>
+If you haven't set up SSL yet, consider using a service like Let's Encrypt for a free SSL certificate. Many hosting providers also offer one-click SSL setup.
+</Tip>
+
+## Completing the "Getting Started" Section
+
+After configuring your cron job and site domain, you'll want to complete the "Getting Started" section in your admin dashboard. 
+
+<Note>
+Completing the "Getting Started" section is crucial for ensuring all aspects of your Aikeedo installation are properly configured. Don't skip this step!
+</Note>
+
+## Next Steps
+
+After completing these initial setup steps, your Aikeedo installation should be ready for use. Here are some recommended next steps:
+
+- [Configure email settings](/email/mailer) to ensure proper communication with your users.
+- Set up [authentication providers](/authentication/accounts-settings) if you want to offer social login options.
+- Explore [integrations](/integrations/openai) to extend the functionality of your Aikeedo instance.
+- Review our [billing documentation](/billing/overview) to understand how to set up and manage subscriptions.

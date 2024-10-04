@@ -1,4 +1,110 @@
 ---
 title: Localization
-description: 'Under development'
+description: 'Learn how to translate Aikeedo into multiple languages and manage language settings for your users.'
 ---
+
+## Introduction
+
+Localization is a crucial feature that allows you to make Aikeedo accessible to a global audience. This guide will walk you through the process of translating your Aikeedo instance, managing language files, and enabling language selection for your users.
+
+## Translation File Locations
+
+Aikeedo uses separate translation files for different parts of the application:
+
+1. **App and Admin Interface**: `/locale` directory
+2. **Landing Page (Home Page)**: `/public/content/plugins/heyaikeedo/default/locale` directory
+
+    This is the default location for the landing page translations. The full path structure follows this pattern:
+
+    `/{webroot}/content/plugins/{organization}/{theme}/locale`
+
+    Where:
+    - `{webroot}` is typically `public`, but may be `public_html` in some installations (e.g., cPanel)
+    - `{organization}` is usually `heyaikeedo`, but can be customized to your organization name if you're using a custom theme
+    - `{theme}` is `default` for the standard theme, but could be different if you're using a custom theme
+
+    <Note>
+    Always check your specific installation setup to confirm the exact path.
+    </Note>
+
+    <Tip>
+    For more information on creating custom themes and managing their translations, refer to our [Theme Development](/development/introduction) guide.
+    </Tip>
+
+## Translation Process
+
+To translate Aikeedo into a new language or modify existing translations, follow these steps:
+
+1. Navigate to the appropriate directory based on the section you want to translate.
+2. Locate the `.po` file for your target language.
+3. Open the file in a text editor or a specialized PO file editor.
+4. Find the `msgid` entries, which contain the original English text.
+5. Enter your translations in the corresponding `msgstr` fields.
+
+<Note>
+  Always keep the `msgid` values unchanged. Only modify the `msgstr` entries.
+</Note>
+
+### Example Translation
+
+Here's a simple example of how a translation might look in a `.po` file:
+
+```
+msgid "Welcome to Aikeedo"
+msgstr "Bienvenue sur Aikeedo"
+```
+
+## Managing Available Languages
+
+To enable or disable languages for your Aikeedo instance:
+
+1. Open the `/locale/locale.json` file.
+2. Modify the JSON structure to add or remove language entries.
+
+<Tip>
+  If you're not familiar with JSON, consider using a JSON editor to avoid syntax errors.
+</Tip>
+
+## User Language Selection
+
+Aikeedo provides two ways for users to change their preferred language:
+
+### For Logged-in Users
+
+1. Log into the Aikeedo app.
+2. Click on your name in the account menu (bottom-left of the app dashboard).
+3. Navigate to your profile page.
+4. Look for the language selection option and choose your preferred language.
+
+### For Website Visitors
+
+The language selection process for website visitors may vary depending on the theme used. In the default theme:
+
+1. Look for the language switcher in the website header (often in the top-right corner).
+2. Click on the switcher (typically represented by a globe icon or current language code).
+3. Select your preferred language from the dropdown menu.
+
+<Note>
+  The exact location and appearance of the language selector may differ based on your chosen theme. Some themes might place it in a different part of the header, footer, or even in a side menu.
+</Note>
+
+## Best Practices for Localization
+
+1. **Consistency**: Maintain consistent terminology across all translations.
+2. **Context**: Consider the context in which the text appears to ensure accurate translations.
+3. **Testing**: After translating, thoroughly test the interface in each language to catch any layout or functionality issues.
+4. **Regular Updates**: Keep translations up-to-date with each new release of Aikeedo.
+
+## Troubleshooting
+
+If you encounter issues with localization:
+
+- Ensure all `.po` files are properly formatted.
+- Check that the `locale.json` file is correctly configured.
+- Clear your browser cache and application cache after making changes.
+- Verify that the correct language files are being loaded in the application settings.
+
+## Need Help?
+
+If you need assistance with localization or have any questions, don't hesitate to reach out to our support team at [support@aikeedo.com](mailto:support@aikeedo.com).
+

@@ -1,0 +1,105 @@
+---
+title: Stripe Integration
+sidebarTitle: Stripe
+description: Learn how to seamlessly integrate Stripe payments into your Aikeedo platform, enabling secure and efficient transactions for your users.
+---
+
+Integrating Stripe with Aikeedo allows you to offer a secure and reliable payment solution for your users. This guide will walk you through the process of setting up Stripe payments, from creating your Stripe account to configuring webhooks and enabling the integration in Aikeedo.
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- An active [Stripe account](https://stripe.com/)
+- Access to your Aikeedo admin panel
+- Basic understanding of payment gateways (don't worry, we'll guide you through the process!)
+
+## Step 1: Set Up Your Stripe Account
+
+If you haven't already, sign up for a Stripe account:
+
+1. Visit the [Stripe website](https://stripe.com/) and click "Start now" or "Create account"
+2. Follow the prompts to create and verify your account
+3. Complete any additional verification steps required by Stripe
+
+## Step 2: Obtain Stripe API Keys
+
+To connect Aikeedo with Stripe, you'll need to retrieve your API keys:
+
+1. Log in to your [Stripe Dashboard](https://dashboard.stripe.com/)
+2. Navigate to **Developers** > [**API keys**](https://dashboard.stripe.com/apikeys)
+3. You'll see two types of keys:
+   - **Publishable key**: Starts with `pk_`
+   - **Secret key**: Starts with `sk_`
+
+<Note>
+  Keep your secret key confidential! Never share it publicly or include it in client-side code.
+</Note>
+
+## Step 3: Set Up Stripe Webhooks
+
+Webhooks are crucial for handling recurring payments and keeping your Aikeedo platform in sync with Stripe. Here's how to set them up:
+
+1. In your Stripe Dashboard, go to **Developers** > [**Webhooks**](https://dashboard.stripe.com/webhooks)
+2. Click "Add endpoint"
+3. Enter your webhook URL: `https://your-aikeedo-domain.com/webhooks/stripe`
+4. Under "Events to send," select the following:
+   - `invoice.created`
+   - `invoice.updated`
+   - `invoice.finalized`
+   - `invoice.marked_uncollectible`
+   - `invoice.payment_succeeded`
+   - `invoice.deleted`
+   - `invoice.voided`
+   - `customer.subscription_updated`
+   - `customer.subscription_deleted`
+5. Click "Add endpoint" to create the webhook
+6. After creation, you'll see a "Signing secret" - copy this for later use
+
+<Tip>
+  If you're not sure which events to select, it's safe to choose "Select all events" for comprehensive coverage.
+</Tip>
+
+## Step 4: Enable Stripe in Aikeedo
+
+Now that you have your Stripe account set up, it's time to configure Aikeedo:
+
+1. Log in to your Aikeedo admin panel
+2. Navigate to **Settings > Payments > Stripe**
+3. Toggle the switch to enable Stripe payments
+4. Choose the appropriate mode:
+   - **Test**: For testing payments (use Stripe's test cards)
+   - **Live**: For processing real transactions
+5. Enter the following details:
+   - **API Publishable Key**: Your Stripe publishable key
+   - **API Secret Key**: Your Stripe secret key
+   - **Webhook Secret**: The signing secret from your webhook setup
+6. Click "Save changes" to apply your settings
+
+<Check>
+  Congratulations! Stripe payments are now enabled on your Aikeedo platform.
+</Check>
+
+## Testing Your Integration
+
+Before going live, it's crucial to test your Stripe integration:
+
+1. Set Aikeedo to "Test" mode
+2. Use [Stripe's test card numbers](https://stripe.com/docs/testing) to simulate various payment scenarios
+3. Create a test subscription or product purchase
+4. Verify that payments are processed correctly and webhooks are functioning
+
+Once you're confident everything is working as expected, switch to "Live" mode to start accepting real payments.
+
+## Troubleshooting
+
+If you encounter any issues with your Stripe integration, try these steps:
+
+1. Double-check all API keys and secrets for accuracy
+2. Ensure your webhook URL is correct and accessible
+3. Review Stripe's dashboard for any error logs or failed webhook attempts
+4. Check Aikeedo's error logs for any integration-related issues
+
+If problems persist, don't hesitate to reach out to [our support](mailto:support@aikeedo.com) for assistance.
+
+By following this guide, you've successfully integrated Stripe payments into your Aikeedo platform, providing your users with a secure and efficient payment experience. If you have any questions or need further assistance, our support team is always here to help!

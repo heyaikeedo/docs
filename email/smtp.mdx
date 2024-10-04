@@ -1,39 +1,109 @@
 ---
-title: SMTP
-description: Configure your SMTP settings to enable secure and reliable email delivery.
+title: SMTP Configuration
+description: Learn how to set up and configure SMTP for secure and reliable email delivery in Aikeedo.
 ---
 
-## Get SMTP Details
+# SMTP Configuration
 
-Before configuring SMTP settings, you need to obtain the following details from your SMTP server. If you don't have an SMTP server, you can use a third-party service like [SendGrid](https://sendgrid.com/) or [Mailgun](https://www.mailgun.com/).
+Setting up SMTP (Simple Mail Transfer Protocol) is crucial for ensuring reliable email delivery from your Aikeedo application. This guide will walk you through the process of configuring SMTP settings, whether you're a tech-savvy administrator or new to email server configurations.
 
-## Configuration Steps
+## Understanding SMTP
 
-Follow these steps to set up and validate your SMTP configuration.
+SMTP is the standard protocol for sending emails across the Internet. By configuring SMTP in Aikeedo, you ensure that all system-generated emails (such as user notifications, password resets, and marketing communications) are sent reliably and securely.
 
-1. **Log in as Admin:**
+## Before You Begin
 
-   - Access the Aikeedo admin panel using your administrator credentials.
+Before configuring SMTP settings, you'll need to obtain the following details from your SMTP provider:
 
-2. **Navigate to SMTP Settings:**
+- SMTP Host (server address)
+- Port number
+- Username
+- Password
+- Encryption method (TLS/SSL)
 
-   - In the admin panel, go to **Settings > Email > SMTP**.
+<Note>
+If you don't have an SMTP server, consider using a reputable third-party service like [SendGrid](https://sendgrid.com/), [Mailgun](https://www.mailgun.com/), [Amazon SES](https://aws.amazon.com/ses/), or [Brevo](https://www.brevo.com/). These services offer reliable email delivery and often provide free tiers for low-volume senders.
+</Note>
 
-3. **Enter SMTP Details:**
+## Step-by-Step Configuration
 
-   - Provide the following SMTP details:
-     - **SMTP Host:** Enter the address of your SMTP server.
-     - **Port:** Specify the port number for your SMTP server.
-     - **Username:** Your SMTP server username.
-     - **Password:** Your SMTP server password.
+Follow these steps to set up SMTP in your Aikeedo application:
 
-4. **Save Changes:**
+### 1. Access the Admin Panel
 
-   - Save your configuration to apply the new SMTP settings.
+Log in to your Aikeedo admin panel using your administrator credentials.
 
-5. **Validation:**
-   - The SMTP configuration will be validated before saving. Ensure that the provided details are correct.
+### 2. Navigate to SMTP Settings
 
-_After successfully saving the SMTP settings, set the mailer transport to SMTP in the [Mail Settings](/email/mail)._
+In the admin panel, follow this path:
 
-By configuring SMTP settings, you ensure that Aikeedo can securely send emails using your specified SMTP server.
+**Settings > Email > SMTP**
+
+### 3. Enter SMTP Details
+
+Fill in the form with the SMTP details you obtained from your provider:
+
+- **SMTP Host**: Enter the address of your SMTP server (e.g., `smtp.gmail.com` for Gmail)
+- **Port**: Specify the port number (common ports are 25, 465, or 587)
+- **Username**: Your SMTP server username (often your email address)
+- **Password**: Your SMTP server password or app-specific password
+
+<Tip>
+For enhanced security, many providers recommend using app-specific passwords instead of your main account password. Check your email provider's documentation for instructions on generating these.
+</Tip>
+
+### 4. Save and Validate
+
+Click the "Save changes" button to apply your new SMTP settings. Aikeedo will automatically attempt to validate your configuration before saving.
+
+### 5. Test the Configuration
+
+After saving, it's a good practice to send a test email to ensure everything is working correctly:
+
+1. Set up a test user account or use an existing one.
+2. Trigger an email-sending action (e.g., password reset, welcome email).
+3. Check the receiving inbox to confirm the email was sent and received correctly.
+
+## cPanel SMTP Restrictions
+
+If your Aikeedo installation is on a cPanel server, you may encounter issues when trying to use external SMTP servers. This is because cPanel blocks access to external SMTP servers by default as a security measure.
+
+### Resolving cPanel SMTP Restrictions
+
+If you're experiencing difficulties sending emails through an external SMTP server on a cPanel-managed hosting account, follow these steps:
+
+1. Contact your hosting provider or server administrator.
+2. Request that they disable SMTP restrictions for your account.
+3. The server administrator can disable SMTP restrictions through WHM (Web Host Manager) by navigating to:
+   **Home » Security Center » SMTP Restrictions**
+4. On this page, they can disable the SMTP restrictions for your specific account or globally for the server.
+
+For more information on this process, you can refer to the [cPanel documentation on disabling SMTP restrictions](https://support.cpanel.net/hc/en-us/articles/1500009931961-How-to-disable-SMTP-Restrictions).
+
+## Troubleshooting
+
+If you encounter issues with your SMTP configuration, try the following:
+
+- Double-check all entered information for typos or errors
+- Ensure your SMTP provider account is in good standing
+- Check if your server's IP is blacklisted
+- Verify that your firewall isn't blocking the necessary ports
+- If using cPanel, confirm that SMTP restrictions have been disabled
+
+<Warning>
+If you're using a personal email account (like Gmail) for SMTP, you may need to enable "Less secure app access" or use an app-specific password. However, for production environments, it's recommended to use a dedicated SMTP service.
+</Warning>
+
+## Next Steps
+
+Once you've successfully configured SMTP, make sure to update your [Mail Settings](/email/mailer) to use SMTP as the transport method. This ensures that all outgoing emails from Aikeedo will use your new SMTP configuration.
+
+## Security Considerations
+
+- Regularly update your SMTP password to maintain security
+- Monitor your email sending patterns to detect any unusual activity
+- Consider implementing SPF, DKIM, and DMARC records to improve email deliverability and security
+
+By following this guide, you should now have a properly configured SMTP setup for your Aikeedo application, ensuring reliable email delivery for all your users and system-generated communications.
+
+If you need further assistance, don't hesitate to [contact our support team](mailto:support@aikeedo.com).

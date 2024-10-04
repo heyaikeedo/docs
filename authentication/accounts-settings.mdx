@@ -1,4 +1,78 @@
 ---
-title: Accounts Settings
-description: 'Under development'
+title: Account Settings
+description: Configure user account options and security policies for your Aikeedo platform
 ---
+
+The Account Settings page allows you to manage crucial aspects of user accounts on your Aikeedo platform. These settings control user registration, sign-in processes, and email verification policies, ensuring a balance between user accessibility and platform security.
+
+## General Settings
+
+### User Accounts
+
+This setting controls whether users can create and access accounts on your platform.
+
+- When enabled, users can sign in through the sign-in form and API.
+- If disabled, only admin accounts will be able to sign in.
+
+<Warning>
+  Disabling user accounts will prevent regular users from accessing your platform. Use this option with caution.
+</Warning>
+
+### Signup Form
+
+This option determines whether new users can register for accounts on your platform.
+
+- When enabled, users can sign up through the registration form and API.
+- If disabled, new user registrations will be prevented, but existing users can still sign in.
+
+<Tip>
+  You might want to disable the signup form temporarily for maintenance or to control user influx.
+</Tip>
+
+## Email Verification Policy
+
+The email verification policy determines how strictly your platform enforces email verification for new and existing users. You can choose from three levels of verification:
+
+1. **None**: No email verification is required.
+   - Users can access all features without verifying their email addresses.
+   - This option provides the most frictionless user experience but offers the least security.
+
+2. **Relaxed**: Users can sign in, but are encouraged to verify their email.
+   - Users can access the platform without email verification.
+   - An alert will be displayed on the dashboard indicating that the email is unverified.
+   - This setting balances user convenience with a reminder to complete verification.
+
+3. **Strict**: Email verification is mandatory before full platform access.
+   - Users can sign in but cannot access any pages except account-related pages until they verify their email address.
+   - This provides the highest level of security but may impact user onboarding.
+
+<Note>
+  To enable email verification (for Relaxed and Strict policies), ensure you've configured your [mailer transport](/email/mailer) in the Email settings.
+</Note>
+
+<Warning>
+  The email verification policy does not apply to admin portal access. Admin accounts are managed separately for security reasons.
+</Warning>
+
+Each option offers different balances between user convenience and security, allowing you to tailor the policy to your platform's needs.
+
+
+## Best Practices
+
+1. **Regular Review**: Periodically review your account settings to ensure they align with your current security needs and user experience goals.
+
+2. **User Communication**: If you make significant changes to these settings, consider notifying your users to avoid confusion.
+
+3. **Testing**: After changing settings, test the user registration and login processes to ensure everything works as expected.
+
+4. **Compliance**: Ensure your account settings comply with relevant data protection regulations in your jurisdiction.
+
+## Related Settings
+
+For a comprehensive approach to user management and security, consider exploring these related areas:
+
+- [Identity Providers](/authentication/identity-providers/google) - Set up third-party authentication options
+- [CAPTCHA](/authentication/captcha) - Add an extra layer of security to your forms
+- [Email Configuration](/email/mailer) - Set up your email system for notifications and verifications
+
+By carefully configuring these account settings, you can create a secure and user-friendly environment on your Aikeedo platform, tailored to your specific needs and user base.

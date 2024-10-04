@@ -1,144 +1,155 @@
 ---
 title: Prompt Templates
-description: Prompt templating is a feature that allows the creation of dynamic prompts with customizable inputs.
+description: Create dynamic, customizable prompts to enhance your AI-powered applications with Aikeedo's powerful prompt templating feature.
 ---
 
-## Tags and Attributes
+Prompt templating is a powerful feature that allows you to create dynamic prompts with customizable inputs. This flexibility enables you to design interactive and personalized AI experiences for your users. In this guide, we'll explore how to use prompt templates effectively in your Aikeedo projects.
+
+## Understanding Prompt Templates
+
+Prompt templates are pre-designed structures that include placeholders for user inputs. These templates allow you to create consistent and customizable prompts for various AI-powered tasks, such as content generation, language translation, or data analysis.
+
+## Key Components
 
 ### Tags
 
-Tags are placeholders within curly braces, such as `{ input_name }`. They represent input elements that users can customize.
+Tags are the building blocks of prompt templates. They represent input elements that users can customize and are enclosed in curly braces.
 
-### Attributes
-
-Attributes are methods that modify the behavior of tags. They are appended to tags using the pipe character (`|`). Multiple attributes can be applied to a single tag.
-
-## Syntax
-
-The default syntax renders each input as a simple text input with a label:
-
-```plaintext
+```scss
 { input_name }
 ```
 
-The label is automatically generated from the input name in title case. This behavior can be overridden using the `label` attribute:
+### Attributes
 
-```plaintext
-{ input_name | label:Blog title }
+Attributes modify the behavior of tags, allowing you to fine-tune how inputs are presented and processed. They are appended to tags using the pipe character (`|`).
+
+```scss
+{ input_name | attribute1 | attribute2 }
 ```
 
-Multiline text inputs are defined using the `multiline` attribute:
+## Creating Your First Prompt Template
 
-```plaintext
-{ input_name | multiline }
+Let's create a simple prompt template for an "Article Generator":
+
+```scss
+Write an article about { topic | placeholder: Your chosen subject }.
+
+Use the following draft content:
+---
+{ content | multiline | placeholder: Draft content }
+---
+
+Additional instructions:
+- Include relevant statistics and consider diverse perspectives.
+- Write it in { language } using a { tone } voice tone.
 ```
 
-A custom label for multiline inputs can be set as follows:
-
-```plaintext
-{ input_name | multiline | label:Input name }
-```
-
-An input with predefined options is defined using the `type` attribute with a value of `enum`. The options are defined using the `options` attribute:
-
-```plaintext
-{ input_name | type:enum | options:Option 1, Option 2, Option 3 }
-```
+This template generates a form with inputs for the topic, draft content, language, and tone, allowing users to customize their article generation request.
 
 ## Available Attributes
 
-### label
+Enhance your prompt templates with these powerful attributes:
 
-The `label` attribute is used to set a custom label for the input:
+<ResponseField name="label" type="">
+Sets a custom label for the input
 
-```html
-{ input_name | label:Custom label }
-```
+Example:
+`{ input_name | label:Custom label }`
+</ResponseField>
 
-### multiline
+<ResponseField name="multiline" type="">
+Creates a multiline text input
 
-The `multiline` attribute defines a multiline text input:
+Example:`{ input_name | multiline }`
+</ResponseField>
 
-```html
-{ input_name | multiline }
-```
+<ResponseField name="type" type="">
+Defines the input type (currently supports `enum`)
 
-### type
+Example:`{ input_name | type:enum }`
+</ResponseField>
 
-The `type` attribute defines the type of input. Currently the only possible value is `enum`.
+<ResponseField name="options" type="">
+Specifies options for `enum` type inputs
 
-```html
-{ input_name | type:enum }
-```
+Example:`{ input_name | type:enum | options:Option 1, Option 2, Option 3 }`
+</ResponseField>
 
-### options
+<ResponseField name="optional" type="">
+Makes an input optional
 
-The `options` attribute defines the options for an input with the `enum` type:
+Example:`{ input_name | optional }`
+</ResponseField>
 
-```html
-{ input_name | type:enum | options:Option 1, Option 2, Option 3 }
-```
+<ResponseField name="placeholder" type="">
+Sets a custom placeholder text
 
-### optional
+Example:`{ input_name | placeholder:Custom placeholder }`
+</ResponseField>
 
-The `optional` attribute makes an input optional:
+<ResponseField name="info" type="">
+Provides additional information about the input
 
-```html
-{ input_name | optional }
-```
-
-### placeholder
-
-The `placeholder` attribute sets a custom placeholder for the input:
-
-```html
-{ input_name | placeholder:Custom placeholder }
-```
-
-### info
-
-The `info` attribute provides custom information text for the input:
-
-```html
-{ input_name | info:Custom info text }
-```
+Example:`{ input_name | info:Custom info text }`
+</ResponseField>
 
 ## Built-in Inputs
 
-Currently, there are two built-in inputs:
+Aikeedo provides two convenient built-in inputs to streamline your prompt templates:
 
-- `language` - Dropdown list of supported languages.
-- `tone` - Dropdown list of supported voice tones.
+1. `language`: A dropdown list of supported languages.
+2. `tone`: A dropdown list of supported voice tones.
 
-Built-in inputs are simple tags with no attributes:
+Use these built-in inputs in your templates like this:
 
-```plaintext
+```scss
 { language }
-```
-
-```plaintext
 { tone }
 ```
 
-## Creating Prompt Templates
+## Advanced Template Example
 
-To create a prompt template for an "Article Generator," use the following example:
+Let's create a more sophisticated prompt template for a "Comprehensive Article Generator":
 
-```plaintext
+```scss
+Create a detailed article on { topic | placeholder: Your chosen subject | info: Specify the main focus of your article }.
 
-    Write an article about { topic | placeholder: Your chosen subject | info:
-    Important details }. Use the following draft content:
+Target audience: { audience | type:enum | options:General, Beginners, Experts | info: Select your intended readership }
 
-    ---
-        { content | multiline| placeholder: Draft content }
-    ---
+Article structure:
+1. Introduction
+2. { section_1 | label:Main Section 1 | placeholder:E.g., Historical background }
+3. { section_2 | label:Main Section 2 | placeholder:E.g., Current trends }
+4. { section_3 | label:Main Section 3 | placeholder:E.g., Future implications }
+5. Conclusion
 
-    Additional instructions:
-    - Include relevant statistics (add the links of the sources you use)
-    and consider diverse perspectives.
-    - Write it in a { language } language by using {tone} voice tone and
-    mention the source links in the end.
+Key points to cover:
+{ key_points | multiline | placeholder: List important points to address }
 
+Writing style:
+- Language: { language }
+- Tone: { tone }
+- Length: { word_count | placeholder:Approximate word count | info: Suggested range: 500-2000 words }
+
+Additional requirements:
+- Include at least { source_count | type:enum | options:2, 3, 5 | label:Number of sources } credible sources
+- Incorporate relevant statistics and data visualizations if applicable
+- Address potential counterarguments or alternative viewpoints
+
+Extra notes:
+{ extra_notes | multiline | optional | placeholder: Any additional instructions or context }
 ```
 
-This template generates a form for users to input the topic, draft content, language, and tone for an article.
+This advanced template demonstrates how to combine various attributes and input types to create a comprehensive and flexible prompt for generating high-quality articles.
+
+## Best Practices
+
+1. **Be specific**: Clearly define what you want the AI to do in your template.
+2. **Use appropriate input types**: Choose the right input type (text, multiline, enum) for each piece of information you need.
+3. **Provide context**: Use the `info` attribute to give users helpful information about each input.
+4. **Balance flexibility and structure**: Offer enough customization options while maintaining a clear overall structure.
+5. **Test your templates**: Experiment with different combinations of inputs to ensure your template produces the desired results.
+
+## Conclusion
+
+Prompt templates are a powerful tool for creating dynamic, customizable AI experiences. By mastering the use of tags, attributes, and built-in inputs, you can design sophisticated prompts that cater to a wide range of use cases and user needs.

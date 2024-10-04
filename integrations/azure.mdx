@@ -1,0 +1,94 @@
+---
+title: Azure Integration
+sidebarTitle: Azure
+description: Enhance your Aikeedo platform with Microsoft Azure's advanced AI capabilities. This guide walks you through setting up and leveraging Azure's powerful text-to-speech services for high-quality voice generation.
+---
+
+## Introduction
+
+Aikeedo's Azure integration unlocks advanced text-to-speech capabilities for your platform. With access to Azure's Speech API, you can significantly enhance your VoiceOver tool and audio content creation with high-quality, natural-sounding voices.
+
+## Setting Up the Integration
+
+Follow these steps to connect Microsoft Azure with your Aikeedo platform:
+
+### Step 1: Set Up Azure Speech Service
+
+1. If you don't have an Azure account, [sign up here](https://azure.microsoft.com/free/).
+2. Once logged in, access the Azure portal at [portal.azure.com](https://portal.azure.com).
+3. Create a new Speech service resource:
+   - Click on "Create a resource" in the Azure portal.
+   - Search for "Speech" and select "Speech" from the results.
+   - Click "Create" to start setting up the Speech service.
+   - Fill in the required details:
+     - Choose a name for your resource.
+     - Select your subscription.
+     - Choose a resource group or create a new one.
+     - Select a region (this will be your "Location/Region" in Aikeedo).
+     - Choose a pricing tier (Free tier is available for testing).
+   - Click "Review + create" and then "Create" to deploy the Speech service.
+
+4. Once deployment is complete, go to your Speech service resource.
+5. In the left menu, under "Resource Management", click on "Keys and Endpoint".
+6. You'll find your API key (listed as KEY 1 or KEY 2) and region here. You'll need these for Aikeedo.
+
+<Note>
+  Keep your API key secure and confidential. It grants access to your Azure services and should not be shared publicly.
+</Note>
+
+### Step 2: Configure Aikeedo
+
+1. Log in to your Aikeedo admin panel.
+2. Navigate to **Settings > Azure Integrations**.
+3. In the "Speech API (TTS)" section:
+   - Select your "Location/Region" from the dropdown menu.
+   - Enter your Azure Speech API key in the "API Key" field.
+4. Click **Save changes** to activate the integration.
+
+<Check>
+  Great job! Azure Speech API is now integrated with your Aikeedo platform.
+</Check>
+
+## Available Voice Types
+
+Azure's Text-to-Speech service offers a variety of voice types:
+
+- Neural voices
+- Standard voices
+- Custom voices (if configured in your Azure account)
+
+These voice types offer different levels of quality and naturalness, allowing you to choose the best fit for your specific use case.
+
+## Aikeedo Tools Powered by Azure
+
+Azure integration enhances the following Aikeedo tool:
+
+1. **VoiceOver**: Transform text into high-quality, natural-sounding speech using a wide range of voices and languages.
+
+## Best Practices
+
+To make the most of your Azure integration:
+
+- Experiment with different voice types to find the best fit for your use case.
+- Consider the language and accent requirements of your project when selecting voices.
+- Monitor your API usage to manage costs effectively.
+
+## Troubleshooting
+
+If you encounter issues with the Azure integration, try these steps:
+
+1. Verify that your API key is correct and active.
+2. Ensure you've selected the correct region in Aikeedo that matches your Azure Speech service resource.
+3. Check your Azure subscription for any usage limits or restrictions.
+4. Confirm you have sufficient credit balance in your Azure account.
+5. For voice-specific issues, verify that your account has access to the required voice types.
+6. If you receive error messages related to authentication or API calls, double-check your Azure resource configuration.
+7. If problems persist, contact [Aikeedo support](mailto:support@aikeedo.com) for assistance.
+
+<Tip>
+  Regularly review your Azure usage and available voice options to ensure smooth integration with Aikeedo.
+</Tip>
+
+<Note>
+  Remember to review Microsoft Azure's usage policies and pricing to ensure compliance and manage costs effectively as you scale your text-to-speech integration.
+</Note>

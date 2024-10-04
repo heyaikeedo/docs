@@ -1,32 +1,62 @@
 ---
 title: Unified Credit System
-description:  Learn how to use the unified credit system in Aikeedo to manage usage credits in plans.
+description: Learn how to use the unified credit system in Aikeedo to manage usage credits in plans.
 ---
 
-With the release of Aikeedo v2.0, all previous usage units (tokens, image count and audio seconds) are replaced with a single unit: Credits. This change simplifies the usage management process and allows you to define credit conversion ratios in the Admin UI.
+## Introduction
 
-We've also introduced a calculator (available through Google Sheets) to help you calculate credit conversion ratios. The calculator is available for free to Extended License users.
+Aikeedo v2.0 introduces a Unified Credit System, simplifying usage management across all features. This system replaces the previous multiple unit types (tokens, image count, and audio seconds) with a single, versatile unit: Credits.
 
-## Access the calculator:
+## Key Features
 
-You can access the calculator at the following link: [Aikeedo Price Calculator](https://drive.google.com/drive/folders/1AHqGqHT6tQyRwRxS2v2j0RngxGbqr_pA?usp=drive_link)
+- **Simplified Usage Tracking**: All usage is now measured in credits, making it easier to manage and understand user consumption.
+- **Flexible Credit Conversion**: Administrators can define custom credit conversion ratios for different features and AI providers.
+- **Improved Plan Management**: Simplifies the process of creating and managing subscription plans with a unified credit allocation.
 
-<Warning>
-The calculator is not part of the item and is available only to Extended License users for free. To get access to the calculator, please send your purchase code at following link along with your request. After verification, we will provide you access to the calculator.
+## How It Works
 
-[Request Access](https://drive.google.com/drive/folders/1AHqGqHT6tQyRwRxS2v2j0RngxGbqr_pA?usp=drive_link)
-</Warning>
+### Credit Conversion
 
-## How to use the calculator:
+Credits are used as a universal currency within the Aikeedo platform. Each action (text generation, image creation, audio processing etc.) consumes a specific number of credits based on the defined conversion ratios.
 
-Calculator is self-explanatory and easy to use. It contains information notes to guide you through the process.
+### Setting Conversion Ratios
 
-You can find green and orange cells in the calculator. Green cells are inputs to define the ratios and orange cells are outputs to show the calculated ratios. Basically, you need to define total amount of the credits you want to sell per 1 USD and define the profit margin. The calculator will automatically calculate the credit conversion ratios for you to use in the Admin UI.
+1. Log in to your Aikeedo admin panel.
+2. Navigate to Settings in the left sidebar.
+3. Under the Finance section, click on "Credit ratios".
+4. Here, you'll find options to set credit costs for various AI models.
+5. For each AI model, you can set the credit cost for their specific models or actions.
+6. Ensure all fields are filled with appropriate values.
+7. The Save button will only become active once all fields have been filled.
+8. After filling in all fields and reviewing your changes, click the now-active Save button to apply the new ratios.
 
-Later on at the below of the calculator, you can define pricing plans in your own currency and the calculator will automatically calculate the maximum credits that can be used in each plan according to the defined profit margin.
+<Note>
+  The Save button remains inactive until all credit ratio fields are filled. This ensures that no incomplete or potentially erroneous configurations are saved.
+</Note>
 
----
+## Credit Calculator
 
-Keeping Aikeedo updated ensures that you benefit from the latest advancements, security patches, and performance enhancements.
+To assist with setting up your credit system, we provide a Credit Calculator tool:
 
-Thank you for choosing Aikeedo! Get ready to experience the future of AI-powered content creation!
+- Available as a Google Sheets document in the Commercial folder of your Aikeedo package
+- Free for Extended/Commercial License users
+- Helps calculate optimal credit conversion ratios based on your costs and desired pricing
+
+<Tip>
+  Use the calculator to ensure your credit pricing aligns with your operational costs and profit margins. You can find the Credit Calculator in the [Commercial folder](/get-started/commercial-resources) of your Aikeedo package.
+</Tip>
+
+## Benefits of the Unified Credit System
+
+1. **Simplified User Experience**: Users deal with a single currency (credits) across all platform features.
+2. **Flexible Pricing Models**: Easily create varied plans with different credit allocations.
+3. **Easy Resource Management**: Monitor and control resource usage across all features from a single dashboard.
+4. **Adaptable to New Features**: As new AI capabilities are added, they can be easily integrated into the existing credit system.
+
+## Best Practices
+
+- Regularly review and adjust your credit conversion ratios to reflect changes in AI service costs.
+- Communicate clearly to users how credits are consumed for different actions.
+- Use the credit system to create tiered plans that cater to different user needs and usage patterns.
+
+By leveraging the Unified Credit System, you can create more flexible and user-friendly subscription plans while simplifying your platform's usage management. This system provides the foundation for scalable and adaptable pricing strategies as your Aikeedo platform grows and evolves.

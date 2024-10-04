@@ -1,0 +1,106 @@
+---
+title: Intercom Integration
+sidebarTitle: Intercom
+description: Enhance your Aikeedo platform with Intercom to provide real-time customer support and engagement. This guide walks you through setting up Intercom for your Aikeedo website.
+---
+
+## Introduction
+
+Aikeedo's Intercom integration allows you to add powerful customer messaging and support capabilities to your platform. By integrating Intercom, you can engage with your users in real-time, provide support, and gather valuable insights about your customer interactions.
+
+## Setting Up the Integration
+
+Follow these steps to connect Intercom with your Aikeedo platform:
+
+### Step 1: Create an Intercom Account and Obtain Necessary Credentials
+
+1. If you don't have an Intercom account, [sign up here](https://www.intercom.com/).
+2. Once logged in, navigate to the Settings menu in your Intercom dashboard.
+3. In the left sidebar, click on "Messenger" under the "Channels" section.
+4. On the Messenger settings page, click on the "Install" tab.
+5. You'll see two important pieces of information here:
+   - **Workspace/App ID**: This is displayed at the top of the installation code snippet. It's a string that looks like "abc123de".
+   - **Secret Key**: Click on "Copy secret key" to copy your secret key. It's a long string of characters used for identity verification.
+
+<Note>
+  The Secret Key is crucial for enabling Identity Verification, which adds an extra layer of security to your integration. Never share this key publicly or commit it to version control systems.
+</Note>
+
+<Tip>
+  Intercom recommends using Identity Verification to ensure the security and integrity of your user data. Make sure to enable this feature in both Intercom and Aikeedo settings.
+</Tip>
+
+6. Copy both the Workspace/App ID and the Secret Key—you'll need these for configuring Aikeedo.
+
+<Warning>
+  Keep your Secret Key confidential. As the Intercom dashboard warns: "Never commit it directly to your repository, client-side code, or anywhere a third party can find it."
+</Warning>
+
+### Step 2: Configure Aikeedo
+
+1. Log in to your Aikeedo admin panel.
+2. Navigate to Settings.
+3. Find and click on "Script Tags" in the Integrations section.
+4. Look for the "Intercom" integration option.
+5. In the "Config" section, you'll see the following fields:
+   - **Status**: A toggle switch to enable or disable the Intercom integration.
+   - **Identity verification**: A toggle to enable or disable identity verification.
+   - **Workspace/App ID**: Enter your Intercom Workspace/App ID here.
+   - **Secret key**: Enter your Intercom Secret Key here (required for identity verification).
+6. Toggle the "Status" switch to enable the integration.
+7. We recommend enabling "Identity verification" for enhanced security.
+8. Enter your Intercom Workspace/App ID in the designated field.
+9. If you've enabled identity verification, enter your Intercom Secret Key.
+10. Click the "Save changes" button to apply your configuration.
+
+<Check>
+  Great job! Intercom is now integrated with your Aikeedo platform.
+</Check>
+
+<Note>
+  The Secret Key is required to enable Identity Verification, which adds an extra layer of security to your integration.
+</Note>
+
+<Tip>
+  If you can't find your Workspace/App ID, click the "Click here" link below the ID field for additional guidance.
+</Tip>
+
+## What This Integration Does
+
+- Adds the Intercom chat widget to your Aikeedo website
+- Allows real-time communication with your users
+- Enables you to provide customer support directly through your website
+- Helps you gather user feedback and insights
+- Facilitates user onboarding and engagement through targeted messages
+
+## Best Practices
+
+To make the most of your Intercom integration:
+
+- Set up welcome messages to greet new users and guide them through your platform
+- Use Intercom's targeted messaging features to engage users based on their behavior
+- Customize the appearance of the Intercom widget to match your brand
+- Set up an organized inbox and team assignments for efficient customer support
+- Utilize Intercom's knowledge base feature to create self-service support resources
+- Regularly review conversation data and user feedback to improve your product and support
+
+<Note>
+  Remember to respect user privacy and comply with data protection regulations when collecting and handling user data through Intercom.
+</Note>
+
+## Troubleshooting
+
+If you're experiencing issues with your Intercom integration:
+
+1. Verify that you've entered the correct Workspace/App ID in Aikeedo.
+2. If using identity verification, ensure your Secret Key is correct and up to date.
+3. Check if the Intercom widget appears on your website after enabling the integration.
+4. Clear your browser cache and cookies, then reload your website to see if the widget appears.
+5. Ensure there are no JavaScript errors in your browser console that might be preventing Intercom from loading.
+6. If the widget appears but isn't functioning correctly, verify your Intercom account settings and workspace configuration.
+
+<Tip>
+  Intercom provides a test mode in their dashboard. Use this to verify your integration without affecting real users.
+</Tip>
+
+If you continue to experience issues, contact [Aikeedo support](mailto:support@aikeedo.com) for assistance.

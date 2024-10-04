@@ -1,39 +1,96 @@
 ---
-title: Mailer
-description: Configure your email settings in Aikeedo to ensure effective communication with users. Follow these steps to customize your mailer settings.
+title: Mailer Configuration
+description: Learn how to configure email settings in Aikeedo to ensure effective communication with your users. This guide will walk you through the process of setting up your mailer for optimal performance.
 ---
 
-## Mailer Settings
+Proper email configuration is crucial for maintaining smooth communication between your Aikeedo platform and its users. This guide will help you set up and customize your mailer settings to ensure reliable email delivery.
 
-### Supported Mailer Transports
+## Understanding Mailer Settings
 
-- **Null (Default):** Ignores sending emails, useful for testing purposes.
-- **SMTP:** Sends emails using an SMTP server. [Configure SMTP settings](/email/smtp) before enabling this transport.
+Before diving into the configuration process, it's important to understand the key components of Aikeedo's mailer system.
+
+### Mailer Transports
+
+Aikeedo supports two types of mailer transports:
+
+1. **Null Transport (Default)**
+   - This option ignores sending emails, making it useful for testing purposes.
+   - No actual emails are sent when this transport is selected.
+
+2. **SMTP Transport**
+   - Sends emails using an SMTP (Simple Mail Transfer Protocol) server.
+   - Requires additional configuration of SMTP settings.
+
+<Note>
+  If you choose the SMTP Transport, make sure to configure your SMTP settings first. You can find detailed instructions in our [SMTP Configuration Guide](/email/smtp).
+</Note>
 
 ### Sender Details
 
-- **Sender Email:** Set the email address that will be used as the sender of all emails sent by the system.
-- **Sender Name:** Specify the name that will be used as the sender of all emails sent by the system.
+Two important fields define how your emails appear to recipients:
 
-## Configuration Steps
+- **Sender Email**: The email address that will be used as the sender for all system emails.
+- **Sender Name**: The name that will appear as the sender for all system emails.
 
-1. **Log in as Admin:**
+## Step-by-Step Configuration Guide
 
-   - Access the Aikeedo admin panel using your administrator credentials.
+Follow these steps to set up your mailer in Aikeedo:
 
-2. **Navigate to Email Settings:**
+### 1. Access the Admin Panel
 
-   - In the admin panel, go to **Settings > Email > Mail**.
+To access the mailer configuration in Aikeedo, log in to the admin panel using your administrator credentials. Once logged in, navigate to Settings > Email > Mail. This will take you to the mailer configuration page where you can adjust your email settings.
 
-3. **Choose Mailer Transport:**
+### 2. Configure Mailer Settings
 
-   - Select the desired mailer transport based on your requirements.
+<AccordionGroup>
+  <Accordion title="Select Mailer Transport">
+    1. In the "General" section, find the "Mailer transport" dropdown menu.
+    2. Choose between "Null Transport" (for testing) or "SMTP Transport" (for actual email sending).
+    
+    <Warning>
+      If you select "SMTP Transport", ensure you have properly configured your SMTP settings beforehand.
+    </Warning>
+  </Accordion>
+  
+  <Accordion title="Set Sender Details">
+    1. Locate the "Sender details" section.
+    2. Enter the desired email address in the "Sender email" field (e.g., noreply@yourdomain.com).
+    3. Specify the name you want recipients to see in the "Sender name" field (e.g., "Aikeedo Support").
+  </Accordion>
+</AccordionGroup>
 
-4. **Enter Sender Details:**
+### 3. Save Your Configuration
 
-   - Provide the sender email address and name.
+After entering all the necessary information:
 
-5. **Save Changes:**
-   - Save your configuration to apply the new mail settings.
+1. Review your settings to ensure accuracy.
+2. Click the "Save changes" button at the bottom of the page to apply your new mail configuration.
 
-By customizing your mail settings, you ensure that users receive emails from Aikeedo with the appropriate sender details.
+<Check>
+  Your mailer is now configured! Aikeedo will use these settings for all system-generated emails.
+</Check>
+
+## Testing Your Configuration
+
+It's always a good idea to test your email configuration to ensure everything is working correctly:
+
+1. Set up a test user account or use an existing one.
+2. Trigger an email-sending action (e.g., password reset, welcome email).
+3. Check the receiving inbox to confirm the email was sent and received correctly.
+
+<Tip>
+  If you're using the Null Transport for testing, remember that no actual emails will be sent. You may need to check your application logs or use a debugging tool to verify the email sending process.
+</Tip>
+
+## Troubleshooting
+
+If you encounter issues with email delivery:
+
+- Double-check your SMTP settings if using SMTP Transport.
+- Verify that your sender email is correctly formatted and from a valid domain.
+- Check your server's firewall settings to ensure it's not blocking outgoing SMTP traffic.
+- Consider using a dedicated email service provider for improved deliverability.
+
+For more advanced email configuration options or if you need help troubleshooting, please refer to our [SMTP Configuration Guide](/email/smtp) or contact our support team.
+
+By carefully configuring your mailer settings, you ensure that your Aikeedo platform can effectively communicate with users, enhancing their experience and keeping them informed about important updates and actions.

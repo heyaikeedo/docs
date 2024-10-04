@@ -1,0 +1,73 @@
+---
+title: OneSignal Integration
+sidebarTitle: OneSignal
+description: Enhance your Aikeedo platform with OneSignal's push notification capabilities. This guide walks you through setting up and leveraging OneSignal for engaging your users with timely notifications.
+---
+
+## Introduction
+
+Aikeedo's OneSignal integration enables powerful push notification functionality for your platform. By integrating OneSignal, you can significantly enhance user engagement by sending timely and relevant notifications to your users across various devices.
+
+## Setting Up the Integration
+
+Follow these steps to connect OneSignal with your Aikeedo platform:
+
+### Step 1: Create a OneSignal App and Obtain Your App ID
+
+1. If you don't have a OneSignal account, [sign up here](https://onesignal.com/).
+2. Once logged in, click on "All Apps" in the left sidebar.
+3. Click the "New App/Website" button to create a new app.
+4. Fill in the following details:
+   - **OneSignal App Name**: Enter a name for your Aikeedo integration (e.g., "Aikeedo Notifications").
+   - **Select your organization**: Choose the appropriate organization from the dropdown.
+5. Under "Set up your first channel", select "Web" as we're integrating with a web application.
+6. Click "Next: Configure Your Platform" to proceed.
+7. On the Web Configuration page, choose "Custom Code" as the integration type.
+8. Follow the prompts to complete the web push setup for your domain using the Custom Code integration.
+9. Once setup is complete, navigate to "Settings" > "Keys & IDs" in the left sidebar.
+10. Under the "OneSignal Keys" section, you'll find your "OneSignal App ID". It's a long string of characters (e.g., 900877c5-995b-49ef-95e8-af7d52f36054).
+11. Copy this App ID—you'll need it for Aikeedo.
+
+### Step 2: Configure Aikeedo
+
+1. Log in to your Aikeedo admin panel.
+2. Navigate to **Settings > OneSignal**.
+3. In the "Configuration" section, you'll see the following options:
+   - **Status**: Toggle this to enable or disable the OneSignal integration.
+   - **App ID**: Enter your OneSignal App ID in this field.
+4. Paste your OneSignal App ID into the "App ID" field.
+5. Enable the integration by toggling the "Status" switch to the enabled position.
+6. Click **Save changes** to activate the integration.
+
+<Check>
+  Great job! OneSignal is now integrated with your Aikeedo platform.
+</Check>
+
+## Best Practices
+
+To make the most of your OneSignal integration:
+
+- Craft clear and concise notification messages to engage users effectively.
+- Use segmentation to send targeted notifications to specific user groups.
+- Test your notifications across different devices and platforms to ensure consistency.
+- Monitor notification performance and user engagement metrics in your OneSignal dashboard.
+
+## Troubleshooting
+
+If you encounter issues with the OneSignal integration, try these steps:
+
+1. Verify that your App ID is correct and active.
+2. Ensure that webpush is properly set up in your OneSignal account with Custom Code.
+3. Check that the integration is enabled in your Aikeedo settings.
+4. Test the integration by sending a test notification from your OneSignal dashboard.
+5. If you experience delivery issues, check your OneSignal dashboard for any error messages or delivery reports.
+6. Ensure your Aikeedo platform is up to date.
+7. If problems persist, contact [Aikeedo support](mailto:support@aikeedo.com) for assistance.
+
+<Tip>
+  Can't find your App ID? Click the "Click here" link below the App ID field in the Aikeedo settings for additional guidance.
+</Tip>
+
+<Note>
+  Remember to review OneSignal's usage policies and pricing to ensure compliance and manage costs effectively as you scale your push notification integration.
+</Note>

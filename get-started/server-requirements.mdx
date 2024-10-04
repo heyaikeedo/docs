@@ -1,62 +1,95 @@
 ---
 title: Server Requirements
-description: Aikeedo is a web-based application that requires a server environment to run. Ensure a smooth installation and operation of Aikeedo by meeting the following server requirements.
+description: Ensure your server meets these requirements for a smooth Aikeedo installation and operation.
 ---
 
-## PHP and MySQL Versions
+Welcome to the Server Requirements guide for Aikeedo. This page outlines the necessary components and configurations to ensure your server is ready to host Aikeedo efficiently. Whether you're a seasoned developer or new to server management, we've got you covered with clear, easy-to-follow instructions.
 
-- **PHP:** 8.2 or later
-- **MySQL:** 8.0 or later
+## Core Requirements
 
-## Required PHP Extensions
+### PHP and MySQL Versions
 
-Make sure the following PHP extensions are installed:
+Aikeedo requires up-to-date versions of PHP and MySQL to ensure optimal performance and security:
 
-- `ctype`
-- `curl`
-- `dom`
-- `fileinfo`
-- `intl`
-- `json`
-- `libxml`
-- `mbstring`
-- `openssl`
-- `pcre`
-- `phar`
-- `simplexml`
-- `tokenizer`
-- `xml`
-- `xmlwriter`
-- `zip`
+<CardGroup cols={2}>
+  <Card title="PHP Version" icon="php">
+    8.2 or later
+  </Card>
+  <Card title="MySQL Version" icon="database">
+    8.0 or later
+  </Card>
+</CardGroup>
 
-_Note: Some additional extensions might be required, but these are generally installed by default._
+<Note>
+  Using the latest stable versions is recommended for the best experience and to take advantage of the newest features and security updates.
+</Note>
 
-## php.ini Configuration
+### Essential PHP Extensions
 
-Ensure the following configurations in your `php.ini` file:
+To run Aikeedo smoothly, make sure your PHP installation includes these extensions:
+
+<Accordion title="Click to view required PHP extensions">
+  - ctype
+  - curl
+  - dom
+  - fileinfo
+  - intl
+  - json
+  - libxml
+  - mbstring
+  - openssl
+  - pcre
+  - phar
+  - simplexml
+  - tokenizer
+  - xml
+  - xmlwriter
+  - zip
+</Accordion>
+
+<Tip>
+  Most of these extensions are typically included in standard PHP installations. If you're unsure, consult your hosting provider or server administrator.
+</Tip>
+
+## PHP Configuration
+
+Proper PHP configuration is crucial for Aikeedo to function correctly. Adjust the following settings in your `php.ini` file:
 
 - **File Uploads:** On
 - **Post Max Size:** 25MB or more
 - **Upload Max Filesize:** 25MB or more
 
-## Webserver Compatibility
+<Note>
+  If you're not familiar with editing the `php.ini` file, don't worry! Many hosting control panels provide user-friendly interfaces to adjust these settings. If you need help, check out the [PHP configuration guide](https://www.php.net/manual/en/configuration.file.php) or contact your hosting provider.
+</Note>
 
-Aikeedo is tested and compatible with the following webservers:
+## Web Server Compatibility
 
-- **Apache**
-- **Nginx**
+Aikeedo is designed to work with popular web servers, ensuring flexibility in your hosting setup:
 
-However, it is designed to work seamlessly with any webserver, providing you with flexibility in choosing the server that best fits your needs.
+<CardGroup cols={2}>
+  <Card title="Apache" icon="server">
+    Fully tested and supported
+  </Card>
+  <Card title="Nginx" icon="server">
+    Fully tested and supported
+  </Card>
+</CardGroup>
 
-Meeting these server requirements ensures that Aikeedo operates at its full potential, delivering a robust and efficient AI-powered content creation experience.
+While Apache and Nginx are our primary supported web servers, Aikeedo is built to be compatible with most standard web server configurations.
 
-Links:
+<Tip>
+  New to web server setup? Check out these helpful guides:
+  - [How to install Apache](https://httpd.apache.org/docs/2.4/install.html)
+  - [How to install Nginx](https://docs.nginx.com/nginx/admin-guide/installing-nginx/installing-nginx-open-source/)
+</Tip>
 
-- How to configure php.ini? [Click here](https://www.php.net/manual/en/configuration.file.php)
-- How to create MySQL database? [Click here](https://dev.mysql.com/doc/mysql-getting-started/en/)
-- How to install Apache? [Click here](https://httpd.apache.org/docs/2.4/install.html)
-- How to install Nginx? [Click here](https://docs.nginx.com/nginx/admin-guide/installing-nginx/installing-nginx-open-source/)
+## Next Steps
 
-Thank you for choosing Aikeedo! Get ready to experience the future of AI-powered content creation!
+Once you've confirmed that your server meets these requirements, you're ready to move on to the installation process!
 
-If you have any questions or need assistance, feel free to [reach out to our support team](mailto:support@aikeedo.com).
+<Card title="Installation Guide" icon="rocket" href="/get-started/installation">
+  Learn how to install Aikeedo on your server
+</Card>
+
+If you encounter any issues or have questions about server requirements, our support team is here to help. Don't hesitate to [reach out to us](mailto:support@aikeedo.com).

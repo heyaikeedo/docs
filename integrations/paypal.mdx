@@ -1,0 +1,107 @@
+---
+title: PayPal Integration
+sidebarTitle: PayPal
+description: Learn how to seamlessly integrate PayPal payments into your Aikeedo platform, enabling secure and convenient transactions for your users.
+---
+
+Integrating PayPal with Aikeedo allows you to offer a widely recognized and trusted payment solution for your users. This guide will walk you through the process of setting up PayPal payments, from creating your PayPal business account to configuring webhooks and enabling the integration in Aikeedo.
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- An active [PayPal Business account](https://www.paypal.com/us/business)
+- Access to your Aikeedo admin panel
+- Basic understanding of payment gateways (don't worry, we'll guide you through the process!)
+
+## Step 1: Set Up Your PayPal Business Account
+
+If you haven't already, sign up for a PayPal Business account:
+
+1. Visit the [PayPal Business website](https://www.paypal.com/us/business) and click "Sign Up"
+2. Follow the prompts to create and verify your business account
+3. Complete any additional verification steps required by PayPal
+
+## Step 2: Obtain PayPal API Credentials
+
+To connect Aikeedo with PayPal, you'll need to retrieve your API credentials:
+
+1. Log in to the [PayPal Developer Dashboard](https://developer.paypal.com/dashboard/)
+2. Navigate to **Apps & Credentials**
+3. Click on **Create App** to generate a new app for your integration
+4. Set the following details:
+   - App Name: Choose a name for your integration (e.g., "Aikeedo Payments")
+   - Select "Merchant" as the app type
+5. Click "Create App"
+6. On the next page, you'll find your **Client ID** and can generate a **Secret Key**
+
+<Note>
+  Keep your Secret Key confidential! Never share it publicly or include it in client-side code.
+</Note>
+
+## Step 3: Set Up PayPal Webhooks
+
+Webhooks are crucial for handling recurring payments and keeping your Aikeedo platform in sync with PayPal. Here's how to set them up:
+
+1. In the PayPal Developer Dashboard, go to your app's details page
+2. Scroll down to the **Webhooks** section and click "Add Webhook"
+3. Enter your webhook URL: `https://your-aikeedo-domain.com/webhooks/paypal`
+4. Select the following events:
+   - `INVOICING.INVOICE.CANCELLED`
+   - `INVOICING.INVOICE.CREATED`
+   - `INVOICING.INVOICE.PAID`
+   - `INVOICING.INVOICE.REFUNDED`
+   - `INVOICING.INVOICE.SCHEDULED`
+   - `INVOICING.INVOICE.UPDATED`
+   - `BILLING.SUBSCRIPTION.CANCELLED`
+5. Click "Save" to create the webhook
+6. After creation, you'll see a "Webhook ID" - copy this for later use
+
+<Tip>
+  If you're not sure which events to select, it's safe to choose all relevant billing and invoicing events for comprehensive coverage.
+</Tip>
+
+## Step 4: Enable PayPal in Aikeedo
+
+Now that you have your PayPal account set up, it's time to configure Aikeedo:
+
+1. Log in to your Aikeedo admin panel
+2. Navigate to **Settings > Payments > PayPal**
+3. Toggle the switch to enable PayPal payments
+4. Choose the appropriate mode:
+   - **Sandbox**: For testing payments
+   - **Live**: For processing real transactions
+5. Enter the following details:
+   - **Client ID**: Your PayPal app's Client ID
+   - **API Secret Key**: Your PayPal app's Secret Key
+   - **Webhook ID**: The Webhook ID from your webhook setup
+6. Set your preferred **Charge Currency**
+7. Click "Save changes" to apply your settings
+
+<Check>
+  Congratulations! PayPal payments are now enabled on your Aikeedo platform.
+</Check>
+
+## Testing Your Integration
+
+Before going live, it's crucial to test your PayPal integration:
+
+1. Set Aikeedo to "Sandbox" mode
+2. Use [PayPal's sandbox accounts](https://developer.paypal.com/tools/sandbox/accounts/) to simulate various payment scenarios
+3. Create a test subscription or product purchase
+4. Verify that payments are processed correctly and webhooks are functioning
+
+Once you're confident everything is working as expected, switch to "Live" mode to start accepting real payments.
+
+## Troubleshooting
+
+If you encounter any issues with your PayPal integration, try these steps:
+
+1. Double-check all API credentials and Webhook ID for accuracy
+2. Ensure your webhook URL is correct and accessible
+3. Review PayPal's developer dashboard for any error logs or failed webhook attempts
+4. Check Aikeedo's error logs for any integration-related issues
+
+If problems persist, don't hesitate to reach out to [our support](mailto:support@aikeedo.com) for assistance.
+
+By following this guide, you've successfully integrated PayPal payments into your Aikeedo platform, providing your users with a secure and convenient payment experience. If you have any questions or need further assistance, our support team is always here to help!

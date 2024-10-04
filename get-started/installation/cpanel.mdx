@@ -1,0 +1,152 @@
+---
+title: Installing Aikeedo in cPanel
+sidebarTitle: cPanel
+description: Learn how to install Aikeedo on your cPanel hosting, whether you're using a main domain, add-on domain, or subdomain.
+---
+
+Welcome to the Aikeedo installation guide for cPanel! This comprehensive tutorial will walk you through the process of setting up Aikeedo on your cPanel hosting environment. Whether you're using a main domain, an add-on domain, or a subdomain, we've got you covered.
+
+## Before You Start
+
+1. Ensure your server meets our [requirements](/get-started/requirements).
+2. Prepare a database and note down its name, username, and password.
+3. Have your Aikeedo purchase code ready.
+
+## Understanding the Public Directory
+
+It's crucial to understand how Aikeedo's file structure works with your domain:
+
+- Aikeedo has a `public` directory that contains web-accessible files.
+- Your domain should point to this `public` directory, not the root of all Aikeedo files.
+- The `public` directory cannot be moved; it must remain within the Aikeedo file structure.
+
+In cPanel, this typically means:
+- For main domains: copying the contents of the `public` folder to your `public_html` directory.
+- For add-on domains or subdomains: setting the document root to the `public` folder within your Aikeedo installation.
+
+## Installation Process
+
+<Tabs>
+  <Tab title="Main Domain">
+    Follow these steps to install Aikeedo on your main domain in cPanel:
+
+    <Steps>
+        <Step title="Upload the Archive">
+            - Locate the `aikeedo-server-files.zip` archive in your Aikeedo package.
+            - Upload this archive to the directory one level above your `public_html` folder.
+            For example, if your `public_html` path is `/home/username/public_html`, upload to `/home/username/`.
+
+            <Note>
+                If you can't find the zip file, refer to our [File Structure](/get-started/file-structure) guide.
+            </Note>
+        </Step>
+
+        <Step title="Extract the Archive">
+            Once uploaded, extract the contents of `aikeedo-server-files.zip` in the same directory.
+        </Step>
+
+        <Step title="Configure the Public Directory">
+            - Find the `public` folder within the extracted files (e.g., `/home/username/public`).
+            - Copy all contents from this `public` folder to your `public_html` directory.
+            - Make sure to include hidden files and folders (such as .htaccess file or .vite directory).
+
+            <Warning>
+                Important: You'll need to manually repeat this step after each Aikeedo update. For more details on the update process, please refer to our [update guide](/versioning/how-to-update).
+            </Warning>
+        </Step>
+
+        <Step title="Update the Environment File">
+            - Locate the `.env.example` file in your Aikeedo root directory (e.g., `/home/username/`).
+            - Find the line that contains `# PUBLIC_DIR=public_html`.
+            - Uncomment this line by removing the `#` symbol and the space after it.
+            - The final version of this line should look like:
+                ```env .env.example
+                PUBLIC_DIR=public_html
+                ```
+            - Save the changes to the file.
+        </Step>
+
+        <Step title="Begin the Installation">
+            - Open your web browser and navigate to your domain.
+            - You'll be automatically redirected to the installation page at `/install`.
+        </Step>
+        
+        <Step title="Complete the Setup">
+            - Follow the on-screen instructions in the installation wizard.
+            - You'll need to provide:
+              - Database credentials
+              - Your Aikeedo purchase code
+              - Admin account details
+            - Complete all steps as guided by the wizard.
+        </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="Add-on Domain or Subdomain">
+    Follow these steps to install Aikeedo on an add-on domain or subdomain in cPanel:
+
+    <Steps>
+        <Step title="Upload the Archive">
+            - Locate the `aikeedo-server-files.zip` archive in your Aikeedo package.
+            - Upload this archive to your add-on domain or subdomain root directory.
+            For example: `/home/username/yourdomain.com/`
+
+            <Note>
+                If you can't find the zip file, refer to our [File Structure](/get-started/file-structure) guide.
+            </Note>
+        </Step>
+
+        <Step title="Extract the Archive">
+            Once uploaded, extract the contents of `aikeedo-server-files.zip` in the same directory.
+        </Step>
+
+        <Step title="Update Domain Root Directory">
+            - In cPanel, navigate to **Domains** > **Addon Domains** (or **Subdomains**).
+            - Click **Manage** next to your domain.
+            - Update the **Document Root** to point to the `public` folder within your extracted files.
+                For example: `/home/username/yourdomain.com/public`
+            - Save your changes.
+        </Step>
+
+        <Step title="Begin the Installation">
+            - Open your web browser and navigate to your add-on domain or subdomain URL.
+            - You'll be automatically redirected to the installation page at `/install`.
+        </Step>
+
+        <Step title="Complete the Setup">
+            - Follow the on-screen instructions in the installation wizard.
+            - You'll need to provide:
+              - Database credentials
+              - Your Aikeedo purchase code
+              - Admin account details
+            - Complete all steps as guided by the wizard.
+        </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## Important Notes
+
+- Throughout this guide, we use absolute paths (e.g., `/home/username/`). In cPanel's file manager, you might not see the `/home/username/` part. For example, `/home/username/public_html` might appear as just `/public_html`.
+- Always ensure you're working in the correct directory for your specific domain setup.
+- The `public` directory contains all files that should be publicly accessible. Don't confuse this with cPanel's default `public_html` directory.
+
+## Troubleshooting
+
+If you encounter any issues during the installation process:
+
+1. Double-check that you've followed each step correctly.
+2. Ensure all file permissions are set correctly.
+3. Verify that your server meets all the [requirements](/get-started/requirements).
+4. For more detailed troubleshooting steps, please refer to our dedicated [Troubleshooting Guide](/get-started/installation/troubleshooting).
+5. If you're still stuck after trying the solutions in the troubleshooting guide, don't hesitate to [reach out to our support team](mailto:support@aikeedo.com).
+
+## Next Steps
+
+After successfully installing Aikeedo:
+
+1. Follow our [Initial Setup Guide](/get-started/initial-setup) to configure your new installation.
+2. Explore [Website Basics](/website-basics/essentials) to learn about key Aikeedo features.
+3. Consider setting up [email](/email/mailer) for your Aikeedo instance.
+
+Congratulations! You've successfully installed Aikeedo on your cPanel hosting. You're now ready to harness the power of AI for your content creation needs.

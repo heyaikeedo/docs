@@ -73,15 +73,24 @@
         "get-started/get-aikeedo",
         "get-started/file-structure",
         "get-started/server-requirements",
-        "get-started/installation",
-        "get-started/initial-setup"
+        {
+          "group": "Installation",
+          "pages": [
+            "get-started/installation",
+            "get-started/installation/cpanel",
+            "get-started/installation/troubleshooting"
+          ]
+        },
+        "get-started/initial-setup",
+        "get-started/commercial-resources"
       ]
     },
     {
       "group": "Website Basics",
       "pages": [
-        "website-basics/title-meta-information",
-        "website-basics/branding-appearance"
+        "website-basics/essentials",
+        "website-basics/pwa",
+        "website-basics/branding"
       ]
     },
     {
@@ -108,19 +117,47 @@
       ]
     },
     {
-      "group": "Payment Gateways",
-      "pages": [
-        "payment-gateways/paypal",
-        "payment-gateways/stripe"
-      ]
-    },
-    {
       "group": "Integrations",
       "pages": [
-        "integrations/ai/openai",
-        "integrations/ai/claude",
-        "integrations/ai/cohere",
-        "integrations/ai/stabilityai"
+        {
+          "group": "Payment Gateways",
+          "pages": [
+            "integrations/stripe",
+            "integrations/paypal"
+          ]
+        },
+        {
+          "group": "AI Providers",
+          "pages": [
+            "integrations/openai",
+            "integrations/cohere",
+            "integrations/claude",
+            "integrations/elevenlabs",
+            "integrations/gcp",
+            "integrations/azure",
+            "integrations/falai",
+            "integrations/stabilityai",
+            "integrations/clipdrop",
+            "integrations/aimlapi",
+            "integrations/serper"
+          ]
+        },
+        {
+          "group": "Currency Rate Providers",
+          "pages": [
+            "integrations/currency-api"
+          ]
+        },
+        {
+          "group": "Other",
+          "pages": [
+            "integrations/onesignal",
+            "integrations/google-analytics",
+            "integrations/google-tag-manager",
+            "integrations/intercom",
+            "integrations/custom-scripts"
+          ]
+        }
       ]
     },
     {
@@ -141,19 +178,9 @@
       ]
     },
     {
-      "group": "Commercial Resources",
-      "pages": [
-        "commercial/figma-file",
-        "commercial/credit-calculator"
-      ]
-    },
-    {
       "group": "Versioning",
       "pages": [
-        "versioning/how-to-update",
-        "versioning/release-notes",
-        "versioning/migration-to-v2",
-        "versioning/changelog"
+        "versioning/how-to-update"
       ]
     },
     {

@@ -1,4 +1,90 @@
 ---
 title: Users & Workspaces
-description: 'Under development'
+description: 'Understanding user types and workspace management in Aikeedo'
 ---
+
+Aikeedo's user and workspace system is designed to provide flexibility and control for both individual users and organizations. This guide will help you understand the different user types, workspace concepts, and management features available in Aikeedo.
+
+## User Types
+
+Aikeedo has two main types of users:
+
+1. **Standard Users**: These are the end-users of your website who interact with the AI features and content.
+
+2. **Admin Users**: Administrators have enhanced permissions and can access the admin panel to manage the application.
+
+### Admin Users
+
+Admin users have all the capabilities of standard users, plus additional privileges:
+
+- Access to the admin panel
+- Control over application settings 
+- Ability to manage and analyze user and application data
+- Oversight of system-wide data management and analytics
+
+<Note>
+The initial admin user is created during the installation process. This user becomes the app owner.
+</Note>
+
+Admin users can:
+- Create new admin accounts
+- Manage existing admin accounts (modify permissions, deactivate, or delete)
+- Elevate standard user accounts to admin status
+
+<Warning>
+By default, it's not possible to sign up directly as an admin user. This is a security measure to protect your application.
+</Warning>
+
+## Workspaces
+
+Workspaces are a core concept in Aikeedo, allowing for organized collaboration and resource management.
+
+Key features of workspaces:
+
+- Users can create and own multiple workspaces
+- Each workspace can have multiple users
+- Users can be part of multiple workspaces
+- Every workspace has a single owner
+
+### Workspace Owner Capabilities
+
+Workspace owners have full control over their workspaces, including the ability to:
+
+- Create new workspaces
+- Delete existing workspaces
+- Invite new users to the workspace
+- Remove users from the workspace
+- Change the workspace plan
+
+### Default Workspace
+
+When a user signs up for Aikeedo, they are automatically provided with a default workspace. This initial workspace is owned by the new user and serves as their personal starting point within the platform. By default, this workspace is typically named "Personal," reflecting its individual nature. However, to accommodate user preferences and organizational needs, the workspace owner has the flexibility to rename this default space as they see fit. This feature allows users to personalize their Aikeedo experience from the very beginning, tailoring their workspace to align with their specific projects or branding requirements.
+
+## User-Workspace Relationship
+
+The relationship between users and workspaces is many-to-many:
+
+- A single user can create and own multiple workspaces
+- A single user can be a member of multiple workspaces (including those owned by others)
+- A workspace can have multiple user members
+
+This structure allows for flexible collaboration and resource sharing across teams or projects, while also enabling users to manage multiple distinct workspaces for different purposes.
+
+## Best Practices
+
+To make the most of Aikeedo's user and workspace system:
+
+1. **Carefully assign admin roles**: Only give admin access to trusted individuals who need to manage the application.
+
+2. **Educate users on workspace features**: Help your team understand how to effectively use workspaces for collaboration and organization.
+
+
+## Related Resources
+
+For more information on managing your Aikeedo application, check out these related guides:
+
+- [Authentication Settings](/authentication/accounts-settings)
+- [Billing Overview](/billing/overview)
+- [Initial Setup](/get-started/initial-setup)
+
+If you need further assistance, don't hesitate to [contact our support team](mailto:support@aikeedo.com).

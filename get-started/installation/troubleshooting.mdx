@@ -1,0 +1,149 @@
+---
+title: Installation Troubleshooting
+sidebarTitle: Troubleshooting
+description: Resolve common issues encountered during the Aikeedo installation process with our comprehensive troubleshooting guide.
+---
+
+If you're experiencing difficulties during the Aikeedo installation process, this guide will help you identify and resolve common issues. We'll cover various problems you might encounter and provide step-by-step solutions.
+
+## Before You Begin
+
+Before diving into specific issues, ensure that:
+
+1. Your server meets all the [requirements](/get-started/requirements) for Aikeedo.
+2. You have the latest version of Aikeedo files.
+3. You've carefully followed the steps in our [main installation guide](/get-started/installation).
+
+## Common Issues and Solutions
+
+<AccordionGroup>
+  <Accordion title="404 Error at /install or 403 Error at Home Page">
+    If you encounter these errors:
+
+    1. **Verify Document Root**: Ensure your domain's document root points to the `public` folder within the Aikeedo directory.
+       - For main domains in cPanel: This should be the `public_html` directory.
+       - For add-on domains or subdomains: Update the document root in cPanel to point to the `public` folder.
+
+    2. **Check File Extraction**: Confirm that all Aikeedo files are extracted correctly and in the right location.
+
+    3. **File Permissions**: Verify that the web server has appropriate permissions:
+       - Read access to all files
+       - Execute access to directories
+       
+       You can set permissions using these commands:
+       ```bash
+       find /path/to/aikeedo -type d -exec chmod 755 {} \;
+       find /path/to/aikeedo -type f -exec chmod 644 {} \;
+       ```
+
+    4. **Hidden Files**: Ensure the `.htaccess` file is present in the `public` directory.
+
+    If issues persist, double-check your web server configuration and consult your hosting provider's documentation.
+  </Accordion>
+
+  <Accordion title="Database Connection Issues">
+    If you can't connect to the database during installation:
+
+    1. **Verify Credentials**: Double-check your database credentials:
+       - Database name
+       - Username
+       - Password
+       - Host (usually 'localhost' for most setups)
+
+    2. **Database Server**: Ensure the database server is running and accessible from your web server.
+
+    3. **User Permissions**: Verify that the database user has the necessary permissions:
+       - SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER
+
+    4. **Database Existence**: Confirm that the specified database exists and is empty.
+
+    5. **PHP Extensions**: Check that required PHP database extensions (e.g., `mysqli` for MySQL) are installed and enabled.
+
+    If problems continue, try creating a new database and user, or consult your hosting provider's database management tools.
+  </Accordion>
+
+  <Accordion title="500 Internal Server Error">
+    If you encounter a 500 Internal Server Error before or after installation:
+
+    1. **Error Logs**: Check your server's error logs for specific error messages. Common locations:
+       - Apache: `/var/log/apache2/error.log` or `/var/log/httpd/error_log`
+       - Nginx: `/var/log/nginx/error.log`
+
+    2. **PHP Version**: Verify PHP version compatibility and ensure all required PHP extensions are installed.
+
+    3. **Folder Permissions**: Set correct ownership and permissions:
+       ```bash
+       chown -R www-data:www-data /path/to/aikeedo
+       find /path/to/aikeedo -type d -exec chmod 755 {} \;
+       find /path/to/aikeedo -type f -exec chmod 644 {} \;
+       ```
+
+    4. **PHP-FPM**: If using PHP-FPM, try restarting the service:
+       ```bash
+       sudo systemctl restart php8.2-fpm
+       ```
+       (Replace 8.2 with your PHP version)
+
+    5. **.htaccess**: Ensure the `.htaccess` file in the `public` directory has the correct settings.
+
+    6. **PHP Memory Limit**: Check if PHP has enough allocated memory. You can increase it in `php.ini`:
+       ```ini
+       memory_limit = 256M
+       ```
+
+    If the issue persists, enable PHP error reporting temporarily to get more detailed error messages.
+  </Accordion>
+
+  <Accordion title="Installation Wizard Not Loading">
+    If the installation wizard doesn't load or you see a blank page:
+
+    1. **PHP Errors**: Check PHP error logs for any fatal errors or warnings.
+
+    2. **Browser Cache**: Clear your browser cache and cookies, then try again.
+
+    3. **SSL/HTTPS**: If you're using HTTPS, ensure your SSL certificate is valid and properly installed.
+
+    4. **File Permissions**: Verify that the web server can read all necessary files, especially in the `public` directory.
+
+    5. **PHP Extensions**: Confirm all required PHP extensions are installed and enabled.
+
+    6. **Server Resources**: Check if your server has sufficient resources (CPU, RAM) to run the application.
+
+    If problems persist, try accessing the site from a different browser or device to rule out client-side issues.
+  </Accordion>
+</AccordionGroup>
+
+## Additional Troubleshooting Steps
+
+If you're still experiencing issues after trying the solutions above:
+
+1. **Temporary File Cleanup**: Remove any temporary files or caches:
+   ```bash
+   rm -rf /path/to/aikeedo/storage/framework/cache/*
+   rm -rf /path/to/aikeedo/storage/framework/views/*
+   rm -rf /path/to/aikeedo/storage/framework/sessions/*
+   ```
+
+2. **Fresh Installation**: Consider starting with a fresh installation, ensuring you're using the latest Aikeedo files.
+
+3. **Server Configuration**: Review your web server configuration (Apache, Nginx) to ensure it's set up correctly for PHP applications.
+
+4. **PHP Configuration**: Check your `php.ini` file for any settings that might be causing issues (e.g., `max_execution_time`, `upload_max_filesize`).
+
+5. **Hosting Environment**: If you're on shared hosting, contact your hosting provider to ensure there are no restrictions or issues on their end.
+
+## Getting Further Help
+
+If you've tried all the above solutions and are still facing issues:
+
+1. Gather all relevant information:
+   - Exact error messages
+   - Server specifications
+   - PHP version and installed extensions
+   - Steps to reproduce the issue
+
+2. Check our [community forums](https://codecanyon.net/item/aikeedo-ai-powered-content-platform-saas-ready/48578733/comments) for similar issues and solutions.
+
+3. If you can't find a solution, don't hesitate to [contact our support team](mailto:support@aikeedo.com) with the gathered information.
+
+Remember, most installation issues can be resolved by carefully reviewing each step of the installation process and ensuring all requirements are met. With patience and attention to detail, you'll have Aikeedo running smoothly in no time!

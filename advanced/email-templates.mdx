@@ -1,4 +1,63 @@
 ---
 title: Email Templates
-description: 'Under development'
+description: 'Customize and manage email communications for your Aikeedo application'
 ---
+
+Email templates play a crucial role in communicating with your users. Aikeedo provides a set of pre-designed templates that you can easily customize to match your brand and messaging needs. This guide will walk you through the basics of working with email templates in your Aikeedo application.
+
+## Template Location
+
+All email templates are stored in the `/resources/emails` directory of your Aikeedo installation. This centralized location makes it easy to manage and update your email content.
+
+## Available Templates
+
+Aikeedo comes with four essential email templates out of the box:
+
+1. `password-reset.twig`: Sent when a user requests a password reset
+2. `verify-email.twig`: Used for email verification processes
+3. `welcome.twig`: Sent to new users upon registration
+4. `workspace-invitation.twig`: Used when inviting users to join a workspace
+
+These templates cover common scenarios such as account management, onboarding, and collaboration.
+
+## Customizing Templates
+
+You have the flexibility to edit these templates to align with your brand voice and specific needs. Here's how:
+
+1. Navigate to the `/resources/emails` directory
+2. Open the desired template file (e.g., `welcome.twig`) in a text editor
+3. Make your changes, keeping the Twig template syntax intact
+4. Save the file
+
+<Note>
+  After editing any email template, you must clear the app cache for the changes to take effect. This ensures that Aikeedo uses the most up-to-date version of your templates.
+</Note>
+
+## Template Format
+
+Email templates in Aikeedo use the Twig templating engine. If you're new to Twig, you can find more information in the [Twig documentation](https://twig.symfony.com/doc/3.x/).
+
+## Multilingual Support
+
+Currently, email templates do not support multiple languages out of the box. If you need to send emails in different languages, you'll need to create separate templates for each language and implement the logic to select the appropriate template based on the user's language preference.
+
+## Best Practices
+
+When customizing email templates:
+
+- Keep your messaging clear and concise
+- Use a consistent tone that matches your brand voice
+- Test your emails across different email clients to ensure proper rendering
+- Include all necessary information, but avoid overwhelming the recipient
+
+## Related Resources
+
+For more information on setting up and configuring email in your Aikeedo application, check out these related guides:
+
+- [Mailer Configuration](/email/mailer)
+- [SMTP Setup](/email/smtp)
+
+By mastering email templates, you can ensure that your Aikeedo application communicates effectively with users at every stage of their journey.
+
+
+

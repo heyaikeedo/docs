@@ -1,60 +1,100 @@
 ---
-title: GitHub
-description: Integrate GitHub OAuth 2.0 authentication into your Aikeedo application to offer users the convenience of "Login with GitHub." This tutorial provides step-by-step guidance on setting up GitHub OAuth integration, obtaining a GitHub OAuth App ID and App Secret, configuring the integration in Aikeedo, and enabling "Login with GitHub."
+title: GitHub Identity Provider
+sidebarTitle: GitHub
+description: Seamlessly integrate GitHub OAuth 2.0 authentication into your Aikeedo application, allowing users to log in with their GitHub accounts. This guide walks you through the setup process, from creating a GitHub OAuth App to configuring Aikeedo for a smooth "Login with GitHub" experience.
 ---
 
-## Prerequisites
+## Overview
 
-Before you start, ensure you have the following:
+Integrating GitHub as an identity provider offers your users a convenient and secure way to access your Aikeedo application. This feature leverages GitHub's OAuth 2.0 protocol, ensuring a streamlined authentication process while maintaining high security standards.
 
-- A working Aikeedo application.
-- A GitHub account for setting up OAuth integration.
+<Note>
+Before you begin, ensure you have admin access to your Aikeedo application and a GitHub account for setting up the OAuth integration.
+</Note>
 
-## Step 1: Create a GitHub OAuth App
+## Step-by-Step Integration Guide
 
-1. **Visit GitHub Developer Settings:**
+### 1. Create a GitHub OAuth App
 
-   - Go to [GitHub Developer Settings](https://github.com/settings/developers).
+1. Visit the [GitHub Developer Settings](https://github.com/settings/developers).
+2. Click on "OAuth Apps" in the left sidebar, then select "New OAuth App".
+3. Fill out the required information:
+   - Application name: Choose a name for your app
+   - Homepage URL: Enter your Aikeedo application's URL
+   - Authorization callback URL: Enter the callback URL provided by Aikeedo
 
-2. **Create a New OAuth App:**
+<Tip>
+Look for a click-to-copy feature in Aikeedo for easy access to the correct callback URL.
+</Tip>
 
-   - Click on "OAuth Apps" and then select "New OAuth App."
+<Warning>
+The callback URL is automatically generated based on your Site Domain and SSL settings. To configure these, visit the [Website Essentials](/website-basics/essentials) page in your Aikeedo admin panel.
+</Warning>
 
-3. **Configure OAuth App Details:**
+4. Click "Register application" to create your OAuth App.
 
-   - Fill out the required information, including "Application name," "Homepage URL," and "Authorization callback URL." The callback URL should match the one provided by Aikeedo.
+### 2. Obtain OAuth Credentials
 
-4. **Register Application:**
+1. After registering, you'll be taken to your app's settings page.
+2. Here, you'll find your "Client ID".
+3. Click "Generate a new client secret" to create your Client Secret.
+4. Make note of both the Client ID and Client Secret - you'll need these for Aikeedo configuration.
 
-   - Click "Register Application" to create the OAuth App.
+<Warning>
+Keep your Client Secret confidential. Never share it publicly or include it in client-side code.
+</Warning>
 
-5. **OAuth App ID and App Secret:**
+### 3. Configure Aikeedo
 
-   - Note down the "Client ID" and "Client Secret" provided on the OAuth App's settings page. You will need these in the next steps.
+1. Log into your Aikeedo admin panel.
+2. Navigate to **Settings > Identity providers > GitHub**.
+3. Toggle the switch to enable "Login with GitHub".
+4. Enter the "Client ID" and "Client Secret" obtained from your GitHub OAuth App.
+5. The Valid OAuth Redirect URI is automatically populated based on your [Website Essentials](/website-basics/essentials) settings. Ensure this matches the Authorization callback URL you entered in GitHub.
+6. Click "Save changes" to apply your configuration.
 
-## Step 2: Configure Aikeedo
+## Testing Your Integration
 
-1. **Log in as Admin:**
+After completing the setup, it's crucial to test the integration to ensure a smooth user experience:
 
-   - Access the Aikeedo admin panel using your administrator credentials.
+1. Log out of your Aikeedo application.
+2. On the login page, look for the "Login with GitHub" option.
+3. Click the option and proceed through the GitHub authentication flow.
+4. Verify that you can successfully log in and access your Aikeedo account.
 
-2. **Navigate to GitHub OAuth Settings:**
+<Note>
+If you encounter any issues during testing, double-check your configuration settings in both the GitHub Developer settings and Aikeedo admin panel.
+</Note>
 
-   - In the admin panel, go to **Settings > Identity Providers > GitHub**.
+## Video Tutorial
 
-3. **Enable "Login with GitHub":**
+For a visual guide through this process, check out our step-by-step video tutorial:
 
-   - Toggle the switch to enable or disable the "Login with GitHub" feature.
+<iframe
+  className="w-full aspect-video"
+  src="https://www.youtube.com/embed/sWyfIDNdMJQ"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowfullscreen
+></iframe>
 
-4. **Enter GitHub OAuth App ID and App Secret:**
+## Troubleshooting
 
-   - Input the "Client ID" and "Client Secret" obtained from your GitHub OAuth App.
+If you experience any difficulties with the GitHub identity provider integration, consider the following:
 
-5. **Save Changes:**
-   - Save your configuration.
+- Ensure the Authorization callback URL in GitHub Developer settings matches exactly with the one provided by Aikeedo.
+- Verify that you've granted the necessary permissions to your GitHub OAuth App.
+- Check that your app's privacy policy and terms of service URLs are set correctly in the GitHub App settings, if required.
 
-## Testing and Usage
+For further assistance, don't hesitate to reach out to our [support team](/get-started/introduction#support).
 
-With GitHub OAuth integration configured, users will have the option to log in using their GitHub credentials. They can click "Login with GitHub," and the OAuth flow will authenticate and authorize them.
+## Next Steps
 
-By following these steps, you can seamlessly integrate GitHub OAuth 2.0 into your Aikeedo application.
+Now that you've successfully integrated GitHub as an identity provider, consider exploring other authentication options to provide your users with more choices:
+
+- [Google Identity Provider](/authentication/identity-providers/google)
+- [Facebook Identity Provider](/authentication/identity-providers/facebook)
+- [LinkedIn Identity Provider](/authentication/identity-providers/linkedin)
+
+By offering multiple login options, you can enhance user experience and potentially increase user adoption of your Aikeedo application.
