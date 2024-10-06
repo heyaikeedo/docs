@@ -1,0 +1,209 @@
+---
+title: Local Development Guide
+sidebarTitle: Local Development
+description: Set up your local environment to develop and customize Aikeedo efficiently. This comprehensive guide covers everything from prerequisites to running your local server and managing assets.
+---
+
+Welcome to the Aikeedo Local Development Guide! This guide will help you set up a local environment for Aikeedo development, assuming you've already installed Aikeedo on your machine.
+
+<Note>
+If you haven't installed Aikeedo locally yet, please refer to our [Local Installation Guide](/get-started/installation/local) first.
+</Note>
+
+## Prerequisites
+
+Before we dive in, make sure you have the following tools installed on your machine:
+
+- PHP 8.2 or higher
+- MySQL 8.0 or higher
+- Node.js 18.x or higher
+- npm 9.x or higher
+
+<Note>
+These are the minimum required versions. We recommend using the latest LTS (Long Term Support) versions of Node.js and npm for the best performance and security.
+</Note>
+
+To check if you have these installed and their versions, run the following commands in your terminal:
+
+```bash
+php -v
+mysql --version
+node -v
+npm -v
+```
+
+If you need to install or update any of these tools:
+
+- PHP: Visit the [PHP installation guide](https://www.php.net/manual/en/install.php)
+- MySQL: Check the [MySQL installation page](https://dev.mysql.com/doc/refman/8.0/en/installing.html)
+- Node.js & npm: Download from the [Node.js official website](https://nodejs.org/)
+
+<Tip>
+We recommend using a version manager like [nvm](https://github.com/nvm-sh/nvm) for Node.js, which allows you to easily switch between different Node.js versions.
+</Tip>
+
+For more detailed requirements and recommendations, see our [Server Requirements](/get-started/server-requirements) page.
+
+## Step 1: Configure Environment Settings
+
+Let's set up your environment for local development.
+
+1. In the Aikeedo root directory, locate the `.env` file.
+
+2. Open `.env` in your favorite text editor and update the following settings:
+
+   ```ini
+   ENVIRONMENT=dev
+   DEBUG=1
+   HMR=1
+   CACHE=0
+   ```
+3. Save the `.env` file.
+
+<Tip>
+These settings enable development mode, turn on debugging, activate Hot Module Replacement (HMR) for frontend development, and disable caching. This configuration helps you catch errors quickly and see your changes in real-time.
+</Tip>
+
+## Step 2: Set Up Frontend Development
+
+Aikeedo comes pre-built with all necessary frontend assets. However, for local development, you'll need to start the Vite development server:
+
+1. Open a terminal in the Aikeedo root directory.
+
+2. Start the Vite development server:
+   ```bash
+   npm run dev
+   ```
+
+You should see output similar to this:
+
+```
+  VITE v4.x.x  ready in 123 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+  ➜  press h to show help
+```
+
+<Note>
+Keep this terminal window open. It will display compilation errors and automatically update your browser when you make changes to frontend files.
+</Note>
+
+<Tip>
+Since Aikeedo is pre-built, you typically don't need to run `npm install` or `composer install`. The necessary dependencies are already included in the package.
+</Tip>
+
+### Understanding the Asset Structure
+
+Aikeedo organizes its assets into two main directories:
+
+1. `/resources/assets`: For files that need processing (e.g., JavaScript, SCSS).
+   - Example: `/resources/assets/js/app/index.js` is the main JavaScript entry point.
+   - Example: `/resources/assets/css/index.scss` contains the main styles.
+
+2. `/resources/static`: For files that should be copied as-is (e.g., images, fonts).
+   - Example: `/resources/static/images/logo.png` will be copied to `/public/images/logo.png`.
+
+<Tip>
+When adding new assets:
+- Put files that need compilation (JS, CSS) in `/resources/assets`.
+- Place static files (images, fonts) in `/resources/static`.
+
+Vite will handle the rest during development and build processes!
+</Tip>
+
+## Step 3: Start the Backend Server
+
+Now, let's get the PHP server running:
+
+1. Open a new terminal window (keep the npm process running in the previous one).
+
+2. Navigate to the Aikeedo root directory.
+
+3. Start the PHP server:
+   ```bash
+   php -S 0.0.0.0:8000 -t public
+   ```
+
+You should see output like this:
+
+```
+PHP 8.2.x Development Server (http://0.0.0.0:8000) started
+```
+
+## Step 4: Access Your Local Aikeedo Instance
+
+Time to see your work in action!
+
+1. Open your web browser.
+2. Navigate to `http://localhost:8000`.
+
+You should now see the Aikeedo landing page. Congratulations! 🎉
+
+<Tip>
+If you don't see the page or encounter errors:
+- Ensure both the Vite (npm) and PHP servers are running without errors.
+- Check that your `.env` file is correctly configured.
+- Verify that your database settings are correct and the database is accessible.
+</Tip>
+
+## Development Workflow
+
+Now that everything is set up, here's your typical development workflow:
+
+1. Make changes to PHP files for backend modifications.
+   - Example: Edit `/src/Presentation/RequestHandlers/IndexRequestHandler.php` to modify the home page logic.
+
+2. Edit files in `/resources/views` for frontend changes.
+   - Example: Modify `/resources/views/templates/app/dashboard.twig` to update the dashboard layout.
+
+3. Add or modify static assets in `/resources/static`.
+   - Example: Add a new image at `/resources/static/images/new-feature.jpg`.
+
+4. Your browser will automatically reload for frontend changes thanks to HMR.
+
+5. Refresh your browser to see backend changes take effect.
+
+<Note>
+Remember, this setup is for the core Aikeedo development. For theme-specific work, check out our [Theme Development Guide](/development/themes/development-guide).
+</Note>
+
+## Building for Production
+
+When you're ready to build your assets for production:
+
+1. Open a terminal in the Aikeedo root directory.
+2. Run the build command:
+   ```bash
+   npm run build
+   ```
+
+This process will:
+- Create a `public/assets` directory with optimized files.
+- Copy static files from `/resources/static` to `/public`.
+- Update the asset manifest in `/public/.vite`.
+
+<Warning>
+Avoid adding built files to your Git repository. Instead, include the build process in your deployment workflow.
+</Warning>
+
+## Troubleshooting
+
+If you run into issues:
+
+- **PHP errors**: Check the PHP server console and your application's error log file (typically found in the logs directory).
+- **Frontend build errors**: Look at the npm/Vite console output.
+- **Database issues**: Verify your `.env` settings and MySQL connection.
+- **Missing assets**: Ensure files are in the correct `/resources` subdirectory.
+
+For more help, visit our [Troubleshooting Guide](/get-started/installation/troubleshooting) or contact [support@aikeedo.com](mailto:support@aikeedo.com).
+
+## Next Steps
+
+Now that you're all set up, why not explore:
+
+- [Creating Your First Plugin](/development/plugins/development-guide)
+- [Customizing Aikeedo's Theme](/development/themes/development-guide)
+- [Exploring the Aikeedo API](/api-docs/introduction)
+
+Happy coding, and welcome to the world of Aikeedo development! 🚀

@@ -78,6 +78,7 @@
           "pages": [
             "get-started/installation",
             "get-started/installation/cpanel",
+            "get-started/installation/local",
             "get-started/installation/troubleshooting"
           ]
         },
@@ -192,7 +193,28 @@
     {
       "group": "Development",
       "pages": [
-        "development/introduction"
+        "development/introduction",
+        "development/local-development-guide"
+      ]
+    },
+    {
+      "group": "Plugins",
+      "pages": [
+        "development/plugins/overview",
+        "development/plugins/development-guide"
+      ]
+    },
+    {
+      "group": "Themes",
+      "pages": [
+        "development/themes/overview",
+        "development/themes/development-guide"
+      ]
+    },
+    {
+      "group": "Theme Objects",
+      "pages": [
+        "development/themes/objects/user"
       ]
     }
   ],

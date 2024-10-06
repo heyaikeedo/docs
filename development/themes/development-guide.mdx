@@ -1,0 +1,121 @@
+---
+title: How to Build
+description: Learn how to build a theme in Aikeedo.
+---
+
+
+## Prerequisites
+
+This tutorial assumes that you have a basic understanding of PHP and Composer. You should also have a local development environment set up for Aikeedo.
+
+## Step 1: Create a new theme
+
+To create a new theme, you need to create a new directory in the `/public/content/plugins` directory of your Aikeedo platform with the following structure: `yourorganization/theme-name`. We will name our theme `heyaikeedo/orbit`.
+
+```bash
+mkdir -p public/content/plugins/heyaikeedo/orbit
+```
+
+## Step 2: Create the composer.json file for the plugin
+
+<Note>
+Each theme in Aikeedo is a Composer package thus it requires a `composer.json` file. The `composer.json` file contains metadata about the theme, such as its name, description, and dependencies.
+</Note>
+
+Next, create a `composer.json` file in the `public/content/plugins/heyaikeedo/orbit` directory with the following content:
+
+```json
+{
+  "name": "heyaikeedo/orbit",
+  "type": "aikeedo-theme",
+  "require": {
+    "heyaikeedo/composer": "^1.0.0"
+  }
+}
+```
+
+This is minimal `composer.json` file required for an Aikeedo plugin. It specifies the name of the plugin, its type, and the required `heyaikeedo/composer` package. The `heyaikeedo/composer` package is a special Composer package that provides additional functionality for Aikeedo plugins and it must be required by all Aikeedo plugins.
+
+Pay attention to the `type` field in the `composer.json` file. The `type` field must be set to `aikeedo-theme` for Aikeedo themes.
+
+Name of the theme in the `composer.json` file must match the path to the theme directory in the `/public/content/themes` directory. Its format is `yourorganization/theme-name`. Its required to uniquely identify the theme. In our case, the name of the theme is `heyaikeedo/orbit` and the path to the theme directory is `public/content/themes/heyaikeedo/orbit`.
+
+## Step 3: Define version constraints
+
+Only stable packages are allowed to be installed in Aikeedo by default. So we need to define the version constraints for our plugin in the `composer.json` file. We can do this by adding the `version` field to the `composer.json` file.
+
+```json
+{
+  "name": "heyaikeedo/orbit",
+  "type": "aikeedo-theme",
+  "version": "1.0.0",
+  "require": {
+    "heyaikeedo/composer": "^1.0.0"
+  }
+}
+```
+
+Our plugin can now be installed as a Composer package using the `composer require` command. However, it won't do anything yet because we haven't created the plugin class yet. Also, the app will throw an error as it won't be able to find the plugin class.
+
+Add addtional metadata to the `composer.json` file.
+
+```json
+{
+    "name": "heyaikeedo/default",
+    "description": "Default theme for Aikeedo",
+    "version": "1.0.0",
+    "type": "aikeedo-theme",
+    "homepage": "https://aikeedo.com",
+    "time": "2024-03-21",
+    "license": "AIKEEDO",
+    "authors": [
+        {
+            "name": "Aikeedo",
+            "email": "hey@aikeedo.com",
+            "homepage": "https://aikeedo.com",
+            "role": "Owner"
+        }
+    ],
+    "support": {
+        "chat": "https://aikeedo.com/",
+        "docs": "https://docs.aikeedo.com/",
+        "email": "support@aikeedo.com",
+        "forum": "https://aikeedo.com/",
+        "issues": "https://aikeedo.com/",
+        "rss": "https://aikeedo.com/",
+        "source": "https://github.com/heyaikeedo",
+        "wiki": "https://docs.aikeedo.com/"
+    },
+    "require": {
+        "heyaikeedo/composer": "^1.0.0"
+    },
+    "extra": {
+        "title": "Default",
+        "description": "Default theme for Aikeedo",
+        "logo": "https://aikeedo.com/",
+        "icon": "https://aikeedo.com/",
+        "status": "active"
+    },
+    "autoload": {}
+}
+```
+
+## Step 4
+
+Create the `templates/index.twig` file in the `public/content/themes/heyaikeedo/orbit` directory with the following content:
+
+App uses TWIG templating engine to render the pages. 
+
+Templates uses the `@theme` twig namespace to load the theme assets.
+
+## Step 4: Create the theme class
+
+Access the Themes page in the admin UI and locate your new theme. Activate it.
+
+Now you can start developing your theme. Its up to you 
+
+Frontend tooling is totally up to you. We recommend using Vite for the frontend tooling.
+
+Several object available to use in themes. Refer to objects section to get details. 
+
+Its highly recommended to use have a look at the [Default theme](https://github.com/heyaikeedo/themes-default/) to get familiar with the theme development.
