@@ -1,0 +1,260 @@
+---
+title: Local Installation Guide
+sidebarTitle: Local
+description: Learn how to install Aikeedo on your local machine for development, testing, or personal use. This guide covers various setup options, including using PHP's built-in server and popular local development environments.
+---
+
+This guide will walk you through the process of installing Aikeedo on your local machine. This is ideal for development, testing, or personal use.
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+1. Downloaded the Aikeedo package
+2. Familiarity with command-line operations
+3. A local development environment (we'll cover different options)
+
+## Option 1: Using PHP's Built-in Server
+
+This option is suitable if you already have PHP and MySQL installed and accessible via the command line.
+
+<Steps>
+  <Step title="Prepare Your Environment">
+    Ensure you have:
+    - PHP 8.2 or higher installed and accessible via command line
+    - MySQL 8.0 or higher installed and running
+  </Step>
+
+  <Step title="Extract Aikeedo Files">
+    1. Locate the `aikeedo-server-files.zip` in your Aikeedo package.
+    2. Extract the contents to a directory of your choice, e.g., `C:\aikeedo` or `/home/user/aikeedo`.
+  </Step>
+
+  <Step title="Set Up the Database">
+    1. Open your MySQL client or command-line tool:
+       - For command-line users, open your terminal and type `mysql -u root -p` to access MySQL.
+       - For GUI users, open tools like phpMyAdmin, MySQL Workbench, or HeidiSQL.
+
+    2. Create a new database for Aikeedo:
+       - In the MySQL command line or GUI query window, execute the following SQL command:
+       ```sql
+       CREATE DATABASE aikeedo;
+       ```
+       - This creates a new, empty database named 'aikeedo' that will store all your Aikeedo data.
+
+    3. Create a new user (recommended for security):
+       ```sql
+       CREATE USER 'aikeedo_user'@'localhost' IDENTIFIED BY 'your_secure_password';
+       GRANT ALL PRIVILEGES ON aikeedo.* TO 'aikeedo_user'@'localhost';
+       FLUSH PRIVILEGES;
+       ```
+       Replace 'your_secure_password' with a strong, unique password.
+
+    4. Note down the following information for the installation wizard:
+       - Database name: aikeedo
+       - Username: aikeedo_user (or 'root' if you skipped step 3)
+       - Password: The password you set (or your root password if using root)
+       - Host: localhost (in most cases)
+
+    <Note>
+      If you're not comfortable with database management, consider using a database administration tool like phpMyAdmin, which often comes pre-installed with local development environments like XAMPP or MAMP.
+    </Note>
+  </Step>
+
+  <Step title="Start the PHP Server">
+    To start the PHP development server:
+
+    1. Open your terminal or command prompt.
+    2. Navigate to the root directory of your Aikeedo installation. This is the directory where you extracted the Aikeedo files, e.g., `C:\aikeedo` or `/home/user/aikeedo`.
+    3. Once in the root directory, run the following command:
+
+    ```bash
+    php -S localhost:8000 -t public
+    ```
+
+    This command does the following:
+    - `php -S` starts PHP's built-in development server
+    - `localhost:8000` sets the server to listen on localhost at port 8000
+    - `-t public` sets the document root to the `public` directory within your Aikeedo installation
+
+    After running this command, you should see output indicating that the server is running. Keep this terminal window open to keep the server active.
+  </Step>
+
+  <Step title="Access Aikeedo">
+    Open your web browser and navigate to `http://localhost:8000`. You should see the Aikeedo installation wizard.
+  </Step>
+
+  <Step title="Follow On-Screen Installation Wizard">
+    1. Provide the database credentials you noted earlier.
+    2. Enter your Aikeedo Purchase Code.
+    3. Set up your admin account details.
+    4. Follow any additional steps as prompted by the wizard.
+  </Step>
+</Steps>
+
+## Option 2: Using Local Development Environments
+
+This option is suitable if you prefer using pre-configured local development environments like XAMPP, MAMP, or Laragon.
+
+<Tabs>
+  <Tab title="XAMPP">
+    <Steps>
+      <Step title="Install XAMPP">
+        Download and install XAMPP from the [official website](https://www.apachefriends.org/).
+      </Step>
+
+      <Step title="Configure Virtual Host">
+        1. Open `C:\xampp\apache\conf\extra\httpd-vhosts.conf` (Windows) or `/Applications/XAMPP/etc/extra/httpd-vhosts.conf` (macOS).
+        2. Add a new virtual host:
+        ```apache
+        <VirtualHost *:80>
+            DocumentRoot "C:/xampp/htdocs/aikeedo/public"
+            ServerName aikeedo.test
+            <Directory "C:/xampp/htdocs/aikeedo/public">
+                AllowOverride All
+                Require all granted
+            </Directory>
+        </VirtualHost>
+        ```
+      </Step>
+
+      <Step title="Update Hosts File">
+        1. Open your hosts file (`C:\Windows\System32\drivers\etc\hosts` on Windows or `/etc/hosts` on macOS).
+        2. Add the following line:
+        ```
+        127.0.0.1 aikeedo.test
+        ```
+      </Step>
+
+      <Step title="Extract Aikeedo Files">
+        Extract the contents of `aikeedo-server-files.zip` to `C:\xampp\htdocs\aikeedo` (Windows) or `/Applications/XAMPP/htdocs/aikeedo` (macOS).
+      </Step>
+
+      <Step title="Set Up Database">
+        1. Open phpMyAdmin (usually at `http://localhost/phpmyadmin`).
+        2. Create a new database named `aikeedo`.
+      </Step>
+
+      <Step title="Access Aikeedo">
+        Restart Apache in XAMPP, then navigate to `http://aikeedo.test` in your browser. You should see the installation wizard.
+      </Step>
+
+      <Step title="Complete Installation">
+        Follow the on-screen installation wizard to complete the setup.
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="MAMP">
+    <Steps>
+      <Step title="Install MAMP">
+        Download and install MAMP from the [official website](https://www.mamp.info/).
+      </Step>
+
+      <Step title="Configure Virtual Host">
+        1. Open MAMP's Apache configuration file.
+        2. Add a new virtual host:
+        ```apache
+        <VirtualHost *:80>
+            DocumentRoot "/Applications/MAMP/htdocs/aikeedo/public"
+            ServerName aikeedo.test
+            <Directory "/Applications/MAMP/htdocs/aikeedo/public">
+                AllowOverride All
+                Require all granted
+            </Directory>
+        </VirtualHost>
+        ```
+      </Step>
+
+      <Step title="Update Hosts File">
+        1. Open `/etc/hosts`.
+        2. Add the following line:
+        ```
+        127.0.0.1 aikeedo.test
+        ```
+      </Step>
+
+      <Step title="Extract Aikeedo Files">
+        Extract the contents of `aikeedo-server-files.zip` to `/Applications/MAMP/htdocs/aikeedo`.
+      </Step>
+
+      <Step title="Set Up Database">
+        1. Open phpMyAdmin (usually at `http://localhost:8888/phpMyAdmin`).
+        2. Create a new database named `aikeedo`.
+      </Step>
+
+      <Step title="Access Aikeedo">
+        Restart Apache in MAMP, then navigate to `http://aikeedo.test` in your browser. You should see the installation wizard.
+      </Step>
+
+      <Step title="Complete Installation">
+        Follow the on-screen installation wizard to complete the setup.
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="Laragon">
+    <Steps>
+      <Step title="Install Laragon">
+        Download and install Laragon from the [official website](https://laragon.org/).
+      </Step>
+
+      <Step title="Extract Aikeedo Files">
+        Extract the contents of `aikeedo-server-files.zip` to `C:\laragon\www\aikeedo`.
+      </Step>
+
+      <Step title="Set Up Virtual Host">
+        1. Right-click the Laragon tray icon and select "Apache > sites-enabled > Add".
+        2. Enter the following configuration:
+           ```apache
+           <VirtualHost *:80>
+               DocumentRoot "C:/laragon/www/aikeedo/public"
+               ServerName aikeedo.test
+               <Directory "C:/laragon/www/aikeedo/public">
+                   AllowOverride All
+                   Require all granted
+               </Directory>
+           </VirtualHost>
+           ```
+        3. Save the file and restart Apache in Laragon.
+      </Step>
+
+      <Step title="Set Up Database">
+        1. Open HeidiSQL (included with Laragon).
+        2. Create a new database named `aikeedo`.
+      </Step>
+
+      <Step title="Access Aikeedo">
+        Navigate to `http://aikeedo.test` in your browser. You should see the installation wizard.
+      </Step>
+
+      <Step title="Complete Installation">
+        Follow the on-screen installation wizard to complete the setup.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+<Note>
+  Remember, Aikeedo must be installed in the domain root. Subpaths like `http://localhost/subdirectory` are not supported.
+</Note>
+
+## Troubleshooting
+
+If you encounter any issues during local installation:
+
+1. Ensure your local environment meets all [server requirements](/get-started/server-requirements).
+2. Check that all file permissions are set correctly.
+3. Verify that your virtual host and hosts file configurations are correct.
+4. For more detailed troubleshooting steps, refer to our [Troubleshooting Guide](/get-started/installation/troubleshooting).
+
+If you're still having trouble, don't hesitate to [reach out to our support team](mailto:support@aikeedo.com).
+
+## Next Steps
+
+After successfully installing Aikeedo locally:
+
+1. Explore the [Initial Setup Guide](/get-started/initial-setup) to configure your local instance.
+2. Check out our [Local Development Guide](/development/local-development-guide) for tips on developing with Aikeedo.
+
+Congratulations on setting up Aikeedo locally! You're now ready to start developing or testing with your local instance.
