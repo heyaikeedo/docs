@@ -40,12 +40,18 @@
   },
   "tabs": [
     {
-      "name": "API",
-      "url": "api-docs"
-    },
-    {
       "name": "Development",
       "url": "development"
+    },
+    {
+      "name": "User API",
+      "url": "api-reference",
+      "openapi": "/api-reference/openapi.json"
+    },
+    {
+      "name": "Admin API",
+      "url": "api-reference/admin",
+      "openapi": "/api-reference/admin/openapi.json"
     }
   ],
   "anchors": [
@@ -185,12 +191,6 @@
       ]
     },
     {
-      "group": "API Documentation",
-      "pages": [
-        "api-docs/introduction"
-      ]
-    },
-    {
       "group": "Development",
       "pages": [
         "development/introduction",
@@ -221,7 +221,6 @@
         "development/themes/objects/theme",
         "development/themes/objects/theme-locale",
         "development/themes/objects/user",
-        "development/themes/objects/view_namespace",
         "development/themes/objects/workspace",
         "development/themes/objects/workspace-invitation"
       ]
