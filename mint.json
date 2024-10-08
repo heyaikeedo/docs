@@ -42,16 +42,6 @@
     {
       "name": "Development",
       "url": "development"
-    },
-    {
-      "name": "User API",
-      "url": "api-reference",
-      "openapi": "/api-reference/openapi.json"
-    },
-    {
-      "name": "Admin API",
-      "url": "api-reference/admin",
-      "openapi": "/api-reference/admin/openapi.json"
     }
   ],
   "anchors": [
@@ -194,7 +184,8 @@
       "group": "Development",
       "pages": [
         "development/introduction",
-        "development/local-development-guide"
+        "development/local-development-guide",
+        "development/api/overview"
       ]
     },
     {
