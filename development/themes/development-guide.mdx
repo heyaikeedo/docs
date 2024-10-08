@@ -1,69 +1,58 @@
 ---
 title: Building Themes for Aikeedo
 sidebarTitle: Building Themes
-description: Learn how to build a theme in Aikeedo.
+description: Learn how to create and customize themes for your Aikeedo platform.
 ---
 
+# Building Themes for Aikeedo
 
-## Prerequisites
+Creating a custom theme for Aikeedo allows you to personalize the look and feel of your platform. This guide will walk you through the process of building a theme, from setting up the directory structure to activating your new theme.
 
-This tutorial assumes that you have a basic understanding of PHP and Composer. You should also have a local development environment set up for Aikeedo.
+## Getting Started
 
-## Step 1: Create a new theme
+### 1. Create the Theme Directory
 
-To create a new theme, you need to create a new directory in the `/public/content/plugins` directory of your Aikeedo platform with the following structure: `yourorganization/theme-name`. We will name our theme `heyaikeedo/orbit`.
+First, create a new directory for your theme in the `/public/content/plugins` directory of your Aikeedo platform. Use the following structure: `yourorganization/theme-name`.
+
+For this guide, we'll create a theme called "Orbit":
 
 ```bash
 mkdir -p public/content/plugins/heyaikeedo/orbit
 ```
 
-## Step 2: Create the composer.json file for the plugin
+### 2. Set Up the Composer Package
+
+Aikeedo themes are Composer packages, which require a `composer.json` file for metadata and dependencies.
+
+Create a `composer.json` file in your theme directory. Here's a minimal version that's sufficient for a functional theme:
+
+```json
+{
+    "name": "heyaikeedo/orbit",
+    "type": "aikeedo-theme",
+    "version": "1.0.0",
+    "require": {
+        "heyaikeedo/composer": "^1.0.0"
+    },
+    "extra": {
+        "title": "Orbit",
+        "status": "active"
+    }
+}
+````
+
+This minimal version includes the essential fields needed for your theme to function properly.
 
 <Note>
-Each theme in Aikeedo is a Composer package thus it requires a `composer.json` file. The `composer.json` file contains metadata about the theme, such as its name, description, and dependencies.
+  The `type` attribute must be set to `aikeedo-theme`. This is crucial for Aikeedo to recognize and properly handle your package as a theme.
 </Note>
 
-Next, create a `composer.json` file in the `public/content/plugins/heyaikeedo/orbit` directory with the following content:
+For a more comprehensive `composer.json` file, you can use the following extended version:
 
 ```json
 {
-  "name": "heyaikeedo/orbit",
-  "type": "aikeedo-theme",
-  "require": {
-    "heyaikeedo/composer": "^1.0.0"
-  }
-}
-```
-
-This is minimal `composer.json` file required for an Aikeedo plugin. It specifies the name of the plugin, its type, and the required `heyaikeedo/composer` package. The `heyaikeedo/composer` package is a special Composer package that provides additional functionality for Aikeedo plugins and it must be required by all Aikeedo plugins.
-
-Pay attention to the `type` field in the `composer.json` file. The `type` field must be set to `aikeedo-theme` for Aikeedo themes.
-
-Name of the theme in the `composer.json` file must match the path to the theme directory in the `/public/content/themes` directory. Its format is `yourorganization/theme-name`. Its required to uniquely identify the theme. In our case, the name of the theme is `heyaikeedo/orbit` and the path to the theme directory is `public/content/themes/heyaikeedo/orbit`.
-
-## Step 3: Define version constraints
-
-Only stable packages are allowed to be installed in Aikeedo by default. So we need to define the version constraints for our plugin in the `composer.json` file. We can do this by adding the `version` field to the `composer.json` file.
-
-```json
-{
-  "name": "heyaikeedo/orbit",
-  "type": "aikeedo-theme",
-  "version": "1.0.0",
-  "require": {
-    "heyaikeedo/composer": "^1.0.0"
-  }
-}
-```
-
-Our plugin can now be installed as a Composer package using the `composer require` command. However, it won't do anything yet because we haven't created the plugin class yet. Also, the app will throw an error as it won't be able to find the plugin class.
-
-Add addtional metadata to the `composer.json` file.
-
-```json
-{
-    "name": "heyaikeedo/default",
-    "description": "Default theme for Aikeedo",
+    "name": "heyaikeedo/orbit",
+    "description": "Orbit theme for Aikeedo",
     "version": "1.0.0",
     "type": "aikeedo-theme",
     "homepage": "https://aikeedo.com",
@@ -91,32 +80,71 @@ Add addtional metadata to the `composer.json` file.
         "heyaikeedo/composer": "^1.0.0"
     },
     "extra": {
-        "title": "Default",
-        "description": "Default theme for Aikeedo",
+        "title": "Orbit",
+        "description": "Orbit theme for Aikeedo",
         "logo": "https://aikeedo.com/",
         "icon": "https://aikeedo.com/",
         "status": "active"
     },
     "autoload": {}
 }
+````
+
+This extended version provides more detailed information about your theme, including author details, support links, and additional metadata.
+
+<Note>
+  The `name` field in `composer.json` must match the path to your theme directory (e.g., `heyaikeedo/orbit`). This uniquely identifies your theme.
+</Note>
+
+<Tip>
+  Start with the minimal version and expand your `composer.json` file as your theme grows and requires more detailed information. Remember to always keep the `type` set to `aikeedo-theme`.
+</Tip>
+
+### 3. Create the Main Template
+
+Aikeedo uses the Twig templating engine to render pages. Create a `templates/index.twig` file in your theme directory with a basic HTML structure:
+
+```twig
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orbit</title>
+</head>
+<body>
+  <h1>Orbit Theme</h1>
+  <p>This is the Orbit theme for Aikeedo.</p>
+</body>
+</html>
 ```
 
-## Step 4
+<Tip>
+  Use the `@theme` Twig namespace to load theme assets in your templates.
+</Tip>
 
-Create the `templates/index.twig` file in the `public/content/themes/heyaikeedo/orbit` directory with the following content:
+## Activating Your Theme
 
-App uses TWIG templating engine to render the pages. 
+1. Access the Themes page in the Aikeedo admin UI.
+2. Locate your new theme (Orbit).
+3. Click the "Activate" button to enable your theme.
 
-Templates uses the `@theme` twig namespace to load the theme assets.
+## Further Development
 
-## Step 4: Create the theme class
+Now that you have the basic structure in place, you can start customizing your theme. Here are some tips for further development:
 
-Access the Themes page in the admin UI and locate your new theme. Activate it.
+- **Frontend Tooling**: Choose a frontend build tool that suits your workflow. We recommend using Vite for its speed and ease of use.
+- **Theme Objects**: Aikeedo provides several objects that you can use in your themes. Refer to the [Theme Objects](/development/themes/objects/address) section in the documentation for details on available objects and their properties.
+- **Default Theme**: For inspiration and best practices, take a look at the [Default Aikeedo theme](https://github.com/heyaikeedo/themes-default/).
 
-Now you can start developing your theme. Its up to you 
+## Best Practices
 
-Frontend tooling is totally up to you. We recommend using Vite for the frontend tooling.
+1. **Responsive Design**: Ensure your theme looks good on all device sizes.
+2. **Accessibility**: Follow web accessibility guidelines to make your theme usable for everyone.
+3. **Performance**: Optimize your assets and use caching techniques to keep your theme fast.
 
-Several object available to use in themes. Refer to objects section to get details. 
+## Conclusion
 
-Its highly recommended to use have a look at the [Default theme](https://github.com/heyaikeedo/themes-default/) to get familiar with the theme development.
+Building a theme for Aikeedo is a straightforward process that allows you to create a unique look for your platform. By following this guide and exploring the Aikeedo documentation, you'll be well on your way to creating professional, customized themes.
+
+For more advanced topics and detailed information on theme development, check out our other documentation pages or reach out to our support team.
