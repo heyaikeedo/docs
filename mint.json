@@ -198,23 +198,32 @@
       ]
     },
     {
-      "group": "Plugins",
+      "group": "Plugins & Themes",
       "pages": [
         "development/plugins/overview",
-        "development/plugins/development-guide"
-      ]
-    },
-    {
-      "group": "Themes",
-      "pages": [
-        "development/themes/overview",
+        "development/plugins/development-guide",
         "development/themes/development-guide"
       ]
     },
     {
       "group": "Theme Objects",
       "pages": [
-        "development/themes/objects/user"
+        "development/themes/objects/address",
+        "development/themes/objects/affiliate",
+        "development/themes/objects/currency",
+        "development/themes/objects/environment",
+        "development/themes/objects/locale",
+        "development/themes/objects/locales",
+        "development/themes/objects/option",
+        "development/themes/objects/plan",
+        "development/themes/objects/plan-snapshot",
+        "development/themes/objects/subscription",
+        "development/themes/objects/theme",
+        "development/themes/objects/theme-locale",
+        "development/themes/objects/user",
+        "development/themes/objects/view_namespace",
+        "development/themes/objects/workspace",
+        "development/themes/objects/workspace-invitation"
       ]
     }
   ],

@@ -1,0 +1,50 @@
+---
+title: Workspace Invitation Object
+sidebarTitle: Workspace Invitation
+description: Explore the properties available in the Workspace Invitation object for Aikeedo themes.
+---
+
+The `workspace_invitation` object represents an invitation to join a workspace in Aikeedo themes. This object contains essential information about the invitation, including its unique identifier, the invited email address, and timestamps.
+
+## Availability
+
+The `workspace_invitation` object is available in contexts related to workspace management, such as when listing pending invitations or processing invitation responses.
+
+<Note>
+  Always check for the existence of the `workspace_invitation` object before attempting to access its properties to ensure your theme functions correctly in all invitation-related scenarios.
+</Note>
+
+## Properties
+
+The `workspace_invitation` object contains the following properties:
+
+<ResponseField name="id" type="string" required>
+  A unique identifier for the workspace invitation, always in UUID version 4 format (e.g., "018d5355-c857-7044-8284-83e7950685b4").
+</ResponseField>
+
+<ResponseField name="email" type="string" required>
+  The email address of the user invited to join the workspace.
+</ResponseField>
+
+<ResponseField name="created_at" type="number" required>
+  Unix timestamp of when the workspace invitation was created.
+</ResponseField>
+
+<ResponseField name="updated_at" type="number" required>
+  Unix timestamp of the last update to the workspace invitation. This may be the same as `created_at` if the invitation hasn't been modified since creation.
+</ResponseField>
+
+## Example
+
+Here's an example of a `workspace_invitation` object:
+
+```json
+{
+"id": "018d5355-c857-7044-8284-83e7950685b4",
+"email": "hey@aikeedo.com",
+"created_at": 1716412800,
+"updated_at": 1716412800
+}
+```
+
+This structure provides easy access to workspace invitation information within your Aikeedo theme, allowing you to manage and display invitation data consistently across your application.

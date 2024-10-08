@@ -1,0 +1,72 @@
+---
+title: Plan Object
+sidebarTitle: Plan
+description: Explore the properties and methods available in the Plan object for Aikeedo themes.
+---
+
+The `Plan` object represents a subscription plan in Aikeedo themes, providing access to essential plan information. This object is part of the `plans` array, which is globally accessible, allowing you to easily incorporate plan-specific data and functionality into your theme.
+
+## Availability
+
+The `Plan` objects are available globally as part of the `plans` array. You can iterate through this array to access individual plan objects and their properties.
+
+<Note>
+  It's a good practice to check if the `plans` array exists and has elements before attempting to access individual plan objects.
+</Note>
+
+## Properties
+
+Each `Plan` object contains the following properties:
+
+<ResponseField name="id" type="string" required>
+  A unique identifier for the plan, always in UUID version 4 format (e.g., "018e73c8-c4d7-7124-b9ee-83fcf3e1c74b").
+</ResponseField>
+
+<ResponseField name="title" type="string" required>
+  The name or title of the plan (e.g., "Free").
+</ResponseField>
+
+<ResponseField name="description" type="string" required>
+  A brief description of the plan (e.g., "Launch Your Journey").
+</ResponseField>
+
+<ResponseField name="icon" type="string|null" required>
+  URL to the plan's icon image. This field can be null if no icon is set.
+</ResponseField>
+
+<ResponseField name="price" type="number" required>
+  The price of the plan. For free plans, this value will be 0.
+</ResponseField>
+
+<ResponseField name="billing_cycle" type="string" required>
+  The billing cycle for the plan (e.g., "monthly").
+</ResponseField>
+
+<ResponseField name="credit_count" type="number" required>
+  The number of credits included in the plan.
+</ResponseField>
+
+<ResponseField name="created_at" type="number" required>
+  Unix timestamp of when the plan was created.
+</ResponseField>
+
+<ResponseField name="updated_at" type="number" required>
+  Unix timestamp of the last update to the plan.
+</ResponseField>
+
+<ResponseField name="is_featured" type="boolean" required>
+  Indicates whether the plan is featured or not.
+</ResponseField>
+
+<ResponseField name="superiority" type="number" required>
+  A numeric value representing the plan's superiority or ranking compared to other plans.
+</ResponseField>
+
+<ResponseField name="config" type="PlanConfig" required>
+  The configuration object for the plan. See [PlanConfig Object](/development/themes/objects/plan-config) for more details on the properties of this object.
+</ResponseField>
+
+<ResponseField name="feature_list" type="array" required>
+  An array of features included in the plan. This array may be empty if no specific features are defined.
+</ResponseField>
+

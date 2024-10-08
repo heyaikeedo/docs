@@ -1,0 +1,57 @@
+---
+title: Address Object
+sidebarTitle: Address
+description: Explore the properties available in the Address object for Aikeedo themes.
+---
+
+The `address` object is providing access to essential address information for workspaces.
+
+## Availability
+
+The `address` object is available as a property of the `workspace` object. It can be accessed through `workspace.address`. Note that the `address` property may be null if not set for the workspace.
+
+## Properties
+
+The `address` object contains the following properties:
+
+<ResponseField name="country" type="string|null" required>
+  The country code of the address (e.g., "US" for United States).
+</ResponseField>
+
+<ResponseField name="state" type="string|null" required>
+  The state or province code (e.g., "DE" for Delaware).
+</ResponseField>
+
+<ResponseField name="city" type="string|null" required>
+  The name of the city (e.g., "San Francisco").
+</ResponseField>
+
+<ResponseField name="line1" type="string|null" required>
+  The first line of the street address.
+</ResponseField>
+
+<ResponseField name="line2" type="string|null">
+  The second line of the street address (optional).
+</ResponseField>
+
+<ResponseField name="zip" type="string|null" required>
+  The postal or ZIP code.
+</ResponseField>
+
+<ResponseField name="phone_number" type="string|null" required>
+  The phone number associated with the address.
+</ResponseField>
+
+<ResponseExample>
+```json Example
+{
+  "country": "US",
+  "state": "DE",
+  "city": "San Francisco",
+  "line1": "123 Main St",
+  "line2": "Apt 4B",
+  "zip": "12345",
+  "phone_number": "1234567890"
+}
+```
+</ResponseExample>

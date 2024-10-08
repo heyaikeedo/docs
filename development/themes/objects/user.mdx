@@ -1,0 +1,85 @@
+---
+title: User Object
+sidebarTitle: User
+description: Explore the properties and methods available in the User object for Aikeedo themes.
+---
+
+The `user` object is a fundamental component in Aikeedo themes, providing access to essential user information when a user is logged into their account. This object is globally accessible, allowing you to easily incorporate user-specific data and functionality into your theme.
+
+## Availability
+
+The `user` object is available globally when a user is logged in. If no user is logged in, the object will be undefined. Always check for the existence of the `user` object before attempting to access its properties.
+
+<Note>
+  It's a good practice to use conditional checks when working with the `user` object to ensure your theme functions correctly for both logged-in and guest users.
+</Note>
+
+## Properties
+
+The `user` object contains the following properties:
+
+<ResponseField name="id" type="string" required>
+  A unique identifier for the user, always in UUID version 4 format (e.g., "01895d81-4963-71b4-b591-8404987d6954").
+</ResponseField>
+
+<ResponseField name="role" type="enum" required>
+  The user's role in the system. Possible values are:
+  - `admin`: Administrator role with full system access
+  - `user`: Standard user role with limited permissions
+</ResponseField>
+
+<ResponseField name="email" type="string" required>
+  The user's email address.
+</ResponseField>
+
+<ResponseField name="first_name" type="string" required>
+  The user's first name.
+</ResponseField>
+
+<ResponseField name="last_name" type="string" required>
+  The user's last name.
+</ResponseField>
+
+<ResponseField name="language" type="string" required>
+  The user's preferred language code (e.g., "en-US").
+</ResponseField>
+
+<ResponseField name="has_password" type="boolean" required>
+  Indicates whether the user has set a password. Users who signed up using 3rd party services like Google will not have a password.
+</ResponseField>
+
+<ResponseField name="avatar" type="string" required>
+  URL to the user's avatar image.
+</ResponseField>
+
+<ResponseField name="created_at" type="number" required>
+  Unix timestamp of when the user account was created.
+</ResponseField>
+
+<ResponseField name="updated_at" type="number|null" required>
+  Unix timestamp of the last update to the user account. While this field always exists, its value may be null if the user account has never been updated.
+</ResponseField>
+
+<ResponseField name="is_email_verified" type="boolean" required>
+  Indicates whether the user's email has been verified.
+</ResponseField>
+
+<ResponseField name="api_key" type="string" required>
+  The user's API key (partially masked for security).
+</ResponseField>
+
+<ResponseField name="affiliate" type="Affilaite" required>
+  The user's affiliate object. See [Affiliate Object](/development/themes/objects/affiliate) for more details on the properties of this object.
+</ResponseField>
+
+<ResponseField name="workspace" type="Workspace" required>
+  The user's active workspace object. See [Workspace Object](/development/themes/objects/workspace) for more details on the properties of this object.
+</ResponseField>
+
+<ResponseField name="workspaces" type="array<Workspace>" required>
+  An array of workspace objects that the user is a member of, excluding workspaces owned by the user. Each object in this array represents a workspace where the user has membership but not ownership. See [Workspace Object](/development/themes/objects/workspace) for more details on the properties of these objects.
+</ResponseField>
+
+<ResponseField name="owned_workspaces" type="array<Workspace>" required>
+  An array of workspace objects that the user owns. See [Workspace Object](/development/themes/objects/workspace) for more details on the properties of these objects.
+</ResponseField>

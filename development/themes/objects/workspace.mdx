@@ -1,0 +1,60 @@
+---
+title: Workspace Object
+sidebarTitle: Workspace
+description: Explore the properties and functionality of the Workspace object in Aikeedo themes.
+---
+
+The `workspace` object is a fundamental component in Aikeedo themes, representing a user's working environment and associated settings. This object contains crucial information about the workspace, including subscription details, credit usage, and various configuration options.
+
+## Availability
+
+The `workspace` object is available globally when a user is logged into the app. Additionally, it is always accessible as a property of the `user` object. Each user has at least one workspace, so you can safely access `workspace` properties or `user.workspace` properties without additional checks for their existence.
+
+## Properties
+
+The `workspace` object contains the following properties:
+
+<ResponseField name="id" type="string" required>
+  A unique identifier for the workspace, always in UUID version 4 format (e.g., "018d5355-c857-7044-8284-83e7950685b4").
+</ResponseField>
+
+<ResponseField name="name" type="string" required>
+  The name of the workspace (e.g., "Personal").
+</ResponseField>
+
+<ResponseField name="address" type="Address|null" required>
+  The workspace's address information. This may be null if not set. See [Address Object](/development/themes/objects/address) for more details on the properties of this object when it's not null.
+</ResponseField>
+
+<ResponseField name="is_eligible_for_trial" type="boolean" required>
+  Indicates whether the workspace is eligible for a trial period.
+</ResponseField>
+
+<ResponseField name="is_eligible_for_free_plan" type="boolean" required>
+  Indicates whether the workspace is eligible for a free plan.
+</ResponseField>
+
+<ResponseField name="created_at" type="number" required>
+  Unix timestamp of when the workspace was created.
+</ResponseField>
+
+<ResponseField name="updated_at" type="number|null" required>
+  Unix timestamp of the last update to the workspace. While this field always exists, its value may be null if the workspace has never been updated.
+</ResponseField>
+
+<ResponseField name="invitations" type="array<WorkspaceInvitation>" required>
+  An array of pending invitations to join the workspace. This array may be empty. See [Workspace Invitation Object](/development/themes/objects/workspace-invitation) for more details.
+</ResponseField>
+
+<ResponseField name="credit_count" type="number" required>
+  The current number of credits available in the workspace.
+</ResponseField>
+
+<ResponseField name="total_credit_count" type="number" required>
+  The total number of credits allocated to the workspace, including used and available credits.
+</ResponseField>
+
+<ResponseField name="subscription" type="Subscription|null" required>
+  An object containing detailed information about the workspace's subscription. See [Subscription Object](/development/themes/objects/subscription) for more details.
+</ResponseField>
+
