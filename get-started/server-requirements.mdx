@@ -51,6 +51,45 @@ To run Aikeedo smoothly, make sure your PHP installation includes these extensio
   Most of these extensions are typically included in standard PHP installations. If you're unsure, consult your hosting provider or server administrator.
 </Tip>
 
+## Minimum Server Requirements
+
+To ensure optimal performance of Aikeedo, we recommend the following minimum server specifications:
+
+<CardGroup cols={2}>
+  <Card title="Memory" icon="memory">
+    2 GB RAM or more
+  </Card>
+  <Card title="CPU" icon="microchip">
+    2 vCPUs or more
+  </Card>
+</CardGroup>
+
+<Note>
+  For our demo environment, we use a VPS with 4 GB Memory and 2 Intel vCPUs on DigitalOcean. This setup provides excellent performance for most use cases.
+</Note>
+
+### Hosting Recommendations
+
+While Aikeedo can run on various hosting environments, we strongly recommend using a Virtual Private Server (VPS) for better control and performance, especially for commercial use cases.
+
+<Tip>
+  Start with a smaller VPS configuration and resize as needed. This approach allows you to scale your resources based on your actual usage and growth.
+</Tip>
+
+Popular VPS providers that work well with Aikeedo include:
+
+- DigitalOcean (Use our [referral link](https://m.do.co/c/084136521a6a) for $200 in credits, valid for 60 days)
+- Vultr (Use our [referral link](https://www.vultr.com/?ref=9668473-9J) for $300 in credits, valid for 30 days)
+- Amazon Web Services ([AWS](https://aws.amazon.com/))
+
+<Note>
+  While most shared hosting environments are supported, they may have limitations that could affect Aikeedo's performance. For the best experience, especially for commercial use, we strongly advise using a VPS.
+</Note>
+
+<Warning>
+  Special note about Cloudways: The text streaming function doesn't work on Cloudways servers due to their complicated server stack. Unfortunately, they don't provide root access to the server to modify the configuration. This issue cannot be resolved at the application level as it's not application-related. If text streaming is crucial for your use case, we recommend choosing a different hosting provider.
+</Warning>
+
 ## PHP Configuration
 
 Proper PHP configuration is crucial for Aikeedo to function correctly. Adjust the following settings in your `php.ini` file:
