@@ -20,7 +20,7 @@ It's crucial to understand how Aikeedo's file structure works with your domain:
 - Your domain should point to this `public` directory, not the root of all Aikeedo files.
 - The `public` directory cannot be moved; it must remain within the Aikeedo file structure.
 
-In cPanel, this typically means:
+In cPanel, this typically meanss:
 - For main domains: copying the contents of the `public` folder to your `public_html` directory.
 - For add-on domains or subdomains: setting the document root to the `public` folder within your Aikeedo installation.
 
@@ -47,11 +47,11 @@ In cPanel, this typically means:
 
         <Step title="Configure the Public Directory">
             - Find the `public` folder within the extracted files (e.g., `/home/username/public`).
-            - Copy all contents from this `public` folder to your `public_html` directory.
+            - **Copy** (<Tooltip tip='Moving files can lead to errors like "Fatal error: Uncaught Twig\Error\LoaderError: There are no registered paths for namespace theme."'>do not move</Tooltip>) all contents from this `public` folder to your `public_html` directory.
             - Make sure to include hidden files and folders (such as .htaccess file or .vite directory).
 
             <Warning>
-                Important: You'll need to manually repeat this step after each Aikeedo update. For more details on the update process, please refer to our [update guide](/versioning/how-to-update).
+                You'll need to manually repeat this copying step after each Aikeedo update. For more details on the update process, please refer to our [update guide](/versioning/how-to-update).
             </Warning>
         </Step>
 
