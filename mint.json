@@ -233,5 +233,10 @@
   },
   "seo": {
     "indexHiddenPages": true
+  },
+  "analytics": {
+    "ga4": {
+      "measurementId": "G-DBXM1DY73B"
+    }
   }
 }
