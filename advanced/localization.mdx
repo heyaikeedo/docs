@@ -59,10 +59,23 @@ msgstr "Bienvenue sur Aikeedo"
 To enable or disable languages for your Aikeedo instance:
 
 1. Open the `/locale/locale.json` file.
-2. Modify the JSON structure to add or remove language entries.
+2. Enable or disable languages by setting their `"enabled"` field to `true` or `false`.
+3. Set the default language by updating the `"default"` field at the top of the file:
+   ```json
+   {
+       "default": "en-US",
+       "locales": [
+           // ... language entries ...
+       ]
+   }
+   ```
+
+<Note>
+  The default language code must match one of the enabled languages in the `locales` array. For example, if you want to set Spanish as the default, first ensure `es-ES` is enabled, then update the default value to `"es-ES"`.
+</Note>
 
 <Tip>
-  If you're not familiar with JSON, consider using a JSON editor to avoid syntax errors.
+  While Aikeedo includes configuration for 30+ languages, please note that the actual translation strings are not included by default. You'll need to provide your own translations for languages other than English.
 </Tip>
 
 ## User Language Selection
