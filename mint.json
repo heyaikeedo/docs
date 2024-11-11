@@ -171,7 +171,8 @@
         "advanced/localization",
         "advanced/email-templates",
         "advanced/prompt-templates",
-        "advanced/users-workspaces"
+        "advanced/users-workspaces",
+        "advanced/text-streaming"
       ]
     },
     {

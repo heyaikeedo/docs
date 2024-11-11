@@ -1,0 +1,122 @@
+---
+title: Text Streaming
+description: 'Learn about text streaming functionality in Aikeedo and how to ensure it works properly on your server.'
+---
+
+## Introduction
+
+Text streaming is a built-in feature in Aikeedo that shows AI responses in real-time as they are generated, providing a more engaging chat experience. This guide explains how text streaming works and what to do if you encounter any issues.
+
+## How It Works
+
+Aikeedo's text streaming functionality:
+- Works out of the box on most web servers
+- Supports shared hosting environments
+- Requires minimal configuration in most cases
+
+<Note>
+  Text streaming is enabled by default and should work immediately after installation. Most users won't need to make any configuration changes.
+</Note>
+
+## Server Configuration
+
+While Aikeedo works with default server settings in most cases, some servers might need minor adjustments:
+
+### PHP Settings
+
+If streaming isn't working, check these settings in your `php.ini` file:
+
+```ini
+output_buffering = Off
+zlib.output_compression = Off
+```
+
+<Note>
+  These settings prevent PHP from buffering the output, allowing for immediate transmission of text chunks to the client.
+</Note>
+
+<Tip>
+  If you're using shared hosting and can't modify php.ini, contact your hosting provider. Many providers can adjust these settings for you if needed.
+</Tip>
+
+### Web Server Settings
+
+#### For Nginx Servers
+
+Aikeedo automatically sets the required headers for text streaming. However, if your Nginx is configured as a proxy server, you might need these settings:
+
+```nginx
+proxy_buffering off;
+fastcgi_buffering off;
+```
+<Tip>
+  These settings are typically added in the `nginx.conf` file or within the specific server block for your Aikeedo installation.
+</Tip>
+
+<Note>
+  Most Nginx installations work without any changes, thanks to the `X-Accel-Buffering: no` header Aikeedo sets for streaming responses.
+</Note>
+
+#### For Apache Servers
+
+Apache servers typically work without any changes. If you experience issues, try disabling the gzip module by adding the following to your `/public/.htaccess` file:
+
+```apache
+<IfModule mod_headers.c>
+    RewriteRule ^(.*)$ $1 [NS,E=no-gzip:1,E=dont-vary:1]
+</IfModule>
+```
+
+## Common Issues
+
+### Buffering Issues
+
+If you experience delayed or chunked responses, or responses appear all at once instead of streaming:
+
+1. Verify all buffering-related settings are properly configured
+2. Clear your server's cache
+3. Restart your web server after making configuration changes
+4. Clear your browser cache
+5. Try a different browser
+6. Check if your hosting provider is using any aggressive caching
+
+### Caching Mechanisms
+
+Various caching layers can affect text streaming:
+
+- Server-level caching
+- PHP opcode caching
+- Reverse proxy caching
+- Browser caching
+
+<Tip>
+  If responses are delayed, try disabling any caching plugins or features your hosting provider might have enabled.
+</Tip>
+
+### Known Hosting Limitations
+
+<Warning>
+  Some hosting providers may have restrictions that affect text streaming. If you experience issues, contact your hosting provider's support team for assistance.
+</Warning>
+
+- **Cloudways**: Text streaming is not supported due to their server stack configuration
+- **Shared Hosting**: May have limited configuration options
+- **Managed Hosting**: Check with your provider about configuring streaming settings
+
+## Troubleshooting Checklist
+
+Use this checklist to diagnose streaming issues:
+
+- Verify PHP configuration settings
+- Check web server buffering settings
+- Confirm no interfering caching mechanisms
+- Test with different browsers
+- Monitor server logs for errors
+- Verify hosting provider compatibility
+
+## Need Help?
+
+If you continue to experience issues with text streaming:
+
+1. Check our [Installation Troubleshooting](/get-started/installation/troubleshooting) guide
+2. Contact our support team at [support@aikeedo.com](mailto:support@aikeedo.com)
