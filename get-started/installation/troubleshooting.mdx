@@ -117,20 +117,13 @@ Before diving into specific issues, ensure that:
 
 If you're still experiencing issues after trying the solutions above:
 
-1. **Temporary File Cleanup**: Remove any temporary files or caches:
-   ```bash
-   rm -rf /path/to/aikeedo/storage/framework/cache/*
-   rm -rf /path/to/aikeedo/storage/framework/views/*
-   rm -rf /path/to/aikeedo/storage/framework/sessions/*
-   ```
+1. **Fresh Installation**: Consider starting with a fresh installation, ensuring you're using the latest Aikeedo files.
 
-2. **Fresh Installation**: Consider starting with a fresh installation, ensuring you're using the latest Aikeedo files.
+2. **Server Configuration**: Review your web server configuration (Apache, Nginx) to ensure it's set up correctly for PHP applications.
 
-3. **Server Configuration**: Review your web server configuration (Apache, Nginx) to ensure it's set up correctly for PHP applications.
+3. **PHP Configuration**: Check your `php.ini` file for any settings that might be causing issues (e.g., `max_execution_time`, `upload_max_filesize`).
 
-4. **PHP Configuration**: Check your `php.ini` file for any settings that might be causing issues (e.g., `max_execution_time`, `upload_max_filesize`).
-
-5. **Hosting Environment**: If you're on shared hosting, contact your hosting provider to ensure there are no restrictions or issues on their end.
+4. **Hosting Environment**: If you're on shared hosting, contact your hosting provider to ensure there are no restrictions or issues on their end.
 
 ## Getting Further Help
 
