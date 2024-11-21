@@ -172,7 +172,8 @@
         "advanced/email-templates",
         "advanced/prompt-templates",
         "advanced/users-workspaces",
-        "advanced/text-streaming"
+        "advanced/text-streaming",
+        "advanced/secure-urls"
       ]
     },
     {

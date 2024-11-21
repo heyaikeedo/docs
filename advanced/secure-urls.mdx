@@ -1,0 +1,105 @@
+---
+title: Secure URLs
+description: 'Learn how to manage secure URLs to protect the uploaded and AI-generated files.'
+---
+
+## Introduction
+
+Secure URLs is a security feature that protects files uploaded by your users through tokenized URLs. This guide explains how secure URLs work and how to manage this feature in your Aikeedo admin panel.
+
+## How It Works
+
+When secure URLs are enabled:
+- All files uploaded by your users are protected through tokenized URLs
+- The app automatically generates secure URLs whenever files need to be accessed
+- Files can only be accessed through valid tokenized URLs
+- Direct file URLs without tokens will not work
+
+<Note>
+  Secure URLs are completely transparent to your users - they won't notice any difference in how they access files. The app automatically handles all security aspects behind the scenes.
+</Note>
+
+## Managing Secure URLs
+
+### Prerequisites
+
+Before enabling secure URLs, ensure:
+- You're using a supported cloud storage provider (like Digital Ocean Spaces)
+- Your Aikeedo installation is version 2.10 or higher
+- Your Cloud Storage plugin is version 1.2 or higher
+
+<Warning>
+  Local storage does not support secure URLs. You must configure a cloud storage provider in your admin panel first.
+</Warning>
+
+### Enabling the Feature
+
+1. Log in to your Aikeedo admin panel
+2. Go to **Settings** > **Storage settings**
+3. Under the Configuration section, ensure your cloud storage adapter is selected
+4. Toggle the "Secure URLs" switch to enable the feature
+
+<Note>
+  After enabling, all new files uploaded by your users will automatically be protected. Files uploaded before enabling this feature will remain accessible through their original URLs.
+</Note>
+
+## Security Considerations
+
+### URL Access Control
+
+- The app automatically generates new secure URLs whenever files are accessed
+- Each secure URL contains a token that expires after 1 hour
+- Users won't notice the URL expiration - new secure URLs are generated automatically when needed
+- Users cannot bypass the security by sharing direct file URLs
+
+<Note>
+  Your users will have continuous access to their files. The 1-hour expiration only applies to individual secure URLs, not to the files themselves. New secure URLs are automatically generated when needed.
+</Note>
+
+<Warning>
+  If you've enabled CDN in your cloud storage settings (like Digital Ocean Spaces CDN), ensure its edge caching time is set to 1 hour or less. Otherwise, the CDN might continue serving expired secure URLs to your users.
+</Warning>
+
+### Best Practices
+
+1. Enable secure URLs before launching your service
+2. Avoid disabling secure URLs once enabled
+3. Regularly check your storage settings
+4. Monitor your users' file access patterns
+
+## Limitations
+
+Important points to consider:
+
+- Local storage cannot use secure URLs
+- Some cloud storage providers may not support this feature
+- Old URLs will stop working if you disable secure URLs after enabling them
+- Once enabled, switching to a different cloud storage provider is not recommended as previously uploaded files will become inaccessible
+
+<Warning>
+  If you're using Cloudflare R2, secure URLs will only work with the default S3 API endpoint (`<accountid>.r2.cloudflarestorage.com`) and cannot be used with custom domains.
+</Warning>
+
+<Warning>
+  After enabling secure URLs, stick with your chosen cloud storage provider. Switching providers will break access to files uploaded with secure URLs enabled.
+</Warning>
+
+<Note>
+  Verify secure URL support with your chosen cloud storage provider before enabling the feature.
+</Note>
+
+## Troubleshooting
+
+If your users report issues accessing files:
+
+1. Check if your cloud storage provider is functioning correctly
+2. Verify your CDN settings if enabled
+3. Ensure the secure URLs feature is properly enabled
+4. Check if the reported files were uploaded after enabling secure URLs
+
+## Need Help?
+
+If you need assistance managing secure URLs:
+
+1. Review our [Storage Configuration Guide](/website-basics/essentials)
+2. Contact our support team at [support@aikeedo.com](mailto:support@aikeedo.com)
