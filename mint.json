@@ -127,6 +127,7 @@
           "group": "AI Providers",
           "pages": [
             "integrations/openai",
+            "integrations/xai",
             "integrations/cohere",
             "integrations/claude",
             "integrations/elevenlabs",
