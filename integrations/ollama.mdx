@@ -1,0 +1,200 @@
+---
+title: Ollama Integration
+sidebarTitle: Ollama
+description: 'Run open-source large language models locally with Ollama integration. This guide explains how to set up and configure Ollama for your Aikeedo platform.'
+---
+
+## Introduction
+
+Ollama allows you to run large language models locally on your own hardware. By integrating Ollama with Aikeedo, you can provide AI capabilities without relying on cloud services, ensuring data privacy and reducing costs.
+
+<Note>
+  Currently, Ollama integration is available only for the Chat tool in Aikeedo.
+</Note>
+
+## About Ollama
+
+Ollama is an open-source project that simplifies running and managing large language models locally. It offers:
+
+- Easy installation and setup
+- Support for various open-source models
+- Local execution for enhanced privacy
+- Custom model configuration
+- REST API for integration
+
+For more information, visit the [official Ollama website](https://ollama.ai).
+
+## Setting Up Ollama
+
+### Step 1: Install Ollama
+
+<Tabs>
+  <Tab title="macOS">
+    ```bash
+    curl -fsSL https://ollama.ai/install.sh | sh
+    ```
+    
+    For Apple Silicon (M1/M2) Macs, Metal GPU acceleration is supported automatically.
+  </Tab>
+
+  <Tab title="Linux">
+    ```bash
+    curl -fsSL https://ollama.ai/install.sh | sh
+    ```
+
+    For NVIDIA GPUs:
+    - Ensure CUDA 11.7 or later is installed
+    - Install NVIDIA container toolkit
+
+    For AMD GPUs:
+    - ROCm 5.6 or later is required
+    - Check hardware compatibility in ROCm documentation
+  </Tab>
+
+  <Tab title="Windows">
+    1. Download the latest installer from [Ollama Windows Release](https://github.com/ollama/ollama/releases)
+    2. Run the downloaded installer
+    3. Follow the installation wizard
+
+    Requirements:
+    - Windows 10 or later
+    - For NVIDIA GPUs, install CUDA 11.7 or later
+  </Tab>
+</Tabs>
+
+<Note>
+  For detailed installation instructions and troubleshooting, refer to the [Ollama Installation Guide](https://github.com/ollama/ollama#installation).
+</Note>
+
+### Step 2: Configure Your Model
+
+1. Start the Ollama service
+2. Pull your desired model. For example:
+
+```bash
+ollama pull llama2
+# or
+ollama pull mistral
+# or
+ollama pull llama2-uncensored
+```
+
+View all available models at [Ollama Model Library](https://ollama.ai/library).
+
+### Step 3: Configure Server Address
+
+By default, Ollama runs on:
+```
+http://localhost:11434
+```
+
+For remote access, you'll need to:
+1. Configure your firewall to allow access to port 11434
+2. Set up proper security measures as Ollama doesn't include authentication by default
+
+<Warning>
+  When exposing Ollama to remote access, ensure you implement appropriate security measures to protect your server.
+</Warning>
+
+## Integrating with Aikeedo
+
+### Step 1: Configure Aikeedo
+
+1. Log in to your Aikeedo admin panel
+2. Navigate to Settings → Integrations → Ollama
+3. Enter your Ollama server address (e.g., `http://localhost:11434`)
+4. Add your models:
+   - **Key**: A unique identifier (e.g., `ollama/llama2:latest`)
+   - **Name**: Display name for the model
+   - **Provider**: Set as "Meta" for Llama models, or appropriate provider
+5. Click "Save changes"
+
+<Note>
+  The server address must include the scheme (http/https), host, and port number.
+</Note>
+
+## Available Models
+
+Popular models you can use with Ollama include:
+
+- **Llama 2**: Meta's open-source model series
+- **Mistral**: High-performance 7B model
+- **Phi**: Microsoft's compact yet powerful model
+- **Neural Chat**: Optimized for conversation
+- **Code Llama**: Specialized for programming tasks
+- **Vicuna**: Fine-tuned for chat and assistance
+
+For a complete list, check the [Ollama Model Library](https://ollama.ai/library).
+
+## Model Configuration
+
+You can customize model behavior using Modelfiles. Example:
+
+```text
+FROM llama2
+PARAMETER temperature 0.7
+PARAMETER top_p 0.9
+PARAMETER top_k 40
+```
+
+Learn more about model configuration in the [Ollama Documentation](https://github.com/ollama/ollama/blob/main/docs/modelfile.md).
+
+## Hardware Requirements
+
+Minimum requirements vary by model:
+
+- 7B models: 8GB RAM
+- 13B models: 16GB RAM
+- 33B+ models: 32GB+ RAM
+
+GPU acceleration is supported for:
+- NVIDIA GPUs with CUDA
+- AMD GPUs with ROCm
+- Apple Silicon (Metal)
+
+## Best Practices
+
+1. **Model Selection**:
+   - Start with smaller models (7B) and test performance
+   - Consider your hardware capabilities
+   - Choose models based on your specific use case
+
+2. **Performance**:
+   - Enable GPU acceleration when available
+   - Monitor system resources
+   - Adjust model parameters for optimal performance
+
+3. **Security**:
+   - Implement proper firewall rules
+   - Use reverse proxy for additional security
+   - Regular system updates
+
+## Troubleshooting
+
+Common issues and solutions:
+
+1. **Connection Issues**:
+   - Verify Ollama service is running
+   - Check server address format
+   - Confirm firewall settings
+
+2. **Model Loading Failures**:
+   - Ensure sufficient system resources
+   - Verify model is properly pulled
+   - Check model compatibility
+
+3. **Performance Issues**:
+   - Monitor system resources
+   - Consider using a smaller model
+   - Adjust model parameters
+
+## Additional Resources
+
+- [Ollama GitHub Repository](https://github.com/ollama/ollama)
+- [Ollama Documentation](https://github.com/ollama/ollama/tree/main/docs)
+- [Ollama API Reference](https://github.com/ollama/ollama/blob/main/docs/api.md)
+- [Ollama Discord Community](https://discord.gg/ollama)
+
+<Note>
+  Keep Ollama and your models updated for the best performance and security.
+</Note>

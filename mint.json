@@ -130,6 +130,7 @@
             "integrations/xai",
             "integrations/cohere",
             "integrations/claude",
+            "integrations/ollama",
             "integrations/elevenlabs",
             "integrations/gcp",
             "integrations/azure",
