@@ -18,6 +18,7 @@ While you can use any OpenAI-compatible provider, here are some popular options:
 - Together AI
 - OpenRouter
 - Groq
+- DeepSeek
 - Google AI (Gemini)
 - Hugging Face
 - Self-hosted models (via compatible servers)
@@ -147,6 +148,21 @@ For each model you want to use:
 
     <Note>
       Groq is known for its extremely fast inference speeds and competitive pricing.
+    </Note>
+  </Tab>
+
+  <Tab title="DeepSeek">
+    ```text Server
+    https://api.deepseek.com
+    ```
+
+    Required headers:
+    - `Authorization`: Bearer YOUR_API_KEY
+
+    Get your API key from [DeepSeek Platform](https://platform.deepseek.com/api_keys)
+
+    <Note>
+      DeepSeek offers both general-purpose and code-specialized models with competitive pricing.
     </Note>
   </Tab>
 </Tabs>
