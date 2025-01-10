@@ -130,7 +130,6 @@
             "integrations/xai",
             "integrations/cohere",
             "integrations/claude",
-            "integrations/ollama",
             "integrations/elevenlabs",
             "integrations/gcp",
             "integrations/azure",
@@ -139,6 +138,13 @@
             "integrations/clipdrop",
             "integrations/aimlapi",
             "integrations/serper"
+          ]
+        },
+        {
+          "group": "Custom LLM Servers",
+          "pages": [
+            "integrations/ollama",
+            "integrations/openai-api-compatibility"
           ]
         },
         {

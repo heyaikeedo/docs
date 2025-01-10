@@ -1,0 +1,240 @@
+---
+title: OpenAI API Compatibility
+description: 'Learn how to integrate any OpenAI-compatible API provider with your Aikeedo platform.'
+---
+
+## Introduction
+
+Aikeedo supports any API provider that implements the OpenAI API specification. This means you can integrate any service that follows OpenAI's API format, whether it's a cloud service, self-hosted model, or custom implementation.
+
+<Note>
+  If a service is compatible with OpenAI's API specification, it will work with Aikeedo - there are no restrictions on which providers you can use.
+</Note>
+
+## Common Providers
+
+While you can use any OpenAI-compatible provider, here are some popular options:
+
+- Together AI
+- OpenRouter
+- Groq
+- DeepSeek
+- Google AI (Gemini)
+- Hugging Face
+- Self-hosted models (via compatible servers)
+- Custom LLM implementations
+
+## Adding a New Provider
+
+1. Go to Settings → Integrations
+2. Scroll to "Custom LLM Servers" section
+3. Click "New server"
+
+### Configuration Fields
+
+#### API Server
+- **Name**: A descriptive name for the provider
+- **Server address**: The API endpoint URL
+- **API Key/Authorization token**: Your authentication token for the service
+
+<Note>
+  The server address supports dynamic variables for flexible configuration.
+</Note>
+
+##### **Dynamic Variables**
+
+You can use the following variable in your server address:
+- `{model}`: Will be dynamically replaced with the current model name
+
+**Example for Hugging Face**:
+```text
+https://api-inference.huggingface.co/models/{model}
+```
+When using model "mistralai/Mistral-7B-Instruct-v0.1", the actual request will go to:
+```text
+https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1
+```
+
+<Tip>
+  Dynamic variables are particularly useful for services like Hugging Face where the model name is part of the API endpoint.
+</Tip>
+
+#### Headers
+
+Aikeedo automatically adds these default headers:
+- `Content-Type: application/json`
+- `Authorization: Bearer YOUR_API_KEY` (when API key field is filled)
+
+<Note>
+  You can override these default headers or add custom headers as needed. This is useful when a provider requires specific header configurations.
+</Note>
+
+##### Adding Custom Headers
+1. Click "Add header"
+2. Enter the header key (e.g., `HTTP-Referer`)
+3. Enter the header value
+4. Repeat for additional headers
+
+##### Examples
+
+**Override default Authorization header**:
+```text
+Key: Authorization
+Value: Basic YOUR_BASE64_CREDENTIALS
+```
+
+**Add provider-specific headers**:
+```text
+Key: X-Title
+Value: Your Application Name
+```
+
+<Tip>
+  If you need to override the default Content-Type or Authorization headers, simply add them with your desired values in the custom headers section.
+</Tip>
+
+#### Models Configuration
+For each model you want to use:
+- **Key**: Unique identifier for the model (e.g., `gpt-3.5-turbo`)
+- **Name**: Display name shown to users
+- **Provider**: The model provider's name
+- **Vision**: Toggle if the model supports image analysis
+- **Tools**: Toggle if the model supports function calling
+
+## Provider-Specific Setup
+
+<Tabs>
+  <Tab title="Together AI">
+    ```text Server
+    https://api.together.xyz/v1
+    ```
+
+    Get your API key from [Together AI Settings](https://api.together.ai/settings/api-keys)
+  </Tab>
+
+  <Tab title="OpenRouter">
+    ```text Server
+    https://openrouter.ai/api/v1
+    ```
+
+    Get your API key from [OpenRouter Settings](https://openrouter.ai/settings/keys)
+  </Tab>
+
+  <Tab title="Google AI (Gemini)">
+    ```text Server
+    https://generativelanguage.googleapis.com/v1beta/openai
+    ```
+
+    Get your API key from [Google AI Studio](https://aistudio.google.com/apikey)
+  </Tab>
+
+  <Tab title="Hugging Face">
+    ```text Server
+    https://api-inference.huggingface.co/models/{model}/v1/
+    ```
+
+    Get your API key from [Hugging Face Settings](https://huggingface.co/settings/tokens)
+
+    <Note>
+      The {model} variable in the server address will be automatically replaced with your chosen model name.
+    </Note>
+  </Tab>
+
+  <Tab title="Groq">
+    ```text Server
+    https://api.groq.com/openai/v1
+    ```
+    Get your API key from [Groq Console](https://console.groq.com/keys)
+
+    <Note>
+      Groq is known for its extremely fast inference speeds and competitive pricing.
+    </Note>
+  </Tab>
+
+  <Tab title="DeepSeek">
+    ```text Server
+    https://api.deepseek.com
+    ```
+
+    Required headers:
+    - `Authorization`: Bearer YOUR_API_KEY
+
+    Get your API key from [DeepSeek Platform](https://platform.deepseek.com/api_keys)
+
+    <Note>
+      DeepSeek offers both general-purpose and code-specialized models with competitive pricing.
+    </Note>
+  </Tab>
+</Tabs>
+
+## Tools Compatibility
+
+When configuring models for your custom LLM server, you can enable them for:
+
+1. **Chat**: Interactive conversations and assistance
+2. **Writer**: Content generation and writing tasks
+3. **Coder**: Programming help and code generation
+4. **Title Generation**: Automatic title creation for content
+
+<Note>
+  Make sure to enable only the capabilities that your chosen model actually supports. Enabling unsupported features may result in unexpected behavior.
+</Note>
+
+
+## Best Practices
+
+1. **Testing**:
+   - Test each model after configuration
+   - Verify response formats
+   - Check token limits and pricing
+
+2. **Security**:
+   - Keep API keys secure
+   - Use HTTPS for external providers
+   - Regularly rotate API keys
+
+3. **Monitoring**:
+   - Track API usage
+   - Monitor response times
+   - Check for error rates
+
+## Troubleshooting
+
+Common issues and solutions:
+
+1. **Authentication Errors**:
+   - Verify API key format
+   - Check header configuration
+   - Confirm server address is correct
+
+2. **Model Issues**:
+   - Ensure model names match provider's specifications
+   - Verify model availability in your subscription
+   - Check provider's status page
+
+3. **Connection Problems**:
+   - Verify network connectivity
+   - Check for firewall restrictions
+   - Confirm server address format
+
+<Note>
+  Always refer to your provider's documentation for the most up-to-date configuration details and troubleshooting guides.
+</Note>
+
+## Rate Limits and Quotas
+
+- Monitor your provider's rate limits
+- Check quota usage regularly
+- Set up alerts for quota thresholds
+- Consider implementing retry logic for rate limit errors
+
+## Need Help?
+
+For additional support:
+
+1. Check the provider's documentation
+2. Contact [support@aikeedo.com](mailto:support@aikeedo.com)
+
+<Note>
+  Keep your integrations updated as providers may change their API specifications or requirements.
+</Note>
