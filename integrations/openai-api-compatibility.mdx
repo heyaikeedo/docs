@@ -25,6 +25,7 @@ While you can use any OpenAI-compatible provider, here are some popular options:
 - Nebius
 - DeepInfra
 - AI/ML API
+- Azure OpenAI Service
 - Self-hosted models (via compatible servers)
 - Custom LLM implementations
 
@@ -208,6 +209,30 @@ For each model you want to use:
     ```
 
     Get your API key from [AI/ML API Keys](https://aimlapi.com/app/keys)
+  </Accordion>
+
+  <Accordion title="Azure OpenAI Service">
+    ```text Server
+    https://:resource_name.openai.azure.com/openai/deployments/:deployment_name/chat/completions?api-version=:api_version
+    ```
+
+    Get your API key and other details from [Azure Portal](https://portal.azure.com/#blade/Microsoft_Azure_ProjectOxford/CognitiveServicesHub/OpenAI)
+
+    <Note>
+      For Azure OpenAI Service:
+      - Replace `:resource_name` with your Azure OpenAI resource name
+      - Replace `:deployment_name` with `{model}` to use your configured model names as deployment names
+      - Replace `:api_version` with your desired API version (e.g., '2024-10-21')
+      - Different endpoints (like completions, embeddings) will need their specific paths
+    </Note>
+
+    <Tip>
+      Example configuration:
+      ```text
+      https://my-instance.openai.azure.com/openai/deployments/{model}/chat/completions?api-version=2024-10-21
+      ```
+      When you configure a model named "gpt-4o-mini", it will automatically use that as the deployment name in the URL.
+    </Tip>
   </Accordion>
 </AccordionGroup>
 
