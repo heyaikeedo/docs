@@ -188,6 +188,7 @@
     {
       "group": "Versioning",
       "pages": [
+        "versioning/release-notes",
         "versioning/how-to-update"
       ]
     },

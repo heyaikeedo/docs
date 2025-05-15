@@ -1,0 +1,119 @@
+---
+title: Release Notes
+sidebarTitle: Release Notes
+description: Learn about the latest changes, breaking updates, and migration instructions for Aikeedo v3.0.
+---
+
+<Note>
+  The full changelog is available at [https://aikeedo.com/changelog/](https://aikeedo.com/changelog/). This page documents only breaking changes and critical migration instructions for major releases.
+</Note>
+
+Welcome to the Aikeedo v3.0 release notes! Here you'll find a summary of all major changes, breaking updates, and important migration instructions for this version. Please review these notes carefully before updating or migrating your installation.
+
+<Note>
+  Version 3.0 introduces several breaking changes. If you are upgrading from v2.x, be sure to read the migration guide below.
+</Note>
+
+## Breaking Changes in v3.0
+
+### Plugins Architecture Changed
+- Plugins are now installed in `/extra/extensions` instead of `/public`.
+- Old plugins remain compatible, but you must reinstall them manually.
+
+### "Cohere Web Search" Chat Capability Removed
+- The Cohere integration now uses Cohere API v2.0.
+- The built-in web search feature from Cohere has been removed and replaced with Google Search.
+- Please update your plan configuration accordingly.
+
+### Removed Models
+The following legacy/deprecated models have been removed. Please use other available models:
+- openai/gpt-3.5-turbo-instruct
+- openai/o1-preview
+- openai/o1-mini
+- openai/gpt-4.5-preview
+- openai/text-moderation-latest
+- openai/dall-e-2
+- fal-ai/flux-realism (not available anymore)
+- grok-beta
+- grok-vision-beta
+
+### Search Box Removed
+- The search box on the user app dashboard has been replaced with a new quick access bar.
+- To search for library items, visit the Library pages.
+
+### Ai/Infrastruture Namespace Renamed
+- The namespace is now correctly spelled as `Ai/Infrastructure`.
+- If you use services from this layer in custom code, update the namespace accordingly.
+
+### Change in ImageServiceInterface::generateImage() Method Signature
+- The signature of `Ai\Domain\Image\ImageServiceInterface::generateImage()` has changed.
+- It now returns `ImageEntity` directly.
+- Update any custom image generator services to match the new signature.
+
+### Keys for the Following Models Have Been Updated
+If you use any of the following models, set the credit rates and enable them both globally and at the plan level again:
+- fal-ai/flux/dev
+- fal-ai/flux/schnell
+- fal-ai/flux-pro
+
+---
+
+## Migration Guide: Upgrading from v2.x to v3.0
+
+<Warning>
+  Version 3.0 is a major release with breaking changes. A standard update is NOT sufficient for upgrading from v2.x to v3.0. Please follow this migration guide to avoid data loss.
+</Warning>
+
+<Steps>
+  <Step title="Take a Backup">
+    Before starting the migration, create a full backup of your database and all files in your current Aikeedo installation.
+    <Note>
+      This is essential to prevent data loss. Make sure your backup includes user uploads and your database.
+    </Note>
+  </Step>
+
+  <Step title="Remove Old Files">
+    Delete all files and folders from your installation directory.
+    <Warning>
+      This will remove all application files. Do not proceed unless you have a backup.
+    </Warning>
+  </Step>
+
+  <Step title="Database Details">
+    Before installing the new version, ensure you have your previous database name and user credentials ready. You will need to enter these during installation to preserve your data.
+    When prompted by the installer, choose the <b>Migrate</b> option to keep your current data.
+    <Note>
+      If you provide the same database details as your previous installation, the installer will ask whether you want to migrate your current data or perform a fresh install. <b>Choose the <i>Migrate</i> option</b> to preserve your data. Only choose a fresh install if you want to start with a clean database.
+    </Note>
+  </Step>
+
+  <Step title="Install the New Version">
+    Install the new version in the same directory by extracting to the same location as your previous installation. Then follow the <a href="/get-started/installation">installation guide</a> to complete the setup.
+    <Tip>
+      The new version package includes all required files and directories. Overwrite any existing files if prompted.
+    </Tip>
+  </Step>
+
+  <Step title="Restore Uploads">
+    After installation is complete, restore your <code>/public/uploads</code> directory from your backup.
+    <Tip>
+      If you are using <code>public_html</code> instead of <code>public</code>, restore your uploaded files from your backup to <code>/public_html/uploads</code>.
+    </Tip>
+  </Step>
+
+  <Step title="Finalize Update in Admin">
+    Navigate to the <b>Update</b> page in the Admin panel. This step is crucial as it finalizes the update process in the background.
+    <Warning>
+      Do not skip this step. The update will not be fully applied until you visit the update page in Admin.
+    </Warning>
+  </Step>
+
+  <Step title="Reinstall Plugins">
+    Install your plugins again from the admin UI.
+    <Note>
+      Plugin architecture has changed in v3.0. All plugins must be reinstalled manually.
+    </Note>
+  </Step>
+</Steps>
+
+If you have custom plugins or integrations, review the breaking changes above and update your code as needed.
