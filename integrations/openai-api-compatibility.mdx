@@ -26,6 +26,7 @@ While you can use any OpenAI-compatible provider, here are some popular options:
 - DeepInfra
 - AI/ML API
 - Azure OpenAI Service
+- v0 by Vercel
 - Self-hosted models (via compatible servers)
 - Custom LLM implementations
 
@@ -233,6 +234,20 @@ For each model you want to use:
       ```
       When you configure a model named "gpt-4o-mini", it will automatically use that as the deployment name in the URL.
     </Tip>
+  </Accordion>
+
+  <Accordion title="v0 by Vercel">
+    ```text Server
+    https://api.v0.dev/v1
+    ```
+
+    Model name: `v0-1.0-md`
+
+    Get your API key from [v0.dev Settings](https://v0.dev/chat/settings/keys)
+
+    <Note>
+      The v0 API is currently in beta and requires a Premium or Team plan with usage-based billing enabled.
+    </Note>
   </Accordion>
 </AccordionGroup>
 
