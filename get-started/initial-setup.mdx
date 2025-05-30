@@ -20,17 +20,56 @@ Some servers may limit cron tasks to a minimum interval of 15 minutes. In such c
 
 ### Configuring the Cron Task
 
-To set up the cron job, add the following entry to your server's crontab:
+It is important that the cron job runs as the same user that your web server uses to serve your Aikeedo application. On many Linux systems, this user is typically `www-data` (for servers running Apache or Nginx), but it may differ depending on your server setup (for example, `apache`, `nginx`, or another user). Running the cron job as the correct user ensures that file permissions and environment variables are consistent with your web server, preventing potential permission issues.
 
-```shell
-* * * * * /usr/bin/php /path/to/app/root/cron.php
-```
+#### How to Set Up the Cron Job for the Web Server User
 
-This command runs the `cron.php` script in your Aikeedo installation directory every minute.
+1. **Determine the Web Server User:**  
+   - On most systems, the user is `www-data`.  
+   - You can check the running user with:  
+     ```shell
+     ps aux | egrep '(apache|nginx|httpd)'
+     ```
+   - Look for the user column in the output.
+
+2. **Edit the Crontab for the Web Server User:**  
+   Use the following command, replacing `www-data` with your web server user if different:
+   ```shell
+   sudo crontab -u www-data -e
+   ```
+   This opens the crontab editor for the specified user.
+
+3. **Add the Cron Entry:**  
+   Add the following line to the crontab:
+   ```shell
+   * * * * * /usr/bin/php /path/to/app/root/cron.php
+   ```
+   Replace `/path/to/app/root/` with the actual path to your Aikeedo application's root directory.
 
 <Note>
-Replace `/path/to/app/root/` with the actual path to your Aikeedo application's root directory.
+If your server uses a different user for the web server (such as `apache` or `nginx`), substitute `www-data` with the appropriate username in the `sudo crontab -u USERNAME -e` command.
 </Note>
+
+#### Important: File Permissions and Cache Issues
+
+While it is technically possible to run the cron job as `root` or another user, this is **not recommended**. If the cron job runs as a different user than your web server (for example, as `root`), the application may create new files in the app cache with incorrect ownership. This can cause issues when you try to clear the cache from the Aikeedo admin panel (Status page).
+
+- **How to Detect the Issue:**  
+  When you clear the cache from the Status page, you should see a success message in the toast notification.  
+  If you do **not** see a success message, it likely means the app is unable to clear the cache due to file permission issues.
+
+- **How to Fix:**  
+  To resolve this, reset the ownership of your app files to the web server user (e.g., `www-data`) by running:
+  ```shell
+  sudo chown -R www-data:www-data /path/to/app/root
+  ```
+  Replace `/path/to/app/root` with the actual path to your Aikeedo application's root directory.
+
+  After fixing the permissions, ensure the cron job is running as the correct user to prevent this issue from recurring.
+
+<Warning>
+Always run the cron job as the same user that your web server uses (typically `www-data`, `apache`, or `nginx`). This ensures proper file permissions and smooth operation of your Aikeedo installation.
+</Warning>
 
 ### Troubleshooting Cron Issues
 
@@ -58,7 +97,7 @@ Properly setting your site domain is crucial for system functionality.
 </Frame>
 
 <Note>
-Include only the domain, subdomain (if any), and port number (if non-standard). Do not include protocols or paths. Omit the port number if it’s 80 (HTTP) or 443 (HTTPS).
+Include only the domain, subdomain (if any), and port number (if non-standard). Do not include protocols or paths. Omit the port number if it's 80 (HTTP) or 443 (HTTPS).
 </Note>
 
 ### SSL Configuration
