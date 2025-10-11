@@ -14,7 +14,7 @@
   },
   "favicon": "/favicon.svg",
   "background": {
-    "decoration": "grid"
+    "decoration": "windows"
   },
   "navbar": {
     "links": [
@@ -30,6 +30,25 @@
     }
   },
   "navigation": {
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Affiliates",
+          "href": "https://aikeedo.com/affiliates/",
+          "icon": "dollar-sign"
+        },
+        {
+          "anchor": "Changelog",
+          "href": "https://aikeedo.com/changelog/",
+          "icon": "arrow-trend-up"
+        },
+        {
+          "anchor": "Feature Requests",
+          "href": "https://aikeedo.canny.io/",
+          "icon": "star"
+        }
+      ]
+    },
     "tabs": [
       {
         "tab": "Docs",
@@ -207,26 +226,7 @@
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Affiliates",
-          "href": "https://aikeedo.com/affiliates/",
-          "icon": "dollar-sign"
-        },
-        {
-          "anchor": "Changelog",
-          "href": "https://aikeedo.com/changelog/",
-          "icon": "arrow-trend-up"
-        },
-        {
-          "anchor": "Feature Requests",
-          "href": "https://aikeedo.canny.io/",
-          "icon": "star"
-        }
-      ]
-    }
+    ]
   },
   "footer": {
     "socials": {
