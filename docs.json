@@ -1,0 +1,261 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Aikeedo Docs",
+  "colors": {
+    "primary": "#0D9373",
+    "light": "#07C983",
+    "dark": "#0D9373"
+  },
+  "description": "Self-hosted software with customizable features to launch your AI SaaS business quickly and generate revenue fast.",
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "favicon": "/favicon.svg",
+  "background": {
+    "decoration": "grid"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Support",
+        "href": "mailto:support@aikeedo.com"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Buy now",
+      "href": "https://aikeedo.com?utm_source=docs&utm_medium=header"
+    }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Docs",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "get-started/introduction",
+              "get-started/get-aikeedo",
+              "get-started/file-structure",
+              "get-started/server-requirements",
+              {
+                "group": "Installation",
+                "pages": [
+                  "get-started/installation",
+                  "get-started/installation/cpanel",
+                  "get-started/installation/local",
+                  "get-started/installation/troubleshooting"
+                ]
+              },
+              "get-started/initial-setup",
+              "get-started/commercial-resources"
+            ]
+          },
+          {
+            "group": "Website Basics",
+            "pages": [
+              "website-basics/essentials",
+              "website-basics/pwa",
+              "website-basics/branding"
+            ]
+          },
+          {
+            "group": "Email",
+            "pages": [
+              "email/mailer",
+              "email/smtp"
+            ]
+          },
+          {
+            "group": "Authentication",
+            "pages": [
+              "authentication/accounts-settings",
+              {
+                "group": "Identity Providers",
+                "pages": [
+                  "authentication/identity-providers/google",
+                  "authentication/identity-providers/facebook",
+                  "authentication/identity-providers/linkedin",
+                  "authentication/identity-providers/github"
+                ]
+              },
+              "authentication/captcha"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              {
+                "group": "Payment Gateways",
+                "pages": [
+                  "integrations/stripe",
+                  "integrations/paypal"
+                ]
+              },
+              {
+                "group": "AI Providers",
+                "pages": [
+                  "integrations/openai",
+                  "integrations/xai",
+                  "integrations/cohere",
+                  "integrations/claude",
+                  "integrations/elevenlabs",
+                  "integrations/gcp",
+                  "integrations/azure",
+                  "integrations/falai",
+                  "integrations/stabilityai",
+                  "integrations/clipdrop",
+                  "integrations/aimlapi",
+                  "integrations/serper"
+                ]
+              },
+              {
+                "group": "Custom LLM Servers",
+                "pages": [
+                  "integrations/ollama",
+                  "integrations/openai-api-compatibility"
+                ]
+              },
+              {
+                "group": "Currency Rate Providers",
+                "pages": [
+                  "integrations/currency-api"
+                ]
+              },
+              {
+                "group": "Other",
+                "pages": [
+                  "integrations/onesignal",
+                  "integrations/google-analytics",
+                  "integrations/google-tag-manager",
+                  "integrations/intercom",
+                  "integrations/custom-scripts"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Billing",
+            "pages": [
+              "billing/overview",
+              "billing/unified-credit-system",
+              "billing/plans-snapshots-subscriptions"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "advanced/localization",
+              "advanced/email-templates",
+              "advanced/prompt-templates",
+              "advanced/users-workspaces",
+              "advanced/text-streaming",
+              "advanced/secure-urls",
+              "advanced/byok"
+            ]
+          },
+          {
+            "group": "Versioning",
+            "pages": [
+              "versioning/release-notes",
+              "versioning/how-to-update"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Development",
+        "groups": [
+          {
+            "group": "Development",
+            "pages": [
+              "development/introduction",
+              "development/local-development-guide",
+              "development/api/overview"
+            ]
+          },
+          {
+            "group": "Plugins & Themes",
+            "pages": [
+              "development/plugins/overview",
+              "development/plugins/development-guide",
+              "development/themes/development-guide"
+            ]
+          },
+          {
+            "group": "Theme Objects",
+            "pages": [
+              "development/themes/objects/address",
+              "development/themes/objects/affiliate",
+              "development/themes/objects/currency",
+              "development/themes/objects/environment",
+              "development/themes/objects/locale",
+              "development/themes/objects/locales",
+              "development/themes/objects/option",
+              "development/themes/objects/plan",
+              "development/themes/objects/plan-snapshot",
+              "development/themes/objects/subscription",
+              "development/themes/objects/theme",
+              "development/themes/objects/theme-locale",
+              "development/themes/objects/user",
+              "development/themes/objects/workspace",
+              "development/themes/objects/workspace-invitation"
+            ]
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Affiliates",
+          "href": "https://aikeedo.com/affiliates/",
+          "icon": "dollar-sign"
+        },
+        {
+          "anchor": "Changelog",
+          "href": "https://aikeedo.com/changelog/",
+          "icon": "arrow-trend-up"
+        },
+        {
+          "anchor": "Feature Requests",
+          "href": "https://aikeedo.canny.io/",
+          "icon": "star"
+        }
+      ]
+    }
+  },
+  "footer": {
+    "socials": {
+      "website": "https://aikeedo.com?utm_source=docs&utm_medium=footer",
+      "x": "https://x.com/heyaikeedo",
+      "github": "https://github.com/heyaikeedo",
+      "linkedin": "https://www.linkedin.com/company/heyaikeedo",
+      "youtube": "https://www.youtube.com/@heyaikeedo",
+      "instagram": "https://www.instagram.com/heyaikeedo",
+      "facebook": "https://www.facebook.com/heyaikeedo"
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
+  },
+  "seo": {
+    "indexing": "all"
+  },
+  "integrations": {
+    "ga4": {
+      "measurementId": "G-DBXM1DY73B"
+    }
+  }
+}
