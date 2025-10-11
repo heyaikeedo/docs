@@ -256,9 +256,6 @@
   "integrations": {
     "ga4": {
       "measurementId": "G-DBXM1DY73B"
-    },
-    "frontchat": {
-      "snippetId": "4388f0428476a13efd75fb4e53f03b6b"
     }
   }
 }
