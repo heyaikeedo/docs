@@ -1,0 +1,639 @@
+---
+title: Troubleshooting & FAQ
+sidebarTitle: Troubleshooting
+description: 'Solutions to common Aikeedo installation, configuration, and runtime issues including database errors, asset loading problems, and model configuration.'
+---
+
+## Overview
+
+This guide provides solutions to common issues users encounter when installing, configuring, and running Aikeedo. Issues are organized by category for easy navigation.
+
+## Before You Begin
+
+Before troubleshooting, verify that:
+
+1. Your server meets all [server requirements](/overview/server-requirements)
+2. You have the latest version of Aikeedo files
+3. You've followed the [installation guide](/get-started/installation) carefully
+4. You've completed [initial setup](/get-started/initial-setup) steps
+
+## Installation Issues
+
+### Assets Not Loading (CSS, JS, Images Missing)
+
+**Symptoms:**
+- Installation page appears without styling
+- Images, CSS, and JavaScript files fail to load
+- Browser shows 404 errors for asset files
+
+**Cause:**
+The domain is not correctly pointing to the `public` directory.
+
+**Solution:**
+
+<Steps>
+<Step title="Verify Document Root">
+  Ensure your domain points to the `public` directory within your Aikeedo installation:
+  
+  ```
+  /path/to/aikeedo/public
+  ```
+  
+  Not to the root Aikeedo directory.
+</Step>
+
+<Step title="Test Redirection">
+  Visit your domain (e.g., `https://yourdomain.com`). You should be automatically redirected to `https://yourdomain.com/install`.
+  
+  <Check>
+  If the redirect works, your domain is configured correctly.
+  </Check>
+</Step>
+
+<Step title="cPanel Users">
+  If you're using cPanel and cannot change the document root for your main domain, follow the dedicated [cPanel Installation Guide](/get-started/installation/cpanel).
+  
+  <Note>
+  The cPanel installation process differs from the standard installation due to control panel limitations.
+  </Note>
+</Step>
+</Steps>
+
+**Related Documentation:**
+- [Installation Guide](/get-started/installation)
+- [cPanel Installation](/get-started/installation/cpanel)
+
+---
+
+### 404 or 403 Errors During Installation
+
+**Symptoms:**
+- 404 error when accessing `/install`
+- 403 Forbidden error on home page
+- Installation wizard not accessible
+
+**Cause:**
+Domain document root not pointing to the `public` directory, missing files, or incorrect permissions.
+
+**Solution:**
+
+<Steps>
+<Step title="Verify Document Root">
+  Ensure your domain's document root points to the `public` folder:
+  
+  **For cPanel:**
+  - Main domain: Should point to `public_html` which should be the `public` directory
+  - Add-on domains/subdomains: Update document root in cPanel to point to the `public` folder
+  
+  **For VPS/Dedicated:**
+  - Set document root to `/path/to/aikeedo/public`
+</Step>
+
+<Step title="Check File Extraction">
+  Verify all Aikeedo files are extracted correctly and the `public` directory exists with all necessary files.
+</Step>
+
+<Step title="Set File Permissions">
+  Ensure the web server has appropriate permissions:
+  
+  ```bash
+  # Set directory permissions
+  find /path/to/aikeedo -type d -exec chmod 755 {} \;
+  
+  # Set file permissions
+  find /path/to/aikeedo -type f -exec chmod 644 {} \;
+  ```
+</Step>
+
+<Step title="Verify .htaccess File">
+  Ensure the `.htaccess` file is present in the `public` directory.
+  
+  <Note>
+  Hidden files may not be visible by default. Enable "Show hidden files" in your FTP client or file manager.
+  </Note>
+</Step>
+</Steps>
+
+---
+
+### Database Connection Issues
+
+**Symptoms:**
+- Cannot connect to database during installation
+- Database error messages in installation wizard
+- Installation fails at database configuration step
+
+**Cause:**
+Incorrect database credentials, missing database, or insufficient permissions.
+
+**Solution:**
+
+<AccordionGroup>
+<Accordion title="Verify Database Credentials">
+  Double-check all database connection details:
+  - **Database name**: Must be exact (case-sensitive)
+  - **Username**: Database user with proper permissions
+  - **Password**: Correct password for the database user
+  - **Host**: Usually `localhost`, but may be different on some hosts
+</Accordion>
+
+<Accordion title="Check Database Server">
+  - Ensure the database server (MySQL/MariaDB) is running
+  - Verify the database is accessible from your web server
+  - Confirm the database exists and is empty
+</Accordion>
+
+<Accordion title="Verify User Permissions">
+  The database user must have these permissions:
+  - SELECT
+  - INSERT
+  - UPDATE
+  - DELETE
+  - CREATE
+  - DROP
+  - INDEX
+  - ALTER
+  
+  <Tip>
+  If unsure, grant ALL PRIVILEGES to the database user for the specific database.
+  </Tip>
+</Accordion>
+
+<Accordion title="Check PHP Extensions">
+  Verify that required PHP database extensions are installed:
+  - `mysqli` for MySQL
+  - `pdo_mysql` for PDO support
+  
+  Check with:
+  ```bash
+  php -m | grep -i mysql
+  ```
+</Accordion>
+</AccordionGroup>
+
+If problems persist, try creating a new database and user with full permissions.
+
+---
+
+### 500 Internal Server Error During Installation
+
+**Symptoms:**
+- HTTP 500 error before or during installation
+- Blank page with 500 status code
+- Generic server error message
+
+**Cause:**
+PHP configuration issues, incorrect file permissions, or insufficient server resources.
+
+**Solution:**
+
+<Steps>
+<Step title="Check Error Logs">
+  Review server error logs for specific error messages:
+  
+  **Apache:**
+  ```bash
+  tail -f /var/log/apache2/error.log
+  # or
+  tail -f /var/log/httpd/error_log
+  ```
+  
+  **Nginx:**
+  ```bash
+  tail -f /var/log/nginx/error.log
+  ```
+  
+  Error logs will reveal the exact issue.
+</Step>
+
+<Step title="Verify PHP Version">
+  Ensure you're running PHP 8.2 or later:
+  
+  ```bash
+  php -v
+  ```
+  
+  Verify all required extensions are installed:
+  ```bash
+  php -m
+  ```
+</Step>
+
+<Step title="Set Correct Ownership and Permissions">
+  ```bash
+  # Set ownership (replace www-data with your web server user)
+  chown -R www-data:www-data /path/to/aikeedo
+  
+  # Set directory permissions
+  find /path/to/aikeedo -type d -exec chmod 755 {} \;
+  
+  # Set file permissions
+  find /path/to/aikeedo -type f -exec chmod 644 {} \;
+  ```
+  
+  <Note>
+  Common web server users: `www-data` (Ubuntu/Debian), `apache` (CentOS/RHEL), `nginx` (Nginx)
+  </Note>
+</Step>
+
+<Step title="Restart PHP-FPM (if applicable)">
+  If using PHP-FPM:
+  
+  ```bash
+  sudo systemctl restart php8.2-fpm
+  ```
+  
+  Replace `8.2` with your PHP version.
+</Step>
+
+<Step title="Increase PHP Memory Limit">
+  Edit your `php.ini` file:
+  
+  ```ini
+  memory_limit = 256M
+  ```
+  
+  Restart your web server after making changes.
+</Step>
+</Steps>
+
+---
+
+### Installation Wizard Not Loading
+
+**Symptoms:**
+- Blank white page when accessing installation
+- Installation wizard doesn't appear
+- JavaScript errors in browser console
+
+**Cause:**
+PHP errors, insufficient server resources, or missing files.
+
+**Solution:**
+
+1. **Check PHP Error Logs**: Review PHP error logs for fatal errors or warnings
+2. **Clear Browser Cache**: Hard refresh (Ctrl+Shift+R or Cmd+Shift+R) or try a different browser
+3. **Verify SSL Certificate**: If using HTTPS, ensure your SSL certificate is valid
+4. **Check File Permissions**: Verify web server can read all files in the `public` directory
+5. **Confirm PHP Extensions**: Ensure all required extensions are installed (see [Server Requirements](/get-started/server-requirements))
+6. **Check Server Resources**: Verify sufficient CPU and RAM are available
+
+<Tip>
+Try accessing the site from an incognito/private browsing window to rule out browser cache issues.
+</Tip>
+
+---
+
+## Configuration Issues
+
+### "Does Not Allow the Value" Error
+
+**Symptoms:**
+- Error message: "Does not allow the value"
+- Occurs after installation when trying to use features
+
+**Cause:**
+The Site Domain value is missing in General Settings.
+
+**Solution:**
+
+1. Log in to the admin panel
+2. Navigate to **Settings > General**
+3. Locate the "Site Domain" field
+4. Enter your domain without protocol or paths (e.g., `yourdomain.com`)
+5. Enable SSL if you have an SSL certificate
+6. Click "Save changes"
+
+**Related Documentation:**
+- [Initial Setup - Configuring Site Domain](/get-started/initial-setup#configuring-your-site-domain)
+
+---
+
+### Cannot Select Models or Send Prompts
+
+**Symptoms:**
+- Browser console shows JavaScript errors
+- Unable to select AI models in dropdown
+- Cannot send prompts or generate content
+- Tools missing from sidebar
+
+**Cause:**
+Features and models are not enabled globally, or plan configuration is incomplete.
+
+**Solution:**
+
+<Steps>
+<Step title="Enable Features Globally">
+  1. Navigate to **Settings > Features** in the admin panel
+  2. Enable the features you want to offer (Chat, Writer, Coder, etc.)
+  3. Click "Save changes"
+  
+  <Note>
+  Enabling features globally makes them available but they still need to be configured in plans.
+  </Note>
+</Step>
+
+<Step title="Enable Models Globally">
+  1. Go to **Settings > Models**
+  2. Enable the AI models you want to make available
+  3. Click "Save changes"
+</Step>
+
+<Step title="Configure Plan Settings">
+  1. Navigate to the **Plans** page in the admin panel
+  2. Find the plan your users are subscribed to
+  3. Edit the plan configuration:
+     - Enable desired features
+     - Enable desired models
+     - Set credit allocations
+  4. **Important:** Check the "Update snapshots" box before saving
+  5. Click "Save changes"
+  
+  <Warning>
+  If you don't check "Update snapshots," changes will only apply to new subscriptions, not existing ones.
+  </Warning>
+</Step>
+
+<Step title="Verify Configuration">
+  1. Log in as a test user
+  2. Verify tools appear in the sidebar
+  3. Test selecting a model and generating content
+  
+  <Check>
+  Users should now be able to access features and generate content.
+  </Check>
+</Step>
+</Steps>
+
+**Related Documentation:**
+- [Plans, Snapshots & Subscriptions](/billing/plans-snapshots-subscriptions)
+- [Application Configuration](/get-started/configuration)
+
+---
+
+### 500 Error on Image Generator or Video Generator
+
+**Symptoms:**
+- Imagine (image generator) page returns HTTP 500 error
+- Video generator page returns HTTP 500 error
+- Server error logs show credit ratio issues
+
+**Cause:**
+Credit ratios are not configured for all enabled models.
+
+**Solution:**
+
+1. Navigate to **Settings > Credit Ratios** in the admin panel
+2. Review all enabled AI models
+3. Ensure **every enabled model** has a credit ratio configured
+4. Set appropriate credit values for each model
+5. Click "Save changes"
+
+<Tip>
+If you're unsure about credit ratios, start with the default suggestions and adjust based on your pricing strategy.
+</Tip>
+
+**Related Documentation:**
+- [Unified Credit System](/billing/unified-credit-system)
+- [Application Configuration](/get-started/configuration)
+
+---
+
+## Database Issues
+
+### MySQL Server Has Gone Away
+
+**Symptoms:**
+- Error message: "MySQL server has gone away"
+- Database connection drops during requests
+- Long-running operations fail
+
+**Cause:**
+MySQL server timeout or packet size limitations.
+
+**Solution:**
+
+<Tabs>
+<Tab title="Server Timeout Fix">
+  **Problem:** MySQL server times out and closes the connection.
+  
+  **Solution:** Update your `my.cnf` configuration file:
+  
+  ```ini
+  [mysqld]
+  wait_timeout = 28800
+  ```
+  
+  This sets the timeout to 8 hours. Adjust as needed for your use case.
+</Tab>
+
+<Tab title="Packet Size Fix">
+  **Problem:** MySQL receives packets that are too large or incorrect.
+  
+  **Solution:** Increase the max packet size in `my.cnf`:
+  
+  ```ini
+  [mysqld]
+  max_allowed_packet = 128M
+  ```
+  
+  This allows larger data packets to be processed.
+</Tab>
+
+<Tab title="InnoDB Log Size">
+  **Problem:** InnoDB log file size is insufficient.
+  
+  **Solution:** Increase the log file size in `my.cnf`:
+  
+  ```ini
+  [mysqld]
+  innodb_log_file_size = 128M
+  ```
+  
+  Or larger, depending on your data volume.
+</Tab>
+</Tabs>
+
+<Warning>
+After modifying `my.cnf`, you must restart your MySQL server for changes to take effect:
+
+```bash
+sudo systemctl restart mysql
+```
+
+or
+
+```bash
+sudo service mysql restart
+```
+</Warning>
+
+**Finding my.cnf:**
+
+Common locations for the MySQL configuration file:
+- Linux: `/etc/my.cnf` or `/etc/mysql/my.cnf`
+- macOS: `/etc/my.cnf`
+- Windows: `C:\ProgramData\MySQL\MySQL Server X.X\my.ini`
+
+<Note>
+If you're on shared hosting and don't have access to `my.cnf`, contact your hosting provider to request these changes.
+</Note>
+
+---
+
+## Feature-Specific Issues
+
+### Auto-Generated Titles Don't Match Content Language
+
+**Symptoms:**
+- AI generates titles in English when content is in another language
+- Title language doesn't match the generated content language
+
+**Cause:**
+AI models sometimes generate titles in their default language despite instructions.
+
+**Solution:**
+
+<Tabs>
+<Tab title="Option 1: Modify Prompts">
+  Customize the title generation prompts in these files:
+  
+  ```
+  /src/Ai/Infrastructure/Services/OpenAi/TitleGeneratorService.php
+  /src/Ai/Infrastructure/Services/Anthropic/TitleGeneratorService.php
+  /src/Ai/Infrastructure/Services/Cohere/TitleGeneratorService.php
+  ```
+  
+  Strengthen the language instruction in the prompt to emphasize matching the content language.
+  
+  <Warning>
+  Custom code modifications will need to be reapplied after app updates.
+  </Warning>
+</Tab>
+
+<Tab title="Option 2: Try Different Models">
+  Some AI models are better at following language instructions than others:
+  
+  1. Navigate to **Settings > Models**
+  2. Enable alternative models (e.g., GPT-4 instead of GPT-3.5)
+  3. Test title generation with different models
+  4. Use the model that best respects language instructions
+  
+  <Tip>
+  Claude models often excel at following specific language instructions.
+  </Tip>
+</Tab>
+</Tabs>
+
+---
+
+## Frequently Asked Questions
+
+### Third-Party Service Costs
+
+**Question:** How much do the AI services cost?
+
+**Answer:** Aikeedo integrates with various third-party AI services that use pay-as-you-go billing. Costs depend on your usage volume and which services you enable.
+
+**Pricing Resources:**
+
+<AccordionGroup>
+<Accordion title="Text Generation Services">
+  - [OpenAI Pricing](https://openai.com/api/pricing/) - GPT models
+  - [Anthropic Claude Pricing](https://www.anthropic.com/pricing#anthropic-api) - Claude models
+  - [Cohere Pricing](https://cohere.com/pricing) - Cohere models
+</Accordion>
+
+<Accordion title="Image Generation Services">
+  - [Stability AI Pricing](https://platform.stability.ai/pricing) - Stable Diffusion
+  - OpenAI DALL-E included in [OpenAI Pricing](https://openai.com/api/pricing/)
+</Accordion>
+
+<Accordion title="Voice & Audio Services">
+  - [ElevenLabs Pricing](https://elevenlabs.io/pricing) - Voice synthesis
+  - [Google Cloud TTS Pricing](https://cloud.google.com/text-to-speech/pricing) - Text-to-speech
+  - [Azure Speech Services Pricing](https://azure.microsoft.com/en-us/pricing/details/cognitive-services/speech-services/) - Microsoft TTS
+  - [Speechify API Pricing](https://speechify.com/text-to-speech-api) - Text-to-speech
+</Accordion>
+
+<Accordion title="Other Services">
+  - [Serper Pricing](https://serper.dev/#pricing) - Search API
+</Accordion>
+</AccordionGroup>
+
+<Tip>
+Most services offer free trial credits or free tiers. Start with these to test functionality before committing to paid usage.
+</Tip>
+
+**Cost Management Tips:**
+1. Start with lower-cost models for testing
+2. Monitor API usage through provider dashboards
+3. Set up usage alerts with your AI providers
+4. Use the [Unified Credit System](/billing/unified-credit-system) to control user consumption
+5. Adjust credit ratios to manage profitability
+
+---
+
+## Additional Troubleshooting Steps
+
+If you're still experiencing issues after trying the solutions above:
+
+1. **Fresh Installation**: Consider a clean reinstall with fresh Aikeedo files
+2. **Server Configuration**: Review web server configuration (Apache/Nginx) for PHP applications
+3. **PHP Configuration**: Check `php.ini` for settings like:
+   - `max_execution_time`
+   - `upload_max_filesize`
+   - `post_max_size`
+   - `memory_limit`
+4. **Hosting Environment**: Contact your hosting provider to ensure no server-side restrictions
+
+## Getting Additional Help
+
+If you've tried the solutions above and still need assistance:
+
+### Before Contacting Support
+
+1. **Check Error Logs:**
+   - Browser console (F12 in most browsers)
+   - Server error logs (`/var/log/apache2/error.log` or `/var/log/nginx/error.log`)
+   - Application logs
+   - PHP error logs
+
+2. **Verify Configuration:**
+   - Review [Initial Setup](/get-started/initial-setup)
+   - Check [Application Configuration](/get-started/configuration)
+   - Verify [Server Requirements](/get-started/server-requirements)
+
+3. **Clear Caches:**
+   - Clear browser cache (Ctrl+Shift+R or Cmd+Shift+R)
+   - Clear application cache from admin panel Status page
+
+### Contact Support
+
+<Card title="Email Support" icon="envelope" href="mailto:support@aikeedo.com">
+  Reach out to our support team with detailed information about your issue, including error messages and steps to reproduce.
+</Card>
+
+**When contacting support, include:**
+- Detailed description of the issue
+- Complete error messages (screenshots if possible)
+- Steps to reproduce the problem
+- PHP version and server environment details
+- Aikeedo version number
+- Relevant error log entries
+- What troubleshooting steps you've already tried
+
+<Tip>
+The more detailed information you provide, the faster our support team can help resolve your issue.
+</Tip>
+
+---
+
+## Related Documentation
+
+- [Installation Guide](/get-started/installation)
+- [Initial Setup](/get-started/initial-setup)
+- [Application Configuration](/get-started/configuration)
+- [Server Requirements](/get-started/server-requirements)
+- [Plans, Snapshots & Subscriptions](/billing/plans-snapshots-subscriptions)
+

@@ -1,11 +1,11 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
+  "theme": "willow",
   "name": "Aikeedo Docs",
   "colors": {
-    "primary": "#0D9373",
+    "primary": "#24282c",
     "light": "#07C983",
-    "dark": "#0D9373"
+    "dark": "#24282c"
   },
   "description": "Self-hosted software with customizable features to launch your AI SaaS business quickly and generate revenue fast.",
   "logo": {
@@ -54,29 +54,36 @@
         "tab": "Docs",
         "groups": [
           {
-            "group": "Get Started",
+            "group": "Overview",
             "pages": [
-              "get-started/introduction",
-              "get-started/get-aikeedo",
-              "get-started/file-structure",
-              "get-started/server-requirements",
+              "overview/introduction",
+              "overview/get-aikeedo",
+              "overview/file-structure",
+              "overview/server-requirements",
+              "overview/commercial-resources"
+            ]
+          },
+          {
+            "group": "Installation & Setup",
+            "pages": [
               {
                 "group": "Installation",
                 "pages": [
                   "get-started/installation",
                   "get-started/installation/cpanel",
-                  "get-started/installation/local",
-                  "get-started/installation/troubleshooting"
+                  "get-started/installation/local"
                 ]
               },
               "get-started/initial-setup",
-              "get-started/commercial-resources"
+              "get-started/configuration",
+              "get-started/troubleshooting"
             ]
           },
           {
             "group": "Website Basics",
             "pages": [
               "website-basics/essentials",
+              "website-basics/landing-page",
               "website-basics/pwa",
               "website-basics/branding"
             ]

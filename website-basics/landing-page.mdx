@@ -1,0 +1,224 @@
+---
+title: Landing Page Customization
+sidebarTitle: Landing Page
+description: 'Customize your Aikeedo landing page including hero images, text content, and theme files while preserving changes through updates.'
+---
+
+## Overview
+
+The landing page is the first impression visitors get of your Aikeedo platform. This guide covers how to customize images, text, and theme files safely.
+
+<Warning>
+Changes made directly to the default theme will be overwritten during app updates. Always duplicate the theme before making customizations.
+</Warning>
+
+## Quick Customizations
+
+### Updating the Hero Image
+
+The hero image is located at:
+
+```
+/public/e/heyaikeedo/default/assets/preview.webp
+```
+
+<Note>
+If you've replaced the default `public` directory with `public_html` (common in cPanel environments), the path will be `/public_html/e/heyaikeedo/default/assets/preview.webp`
+</Note>
+
+To update the hero image:
+
+1. Replace the existing `preview.webp` file with your new image
+2. Keep the same filename (`preview.webp`)
+3. Clear your browser cache to see the changes
+
+<Tip>
+For best results, use WebP format for optimal performance and loading speed.
+</Tip>
+
+### Updating Text Content
+
+Text content should be updated through localization files for proper multilingual support.
+
+Localization files are located at:
+
+```
+/extra/extensions/heyaikeedo/default/locale
+```
+
+See the [Localization guide](/advanced/localization) for detailed instructions on managing text translations.
+
+## Theme File Locations
+
+Understanding where theme files are located helps you customize effectively:
+
+### Asset Files (CSS, JS, Images)
+
+```
+/public/e/heyaikeedo/default/
+```
+
+Contains all frontend assets including:
+- Stylesheets (CSS)
+- JavaScript files
+- Images and icons
+
+### HTML View Files
+
+```
+/extra/extensions/heyaikeedo/default/
+```
+
+Contains template files that generate the HTML structure.
+
+## Safe Theme Customization
+
+To protect your customizations from being overwritten during updates, create a custom theme:
+
+<Steps>
+<Step title="Duplicate the Theme Directory">
+  Copy the default theme to a new location:
+  
+  ```bash
+  # From
+  /extra/extensions/heyaikeedo/default
+  
+  # To
+  /extra/extensions/yourorganization/themename
+  ```
+  
+  Replace `yourorganization` and `themename` with your preferred names.
+</Step>
+
+<Step title="Update composer.json">
+  In your duplicated theme directory, update the `composer.json` file to reflect the new theme name:
+  
+  ```json
+  {
+    "name": "yourorganization/themename"
+  }
+  ```
+  
+  The name must match the new directory structure.
+</Step>
+
+<Step title="Duplicate Theme Assets">
+  Copy the theme assets to match your new theme:
+  
+  ```bash
+  # From
+  /public/e/heyaikeedo/default
+  
+  # To
+  /public/e/yourorganization/themename
+  ```
+</Step>
+
+<Step title="Activate Your Theme">
+  1. Navigate to the admin panel
+  2. Go to **Themes** page
+  3. Find your new theme in the list
+  4. Click **Activate** to enable it
+</Step>
+
+<Step title="Enable Debug Mode">
+  Enable debug mode in your Aikeedo configuration to see changes in real-time during development.
+  
+  <Note>
+  Debug mode helps you identify issues but should never be enabled in production.
+  </Note>
+</Step>
+
+<Step title="Make Your Changes">
+  Edit files in your custom theme directory:
+  - Modify HTML views
+  - Update CSS styles
+  - Add custom JavaScript
+  - Replace images
+</Step>
+
+<Step title="Clear Cache">
+  After making changes, clear the application cache from the admin panel's Status page.
+</Step>
+
+<Step title="Disable Debug Mode">
+  Once you've completed and tested your changes, disable debug mode for optimal performance.
+  
+  <Check>
+  Your customizations are now protected from being overwritten during updates.
+  </Check>
+</Step>
+</Steps>
+
+## Advanced Theme Development
+
+For comprehensive theme customization and development:
+
+### Default Theme Source Code
+
+Access the default theme source code and documentation:
+
+<Card title="Default Theme Repository" icon="github" href="https://github.com/heyaikeedo/themes-default">
+  View the complete source code, structure, and implementation of the default landing page theme
+</Card>
+
+### Theme Development Guide
+
+For in-depth information on building custom themes:
+
+<Card title="Theme Development Guide" icon="code" href="/development/themes/development-guide">
+  Learn about theme architecture, available objects, and best practices for theme development
+</Card>
+
+## Best Practices
+
+Follow these guidelines for successful landing page customization:
+
+1. **Always Duplicate**: Never edit the default theme directly
+2. **Version Control**: Keep your custom theme under version control (Git)
+3. **Test Thoroughly**: Test changes across different browsers and devices
+4. **Optimize Assets**: Compress images and minify CSS/JS for better performance
+5. **Document Changes**: Keep notes on customizations for future reference
+6. **Regular Backups**: Backup your custom theme before major changes
+
+<Tip>
+If you only need to change colors and logos, consider using the [Branding settings](/website-basics/branding) instead of creating a custom theme.
+</Tip>
+
+## Troubleshooting
+
+Common issues and solutions:
+
+<AccordionGroup>
+<Accordion title="Changes not appearing after update">
+  - Clear your browser cache (hard refresh: Ctrl+Shift+R or Cmd+Shift+R)
+  - Clear the application cache from the admin panel
+  - Verify you're editing the active theme, not the default theme
+</Accordion>
+
+<Accordion title="Theme not showing in admin panel">
+  - Verify the `composer.json` file has the correct name format
+  - Ensure the directory structure matches the name in `composer.json`
+  - Check file permissions on the theme directories
+</Accordion>
+
+<Accordion title="Styles not loading correctly">
+  - Verify asset files are in the correct `/public/e/` directory
+  - Clear browser cache and application cache
+  - Check browser console for 404 errors on asset files
+</Accordion>
+</AccordionGroup>
+
+## Related Configuration
+
+Continue customizing your platform:
+
+- [Branding](/website-basics/branding) - Configure logos and colors
+- [General Settings](/website-basics/essentials) - Set site name and SEO
+- [Localization](/advanced/localization) - Manage translations
+- [Theme Development Guide](/development/themes/development-guide) - Advanced theme development
+
+<Warning>
+Remember to disable debug mode on production sites to ensure optimal performance and security.
+</Warning>
+

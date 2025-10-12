@@ -1,9 +1,9 @@
 ---
 title: Initial Setup
-description: Essential steps to configure your Aikeedo installation for optimal performance and functionality.
+description: 'Configure cron jobs, set your site domain, and enable SSL for your Aikeedo installation to ensure proper functionality and security.'
 ---
 
-After successfully installing Aikeedo, there are a few crucial setup steps to ensure your application runs smoothly and securely. This guide will walk you through setting up a cron job, configuring your site domain, and completing the initial setup process.
+After successfully installing Aikeedo, complete these crucial technical setup steps to ensure your application runs smoothly and securely.
 
 ## Setting Up the Cron Job
 
@@ -75,11 +75,12 @@ Always run the cron job as the same user that your web server uses (typically `w
 
 If you encounter problems with subscription renewals:
 
-1. Verify the cron task configuration is correct.
-2. Check your server logs for any error messages related to the cron job or renewal process.
-3. Ensure the PHP path (`/usr/bin/php`) is correct for your server.
+1. Verify the cron task configuration is correct
+2. Check your server logs for error messages related to the cron job
+3. Ensure the PHP path (`/usr/bin/php`) is correct for your server
+4. Verify file permissions are correct for the web server user
 
-If issues persist, consult with your server administrator. They can help diagnose server-specific problems, verify cron job configurations, and ensure proper file permissions. If you still need assistance after consulting your server administrator, please don't hesitate to contact our support team directly for further guidance. Our dedicated team is ready to help you resolve any remaining issues and ensure your Aikeedo installation is running smoothly.
+Consult with your server administrator for server-specific issues. For additional help, see the [Troubleshooting & FAQ](/get-started/troubleshooting) page or contact [support@aikeedo.com](mailto:support@aikeedo.com).
 
 ## Configuring Your Site Domain
 
@@ -125,9 +126,15 @@ Completing the "Getting Started" section is crucial for ensuring all aspects of 
 
 ## Next Steps
 
-After completing these initial setup steps, your Aikeedo installation should be ready for use. Here are some recommended next steps:
+After completing these initial setup steps, proceed to configure your application:
 
-- [Configure email settings](/email/mailer) to ensure proper communication with your users.
-- Set up [authentication providers](/authentication/accounts-settings) if you want to offer social login options.
-- Explore [integrations](/integrations/openai) to extend the functionality of your Aikeedo instance.
-- Review our [billing documentation](/billing/overview) to understand how to set up and manage subscriptions.
+<Card title="Application Configuration" icon="gear" href="/get-started/configuration">
+  Complete guide to configuring all your Aikeedo settings
+</Card>
+
+Or jump directly to specific configuration areas:
+
+- [Email Settings](/email/mailer) - Configure email delivery
+- [Billing Setup](/billing/overview) - Set up subscriptions and pricing
+- [Integrations](/integrations/openai) - Connect AI providers and services
+- [Branding](/website-basics/branding) - Customize your platform's appearance
