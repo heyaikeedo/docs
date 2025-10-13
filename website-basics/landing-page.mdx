@@ -12,68 +12,39 @@ The landing page is the first impression visitors get of your Aikeedo platform. 
 Changes made directly to the default theme will be overwritten during app updates. Always duplicate the theme before making customizations.
 </Warning>
 
-## Quick Customizations
-
-### Updating the Hero Image
-
-The hero image is located at:
-
-```
-/public/e/heyaikeedo/default/assets/preview.webp
-```
-
 <Note>
-If you've replaced the default `public` directory with `public_html` (common in cPanel environments), the path will be `/public_html/e/heyaikeedo/default/assets/preview.webp`
+**Directory Note**: If you've replaced the default `public` directory with `public_html` (common in cPanel environments), replace `public` with `public_html` in all file paths throughout this guide.
 </Note>
 
-To update the hero image:
+## Landing Page Options
 
-1. Replace the existing `preview.webp` file with your new image
-2. Keep the same filename (`preview.webp`)
-3. Clear your browser cache to see the changes
+Aikeedo offers flexibility in how you manage your landing page:
 
-<Tip>
-For best results, use WebP format for optimal performance and loading speed.
-</Tip>
+<AccordionGroup>
+<Accordion title="Option 1: Customize the Default Landing Page">
+Use Aikeedo's built-in landing page and customize it to match your brand. This option gives you full control while staying within the Aikeedo ecosystem.
 
-### Updating Text Content
+**Best for:** Users who want to customize the existing design without external tools.
+</Accordion>
 
-Text content should be updated through localization files for proper multilingual support.
+<Accordion title="Option 2: Use Third-Party Landing Page">
+Install Aikeedo on a subdomain (`app.yourdomain.com`) and disable the default landing page. Create your main landing page using external services like Framer, WordPress, Webflow, or Squarespace, then point your main domain (`yourdomain.com`) to your third-party landing page.
 
-Localization files are located at:
+**How it works:** Main domain shows your custom landing page, while the subdomain handles Aikeedo functionality (authorized users go to dashboard, unauthorized visitors see login page).
 
-```
-/extra/extensions/heyaikeedo/default/locale
-```
+**Best for:** Users who want complete design freedom with specialized landing page builders.
+</Accordion>
 
-See the [Localization guide](/advanced/localization) for detailed instructions on managing text translations.
+<Accordion title="Option 3: Install Custom Themes">
+Use pre-built themes from our [Marketplace](https://aikeedo.com/marketplace/) or create your own. You can build themes yourself using our [Theme Development Guide](/development/themes/development-guide) or have our team create custom themes for you (contact [sales@aikeedo.com](mailto:sales@aikeedo.com)).
 
-## Theme File Locations
+**Best for:** Users who want professional designs without starting from scratch.
+</Accordion>
+</AccordionGroup>
 
-Understanding where theme files are located helps you customize effectively:
+## Customize the Default Landing Page
 
-### Asset Files (CSS, JS, Images)
-
-```
-/public/e/heyaikeedo/default/
-```
-
-Contains all frontend assets including:
-- Stylesheets (CSS)
-- JavaScript files
-- Images and icons
-
-### HTML View Files
-
-```
-/extra/extensions/heyaikeedo/default/
-```
-
-Contains template files that generate the HTML structure.
-
-## Safe Theme Customization
-
-To protect your customizations from being overwritten during updates, create a custom theme:
+To customize Aikeedo's default landing page, you'll need to duplicate the theme first to protect your changes from being overwritten during updates.
 
 <Steps>
 <Step title="Duplicate the Theme Directory">
@@ -112,6 +83,10 @@ To protect your customizations from being overwritten during updates, create a c
   # To
   /public/e/yourorganization/themename
   ```
+  
+  <Note>
+  If using `public_html`, replace `public` with `public_html` in the paths above.
+  </Note>
 </Step>
 
 <Step title="Activate Your Theme">
@@ -149,6 +124,61 @@ To protect your customizations from being overwritten during updates, create a c
   </Check>
 </Step>
 </Steps>
+
+## Theme File Locations
+
+Understanding where theme files are located helps you customize effectively:
+
+### Asset Files (CSS, JS, Images)
+
+```
+/public/e/heyaikeedo/default/
+```
+
+Contains all frontend assets including:
+- Stylesheets (CSS)
+- JavaScript files
+- Images and icons
+
+### HTML View Files
+
+```
+/extra/extensions/heyaikeedo/default/
+```
+
+Contains template files that generate the HTML structure.
+
+## Quick Customizations
+
+### Updating the Hero Image
+
+The hero image is located at:
+
+```
+/public/e/heyaikeedo/default/assets/preview.webp
+```
+
+To update the hero image:
+
+1. Replace the existing `preview.webp` file with your new image
+2. Keep the same filename (`preview.webp`)
+3. Clear your browser cache to see the changes
+
+<Tip>
+For best results, use WebP format for optimal performance and loading speed.
+</Tip>
+
+### Updating Text Content
+
+Text content should be updated through localization files for proper multilingual support.
+
+Localization files are located at:
+
+```
+/extra/extensions/heyaikeedo/default/locale
+```
+
+See the [Localization guide](/advanced/localization) for detailed instructions on managing text translations.
 
 ## Advanced Theme Development
 
