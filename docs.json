@@ -222,6 +222,7 @@
               "development/themes/objects/locales",
               "development/themes/objects/option",
               "development/themes/objects/plan",
+              "development/themes/objects/plan-config",
               "development/themes/objects/plan-snapshot",
               "development/themes/objects/subscription",
               "development/themes/objects/theme",
