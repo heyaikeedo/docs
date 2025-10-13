@@ -527,6 +527,116 @@ AI models sometimes generate titles in their default language despite instructio
 
 ---
 
+### Uploaded Files Return 404 Not Found Errors
+
+**Symptoms:**
+- Uploaded files show "not found" or 404 errors
+- Generated files (images, audio, documents) are inaccessible
+- Files exist in storage but cannot be accessed via URL
+- Browser shows 404 when clicking file links
+
+**Cause:**
+File grouping enabled on local storage, secure URLs enabled, incorrect document root configuration, or file permission issues.
+
+**Solution:**
+
+<Steps>
+<Step title="Disable File Grouping (if using local storage)">
+  If you're experiencing file access issues with local storage, try disabling file grouping:
+  
+  1. Log in to the admin panel
+  2. Navigate to **Settings > Storage**
+  3. Locate the "File Grouping" option
+  4. Change the value from "Workspace" (or any other option) to **"None"**
+  5. Click "Save changes"
+  
+  <Note>
+  File grouping and secure URLs are optimized for cloud storage (S3, DigitalOcean Spaces, etc.) and may cause compatibility issues on some local storage configurations, particularly on cPanel-based hosting. If files are inaccessible, disabling these options often resolves the issue.
+  </Note>
+</Step>
+
+<Step title="Disable Secure URLs">
+  If you're using local storage without special security requirements:
+  
+  1. In **Settings > Storage**
+  2. Locate the "Secure URLs" option
+  3. **Turn off** the "Secure URLs" option
+  4. Click "Save changes"
+  
+  <Warning>
+  If files were uploaded with Secure URLs enabled, you may need to re-upload them after disabling this option.
+  </Warning>
+</Step>
+
+<Step title="Verify Document Root Configuration">
+  If your domain's document root is set to `public_html` instead of `public`:
+  
+  1. Open your `.env` file in the root directory
+  2. Find the line with `PUBLIC_DIR` (it may be commented out with `#`)
+  3. Ensure it's set correctly:
+     ```bash
+     PUBLIC_DIR=public_html
+     ```
+  4. Remove the `#` symbol if present at the beginning
+  5. Save the file
+  
+  <Note>
+  This is particularly important for cPanel users where the default document root is `public_html`.
+  </Note>
+</Step>
+
+<Step title="Check File Permissions">
+  Ensure the web server has read access to uploaded files:
+  
+  ```bash
+  # Navigate to your Aikeedo directory
+  cd /path/to/aikeedo
+  
+  # Set correct permissions for storage directory
+  chmod -R 755 storage/
+  
+  # Set correct ownership (replace www-data with your web server user)
+  chown -R www-data:www-data storage/
+  ```
+  
+  Common web server users:
+  - Ubuntu/Debian: `www-data`
+  - CentOS/RHEL: `apache`
+  - Nginx: `nginx`
+</Step>
+
+<Step title="Verify Storage Path">
+  Check that your storage path is correctly configured:
+  
+  1. Go to **Settings > Storage** in the admin panel
+  2. Verify the storage driver is set correctly (Local, S3, etc.)
+  3. If using local storage, ensure the path is correct
+  4. Test by uploading a new file
+  
+  <Check>
+  If the new file is accessible, the configuration is correct. You may need to re-upload older files.
+  </Check>
+</Step>
+
+<Step title="Clear Application Cache">
+  After making configuration changes:
+  
+  1. Navigate to **Status** page in the admin panel
+  2. Click "Clear cache" to clear the application cache
+  3. Test file access again
+</Step>
+</Steps>
+
+<Tip>
+For production environments requiring secure file access or workspace-based file organization, cloud storage (S3, DigitalOcean Spaces) is recommended. File grouping and secure URL features are optimized for cloud storage and work most reliably in that environment, though they may also work on some local storage configurations.
+</Tip>
+
+**Related Documentation:**
+- [Secure URLs](/advanced/secure-urls) - Configure secure file access
+- [cPanel Installation](/get-started/installation/cpanel) - Document root configuration for cPanel
+
+---
+
 ## Frequently Asked Questions
 
 ### Third-Party Service Costs
