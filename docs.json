@@ -69,14 +69,14 @@
               {
                 "group": "Installation",
                 "pages": [
-                  "get-started/installation",
-                  "get-started/installation/cpanel",
-                  "get-started/installation/local"
+                  "setup/installation",
+                  "setup/installation/cpanel",
+                  "setup/installation/local"
                 ]
               },
-              "get-started/initial-setup",
-              "get-started/configuration",
-              "get-started/troubleshooting"
+              "setup/initial-setup",
+              "setup/configuration",
+              "setup/troubleshooting"
             ]
           },
           {
