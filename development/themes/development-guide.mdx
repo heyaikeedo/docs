@@ -25,9 +25,69 @@ The **Aikeedo Theme Starter Kit** provides a modern development environment with
 - **Gettext** for internationalization
 - **PHP Composer** package structure
 
-## Getting Started with the Starter Kit
+## Theme Development Options
 
-### 1. Clone the Starter Repository
+You have several options for theme development:
+
+1. **Build a new theme** from scratch using the [themes-starter kit](https://github.com/heyaikeedo/themes-starter)
+2. **Customize the default theme** for simple modifications
+3. **Customize marketplace themes** for advanced modifications
+4. **Rebuild themes from source** for complex customizations
+
+### Choosing the Right Approach
+
+<Tabs>
+<Tab title="Simple Changes">
+  **Use**: Quick customization (Option 2 or 3)
+  
+  **Best for**:
+  - Changing colors, fonts, or basic styling
+  - Modifying text content
+  - Simple layout adjustments
+  - Adding basic HTML elements
+  
+  **Limitations**:
+  - Manual asset copying required
+  - No hot reloading
+  - Limited to existing template structure
+</Tab>
+
+<Tab title="Complex Changes">
+  **Use**: Rebuild from source (Option 4)
+  
+  **Best for**:
+  - Adding new components or features
+  - Major layout restructuring
+  - Custom JavaScript functionality
+  - Advanced CSS modifications
+  - Adding new template files
+  
+  **Benefits**:
+  - Full development environment
+  - Hot module replacement
+  - Modern build tools
+  - Version control friendly
+</Tab>
+
+<Tab title="New Theme">
+  **Use**: Build from scratch (Option 1)
+  
+  **Best for**:
+  - Completely custom design
+  - Unique functionality
+  - Commercial theme development
+  - Learning theme development
+  
+  **Benefits**:
+  - Complete control
+  - Modern development stack
+  - Reusable across projects
+</Tab>
+</Tabs>
+
+## Option 1: Building a New Theme
+
+### Clone the Starter Repository
 
 Start by cloning the themes-starter repository:
 
@@ -36,7 +96,7 @@ git clone https://github.com/heyaikeedo/themes-starter.git my-theme
 cd my-theme
 ```
 
-### 2. Configure Your Theme Package
+### Configure Your Theme Package
 
 Edit `/static/composer.json` with your theme details:
 
@@ -87,7 +147,7 @@ Edit `/static/composer.json` with your theme details:
 **Important**: Replace `YourVendor\\ThemeName` with your actual namespace. The namespace in `autoload.psr-4` must match your `entry-class` namespace.
 </Warning>
 
-### 3. Set Up Environment
+### Set Up Environment
 
 Create your local environment file:
 
@@ -112,7 +172,7 @@ AIKEEDO_SERVER=http://localhost:8000
 **Critical**: The final path segments (`your-vendor/your-theme-name`) MUST match your composer.json package name!
 </Warning>
 
-### 4. Install Dependencies
+### Install Dependencies
 
 Install npm packages:
 
@@ -127,7 +187,7 @@ Verify installation:
 npm list
 ```
 
-### 5. Start Development Server
+### Start Development Server
 
 ```bash
 npm run dev
@@ -139,7 +199,7 @@ This will:
 - Copy static files to `BUILD_DIR`
 - Extract translations automatically
 
-### 6. Register Theme with Aikeedo
+### Register Theme with Aikeedo
 
 In your Aikeedo installation directory:
 
@@ -148,7 +208,7 @@ In your Aikeedo installation directory:
 composer require your-vendor/your-theme-name
 ```
 
-### 7. Configure Aikeedo
+### Configure Aikeedo
 
 Add or update these settings in your Aikeedo's `.env` file:
 
@@ -166,14 +226,14 @@ DEBUG=1
 CACHE=0
 ```
 
-### 8. Verify Installation
+### Verify Installation
 
 ```bash
 # Your theme should be here
 ls /path/to/aikeedo/public/content/plugins/your-vendor/your-theme-name
 ```
 
-### 9. Activate Your Theme
+### Activate Your Theme
 
 <Steps>
 <Step title="Log into Admin Panel">
@@ -194,6 +254,94 @@ ls /path/to/aikeedo/public/content/plugins/your-vendor/your-theme-name
   <Check>
   Your theme is now active and visible to users!
   </Check>
+</Step>
+</Steps>
+
+## Option 2: Customizing the Default Theme
+
+For simple modifications to the default theme, you can make direct changes without rebuilding from source.
+
+<Note>
+This approach is suitable for basic customizations. For complex changes, consider rebuilding from source (Option 4).
+</Note>
+
+### Quick Customization Guide
+
+For detailed step-by-step instructions on customizing the default theme, including:
+
+- Duplicating the default theme
+- Updating composer configuration
+- Copying public assets
+- Activating your custom theme
+- Making changes and managing cache
+
+<Card title="Landing Page Customization" icon="palette" href="/website-basics/landing-page">
+Complete step-by-step guide for customizing the default theme with detailed instructions for duplicating, configuring, and modifying themes.
+</Card>
+
+## Option 3: Customizing Marketplace Themes
+
+For themes purchased from the Aikeedo marketplace, follow the same process as customizing the default theme, but start with your purchased theme instead.
+
+<Warning>
+Always work on a copy of the theme to prevent losing changes during updates.
+</Warning>
+
+### Quick Customization Guide
+
+Follow the same steps as customizing the default theme, but replace the default theme with your purchased theme.
+
+<Card title="Landing Page Customization" icon="palette" href="/website-basics/landing-page">
+Complete step-by-step guide for customizing themes with detailed instructions for duplicating, configuring, and modifying themes.
+</Card>
+
+## Option 4: Rebuilding Themes from Source
+
+For complex customizations, rebuild the theme from source using the same process as building a new theme.
+
+### Rebuilding the Default Theme
+
+<Steps>
+<Step title="Clone the Default Theme Repository">
+  ```bash
+  git clone https://github.com/heyaikeedo/themes-default.git my-custom-theme
+  cd my-custom-theme
+  ```
+</Step>
+
+<Step title="Configure Your Theme">
+  Follow the same configuration steps as building a new theme, but update the package name to avoid conflicts:
+  
+  ```json
+  {
+    "name": "yourorganization/custom-default",
+    "description": "Customized default theme",
+    "version": "1.0.0",
+    "type": "aikeedo-theme",
+    "require": {
+      "heyaikeedo/composer": "^1.0.0"
+    },
+    "extra": {
+      "title": "Custom Default Theme",
+      "status": "active"
+    }
+  }
+  ```
+</Step>
+
+<Step title="Set Up Development Environment">
+  Follow the same environment setup as building a new theme, but point to your custom theme directory.
+</Step>
+
+<Step title="Make Your Customizations">
+  Edit the source files in the `src/` and `static/` directories as needed.
+</Step>
+
+<Step title="Build and Deploy">
+  ```bash
+  npm run build
+  npm run pack
+  ```
 </Step>
 </Steps>
 
@@ -338,9 +486,11 @@ If theme assets aren't loading:
 
 ## Related Guides
 
+- [Landing Page Customization](/website-basics/landing-page) - Basic customization guide for the default theme
 - [Theme Objects](/development/themes/objects/address) - Available objects for templates
 - [Localization](/advanced/localization) - Add multilingual support
 - [Themes Starter Repository](https://github.com/heyaikeedo/themes-starter) - Modern development starter kit
+- [Default Theme Repository](https://github.com/heyaikeedo/themes-default) - Source code for the default theme
 
 <Support />
 
