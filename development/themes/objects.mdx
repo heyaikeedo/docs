@@ -7,64 +7,148 @@ description: Complete reference for all theme objects, variables, and data struc
 
 This comprehensive guide covers all theme objects, variables, and data structures available in Aikeedo themes. Each object provides specific functionality and data access for building dynamic theme components.
 
-## Address Object
+## Global Objects and Variables
 
-The `address` object provides access to essential address information for workspaces.
+These objects and variables are available globally throughout all theme templates:
+
+- `version` - App version information
+- `theme` - Current theme name
+- `environment` - Current environment
+- `nav` - Navigation registry
+- `view_namespace` - Current view namespace
+- `config` - All configuration settings
+- `currency` - Global currency information
+- `locales` - Available locales array
+- `locale` - Current locale object
+- `option` - All option settings
+
+## User-Specific Objects
+
+These objects are only available when a user is logged in:
+
+- `user` - Current user object with workspace information
+- `workspace` - Current user's workspace object
+
+## Nested Objects
+
+These objects are available as properties of other objects:
+
+- `address` - Available as `workspace.address`
+- `affiliate` - Available as `user.affiliate`
+- `country` - Available as `user.country`
+- `subscription` - Available as `workspace.subscription`
+- `plan_snapshot` - Available as `subscription.plan`
+
+## User Object
+
+The `user` object is a fundamental component in Aikeedo themes, providing access to essential user information when a user is logged into their account. This object is globally accessible, allowing you to easily incorporate user-specific data and functionality into your theme.
 
 ### Availability
-The `address` object is available as a property of the `workspace` object. It can be accessed through `workspace.address`. Note that the `address` property may be null if not set for the workspace.
+The `user` object is available globally when a user is logged in. If no user is logged in, the object will be undefined. Always check for the existence of the `user` object before attempting to access its properties.
 
-<ResponseField name="address" type="Address Object">
+<Note>
+  It's a good practice to use conditional checks when working with the `user` object to ensure your theme functions correctly for both logged-in and guest users.
+</Note>
+
+<ResponseField name="user" type="User Object">
   <Expandable title="Properties">
-    <ResponseField name="country" type="string|null" required>
-      The country code of the address (e.g., "US" for United States).
+    <ResponseField name="id" type="string" required>
+      A unique identifier for the user, always in UUID version 4 format (e.g., "01895d81-4963-71b4-b591-8404987d6954").
     </ResponseField>
 
-    <ResponseField name="state" type="string|null" required>
-      The state or province code (e.g., "DE" for Delaware).
+    <ResponseField name="role" type="enum" required>
+      The user's role in the system. Possible values are:
+      - `admin`: Administrator role with full system access
+      - `user`: Standard user role with limited permissions
     </ResponseField>
 
-    <ResponseField name="city" type="string|null" required>
-      The name of the city (e.g., "San Francisco").
+    <ResponseField name="email" type="string" required>
+      The user's email address.
     </ResponseField>
 
-    <ResponseField name="line1" type="string|null" required>
-      The first line of the street address.
+    <ResponseField name="first_name" type="string" required>
+      The user's first name.
     </ResponseField>
 
-    <ResponseField name="line2" type="string|null">
-      The second line of the street address (optional).
-    </ResponseField>
-
-    <ResponseField name="zip" type="string|null" required>
-      The postal or ZIP code.
+    <ResponseField name="last_name" type="string" required>
+      The user's last name.
     </ResponseField>
 
     <ResponseField name="phone_number" type="string|null" required>
-      The phone number associated with the address.
+      The user's phone number. This field may be null if not set.
+    </ResponseField>
+
+    <ResponseField name="language" type="string" required>
+      The user's preferred language code (e.g., "en-US").
+    </ResponseField>
+
+    <ResponseField name="has_password" type="boolean" required>
+      Indicates whether the user has set a password. Users who signed up using 3rd party services like Google will not have a password.
+    </ResponseField>
+
+    <ResponseField name="workspace_cap" type="number|null" required>
+      The calculated amount of workspaces the user can have. This value may be null if unlimited.
+    </ResponseField>
+
+    <ResponseField name="avatar" type="string" required>
+      URL to the user's Gravatar avatar image (generated from email hash).
+    </ResponseField>
+
+    <ResponseField name="created_at" type="number" required>
+      Unix timestamp of when the user account was created.
+    </ResponseField>
+
+    <ResponseField name="updated_at" type="number|null" required>
+      Unix timestamp of the last update to the user account. While this field always exists, its value may be null if the user account has never been updated.
+    </ResponseField>
+
+    <ResponseField name="ip" type="string|null" required>
+      The IP address associated with the user account.
+    </ResponseField>
+
+    <ResponseField name="country" type="Country|null" required>
+      The user's country information. See Country Object for more details on the properties of this object.
+    </ResponseField>
+
+    <ResponseField name="city_name" type="string|null" required>
+      The name of the city associated with the user.
+    </ResponseField>
+
+    <ResponseField name="is_email_verified" type="boolean" required>
+      Indicates whether the user's email has been verified.
+    </ResponseField>
+
+    <ResponseField name="api_key" type="string" required>
+      The user's API key (partially masked for security).
+    </ResponseField>
+
+    <ResponseField name="affiliate" type="Affiliate" required>
+      The user's affiliate object. See Affiliate Object for more details on the properties of this object.
+    </ResponseField>
+
+    <ResponseField name="workspace" type="Workspace" required>
+      The user's active workspace object. See Workspace Object for more details on the properties of this object.
+    </ResponseField>
+
+    <ResponseField name="preferences" type="object" required>
+      The user's preferences and settings.
+    </ResponseField>
+
+    <ResponseField name="workspaces" type="array<Workspace>" required>
+      An array of workspace objects that the user is a member of, excluding workspaces owned by the user. Each object in this array represents a workspace where the user has membership but not ownership. See Workspace Object for more details on the properties of these objects.
+    </ResponseField>
+
+    <ResponseField name="owned_workspaces" type="array<Workspace>" required>
+      An array of workspace objects that the user owns. See Workspace Object for more details on the properties of these objects.
     </ResponseField>
   </Expandable>
 </ResponseField>
 
-<ResponseExample>
-```json Example
-{
-  "country": "US",
-  "state": "DE",
-  "city": "San Francisco",
-  "line1": "123 Main St",
-  "line2": "Apt 4B",
-  "zip": "12345",
-  "phone_number": "1234567890"
-}
-```
-</ResponseExample>
-
-## Affiliate Object
+### Affiliate Object
 
 The `affiliate` object provides access to essential affiliate information for users participating in the affiliate program. This object is part of the user object and contains details about the user's affiliate status, earnings, and payout preferences.
 
-### Availability
+#### Availability
 The `affiliate` object is always available as a property of the `user` object when a user is logged in. Affiliate accounts are automatically generated for each user, so you can safely access `user.affiliate` properties without additional checks for its existence.
 
 <ResponseField name="affiliate" type="Affiliate Object">
@@ -117,25 +201,34 @@ The `affiliate` object is always available as a property of the `user` object wh
   </Expandable>
 </ResponseField>
 
-<ResponseExample>
-```json Example
-{
-  "id": "0191acee-3bf1-71cf-ac75-7a9e06fd6a3c",
-  "paypal_email": "test@example.com",
-  "bank_requisites": "1234567890",
-  "code": "87a052aa0996",
-  "clicks": 100,
-  "referrals": 50,
-  "balance": 1000,
-  "pending": 500,
-  "withdrawn": 250,
-  "currency": {
-    // Currency object
-  },
-  "payout_method": "paypal"
-}
-```
-</ResponseExample>
+
+### Country Object
+
+The `country` object provides access to country information for users. This object contains details about the user's country including name, codes, and flag information.
+
+#### Availability
+The `country` object is available as a property of the `user` object. It may be null if the user's country is not set.
+
+<ResponseField name="country" type="Country Object">
+  <Expandable title="Properties">
+    <ResponseField name="name" type="string" required>
+      The full name of the country (e.g., "United States").
+    </ResponseField>
+
+    <ResponseField name="alpha2" type="string" required>
+      The two-letter country code (e.g., "US").
+    </ResponseField>
+
+    <ResponseField name="alpha3" type="string" required>
+      The three-letter country code (e.g., "USA").
+    </ResponseField>
+
+    <ResponseField name="flag_url" type="string" required>
+      URL to the country's flag image (e.g., "https://flagcdn.com/us.svg").
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
 
 ## Currency Object
 
@@ -164,16 +257,6 @@ The `currency` object is globally available and represents the global currency s
   </Expandable>
 </ResponseField>
 
-<ResponseExample>
-```json Example
-{
-  "code": "USD",
-  "name": "United States Dollar",
-  "symbol": "$",
-  "fraction_digits": 2
-}
-```
-</ResponseExample>
 
 ## Environment Variable
 
@@ -209,15 +292,6 @@ The `locale` object is available in various contexts throughout the Aikeedo syst
   </Expandable>
 </ResponseField>
 
-<ResponseExample>
-```json Example
-{
-  "name": "en-US",
-  "label": "English (US)",
-  "enabled": true
-}
-```
-</ResponseExample>
 
 ## Locales Array
 
@@ -230,27 +304,6 @@ The `locales` array is globally available throughout the Aikeedo system. It can 
   The array of locales available in the system. Each element is a Locale object.
 </ResponseField>
 
-<ResponseExample>
-```json Example
-[
-  {
-    "name": "en-US",
-    "label": "English (US)",
-    "enabled": true
-  },
-  {
-    "name": "es-ES",
-    "label": "Español (España)",
-    "enabled": true
-  },
-  {
-    "name": "fr-FR",
-    "label": "Français (France)",
-    "enabled": false
-  }
-]
-```
-</ResponseExample>
 
 ## Plan Object
 
@@ -315,6 +368,67 @@ The `Plan` objects are available globally as part of the `plans` array. You can 
 
     <ResponseField name="feature_list" type="array" required>
       An array of features included in the plan. This array may be empty if no specific features are defined.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Plan Snapshot Object
+
+The `plan_snapshot` object represents a snapshot of a subscription plan at the time of subscription creation. This object is used in subscriptions to maintain the plan details even if the original plan is modified.
+
+### Availability
+The `plan_snapshot` object is available as a property of the `subscription` object.
+
+<ResponseField name="plan_snapshot" type="Plan Snapshot Object">
+  <Expandable title="Properties">
+    <ResponseField name="id" type="string" required>
+      A unique identifier for the plan snapshot.
+    </ResponseField>
+
+    <ResponseField name="title" type="string" required>
+      The name or title of the plan at the time of snapshot.
+    </ResponseField>
+
+    <ResponseField name="description" type="string" required>
+      A brief description of the plan at the time of snapshot.
+    </ResponseField>
+
+    <ResponseField name="icon" type="string|null" required>
+      URL to the plan's icon image at the time of snapshot. This field can be null if no icon was set.
+    </ResponseField>
+
+    <ResponseField name="price" type="number" required>
+      The price of the plan at the time of snapshot.
+    </ResponseField>
+
+    <ResponseField name="billing_cycle" type="string" required>
+      The billing cycle for the plan at the time of snapshot.
+    </ResponseField>
+
+    <ResponseField name="credit_count" type="number" required>
+      The number of credits included in the plan at the time of snapshot.
+    </ResponseField>
+
+    <ResponseField name="member_cap" type="number|null" required>
+      The maximum number of members allowed in the workspace for this plan.
+    </ResponseField>
+
+    <ResponseField name="created_at" type="number" required>
+      Unix timestamp of when the plan snapshot was created.
+    </ResponseField>
+
+    <ResponseField name="updated_at" type="number" required>
+      Unix timestamp of when the plan snapshot was last updated.
+    </ResponseField>
+
+    <ResponseField name="config" type="object" required>
+      The configuration object for the plan at the time of snapshot.
+    </ResponseField>
+
+    <ResponseField name="feature_list" type="array" required>
+      An array of features included in the plan at the time of snapshot. Each feature object contains:
+      - `title`: The feature title
+      - `is_included`: Boolean indicating if the feature is included (true) or excluded (false)
     </ResponseField>
   </Expandable>
 </ResponseField>
@@ -436,78 +550,6 @@ The `plan-config` object is available as a property of the `plan` object. It can
   </Expandable>
 </ResponseField>
 
-<ResponseExample>
-```json Example
-{
-  "writer": {
-    "is_enabled": true,
-    "model": "gpt-4o"
-  },
-  "coder": {
-    "is_enabled": true,
-    "model": "gpt-4o"
-  },
-  "imagine": {
-    "is_enabled": true
-  },
-  "transcriber": {
-    "is_enabled": true
-  },
-  "voiceover": {
-    "is_enabled": true
-  },
-  "chat": {
-    "is_enabled": true
-  },
-  "voice_isolator": {
-    "is_enabled": true
-  },
-  "classifier": {
-    "is_enabled": true
-  },
-  "composer": {
-    "is_enabled": true
-  },
-  "titler": {
-    "model": "gpt-4o-mini"
-  },
-  "models": {
-    "o1-preview": true,
-    "o1-mini": true,
-    "gpt-4o": true,
-    "gpt-4o-mini": true,
-    "gpt-4-turbo": true,
-    "gpt-4": true,
-    "gpt-3.5-turbo": true,
-    "claude-3-5-sonnet-20240620": true,
-    "claude-3-haiku-20240307": true,
-    "claude-3-sonnet-20240229": true,
-    "claude-3-opus-20240229": true,
-    "dall-e-3": true,
-    "dall-e-2": true,
-    "flux-pro": true,
-    "sd-ultra": true,
-    "sd-core": true,
-    "stable-diffusion-xl-1024-v1-0": true,
-    "tts-1": true,
-    "eleven_multilingual_v2": true,
-    "eleven_turbo_v2_5": true,
-    "google-tts-premium": true,
-    "azure-tts": true
-  },
-  "tools": {
-    "embedding_search": true,
-    "google_search": true,
-    "cohere_web_search": true,
-    "web_scrap": true,
-    "generate_image": true
-  },
-  "embedding_model": "text-embedding-3-small",
-  "assistants": null,
-  "presets": null
-}
-```
-</ResponseExample>
 
 ## Subscription Object
 
@@ -569,42 +611,15 @@ The `subscription` object is available within the `workspace` or `user.workspace
     <ResponseField name="currency" type="Currency|null" required>
       A link to the Currency object associated with this subscription. See Currency Object for more details on the properties of this object.
     </ResponseField>
+
+    <ResponseField name="payment_gateway" type="string" required>
+      The payment gateway used for this subscription (e.g., "stripe", "paypal").
+    </ResponseField>
+
+    <ResponseField name="external_id" type="string|null" required>
+      The external ID from the payment gateway for this subscription.
+    </ResponseField>
   </Expandable>
-</ResponseField>
-
-<ResponseExample>
-```json Subscription
-{
-  "id": "01920397-f727-70dc-9d38-7ca40d5c85c9",
-  "trial_period_days": null,
-  "usage_count": 734.41012749952,
-  "usage_percentage": "36.72%",
-  "credit_count": 1265.5898725005,
-  "credit_percentage": "63.28%",
-  "created_at": 1726637143,
-  "updated_at": 1728294198,
-  "canceled_at": null,
-  "cancel_at": null,
-  "renew_at": 1729229143,
-  "plan": {
-    // Plan object
-  },
-  "currency": {
-    // Currency object
-  }
-}
-```
-</ResponseExample>
-
-## Theme Locale Variable
-
-The `theme_locale` variable provides information about the current language and region settings in Aikeedo themes.
-
-### Availability
-The `theme_locale` variable is available globally throughout the theme.
-
-<ResponseField name="theme_locale" type="string" required>
-  The current theme locale value. This represents the language and region settings, following the format of language code and country code (e.g., "en-US").
 </ResponseField>
 
 ## User Object
@@ -642,6 +657,10 @@ The `user` object is available globally when a user is logged in. If no user is 
       The user's last name.
     </ResponseField>
 
+    <ResponseField name="phone_number" type="string|null" required>
+      The user's phone number. This field may be null if not set.
+    </ResponseField>
+
     <ResponseField name="language" type="string" required>
       The user's preferred language code (e.g., "en-US").
     </ResponseField>
@@ -650,8 +669,12 @@ The `user` object is available globally when a user is logged in. If no user is 
       Indicates whether the user has set a password. Users who signed up using 3rd party services like Google will not have a password.
     </ResponseField>
 
+    <ResponseField name="workspace_cap" type="number|null" required>
+      The calculated amount of workspaces the user can have. This value may be null if unlimited.
+    </ResponseField>
+
     <ResponseField name="avatar" type="string" required>
-      URL to the user's avatar image.
+      URL to the user's Gravatar avatar image (generated from email hash).
     </ResponseField>
 
     <ResponseField name="created_at" type="number" required>
@@ -660,6 +683,18 @@ The `user` object is available globally when a user is logged in. If no user is 
 
     <ResponseField name="updated_at" type="number|null" required>
       Unix timestamp of the last update to the user account. While this field always exists, its value may be null if the user account has never been updated.
+    </ResponseField>
+
+    <ResponseField name="ip" type="string|null" required>
+      The IP address associated with the user account.
+    </ResponseField>
+
+    <ResponseField name="country" type="Country|null" required>
+      The user's country information. See Country Object for more details on the properties of this object.
+    </ResponseField>
+
+    <ResponseField name="city_name" type="string|null" required>
+      The name of the city associated with the user.
     </ResponseField>
 
     <ResponseField name="is_email_verified" type="boolean" required>
@@ -676,6 +711,10 @@ The `user` object is available globally when a user is logged in. If no user is 
 
     <ResponseField name="workspace" type="Workspace" required>
       The user's active workspace object. See Workspace Object for more details on the properties of this object.
+    </ResponseField>
+
+    <ResponseField name="preferences" type="object" required>
+      The user's preferences and settings.
     </ResponseField>
 
     <ResponseField name="workspaces" type="array<Workspace>" required>
@@ -699,6 +738,64 @@ The `version` variable is available globally throughout the theme.
   The current version of the Aikeedo app. This value is read from the `/VERSION` file.
 </ResponseField>
 
+## Theme Variable
+
+The `theme` variable provides access to the current theme name being used.
+
+### Availability
+The `theme` variable is available globally throughout the theme.
+
+<ResponseField name="theme" type="string" required>
+  The current theme name (e.g., "heyaikeedo/default").
+</ResponseField>
+
+## Nav Variable
+
+The `nav` variable provides access to the navigation registry for building navigation menus.
+
+### Availability
+The `nav` variable is available globally throughout the theme.
+
+<ResponseField name="nav" type="object" required>
+  The navigation registry object for building navigation menus.
+</ResponseField>
+
+## View Namespace Variable
+
+The `view_namespace` variable indicates which namespace the current view belongs to.
+
+### Availability
+The `view_namespace` variable is available globally throughout the theme.
+
+<ResponseField name="view_namespace" type="string|null" required>
+  The current view namespace. Possible values are:
+  - `"app"`: For application views
+  - `"admin"`: For admin views
+  - `null`: For other views
+</ResponseField>
+
+## Config Variable
+
+The `config` variable provides access to all configuration settings.
+
+### Availability
+The `config` variable is available globally throughout the theme.
+
+<ResponseField name="config" type="object" required>
+  An object containing all configuration settings from the application.
+</ResponseField>
+
+## Option Variable
+
+The `option` variable provides access to all option settings configured in the admin panel.
+
+### Availability
+The `option` variable is available globally throughout the theme.
+
+<ResponseField name="option" type="object" required>
+  An object containing all option settings from the admin panel. This includes site settings, billing options, color schemes, and other customizable options.
+</ResponseField>
+
 ## Workspace Object
 
 The `workspace` object is a fundamental component in Aikeedo themes, representing a user's working environment and associated settings. This object contains crucial information about the workspace, including subscription details, credit usage, and various configuration options.
@@ -714,6 +811,14 @@ The `workspace` object is available globally when a user is logged into the app.
 
     <ResponseField name="name" type="string" required>
       The name of the workspace (e.g., "Personal").
+    </ResponseField>
+
+    <ResponseField name="openai_api_key" type="string" required>
+      The OpenAI API key associated with the workspace.
+    </ResponseField>
+
+    <ResponseField name="anthropic_api_key" type="string" required>
+      The Anthropic API key associated with the workspace.
     </ResponseField>
 
     <ResponseField name="address" type="Address|null" required>
@@ -751,6 +856,14 @@ The `workspace` object is available globally when a user is logged into the app.
     <ResponseField name="subscription" type="Subscription|null" required>
       An object containing detailed information about the workspace's subscription. See Subscription Object for more details.
     </ResponseField>
+
+    <ResponseField name="owner" type="User" required>
+      The owner of the workspace. This property is only available when the workspace is extended with user information.
+    </ResponseField>
+
+    <ResponseField name="users" type="array<User>" required>
+      An array of users who are members of the workspace. This property is only available when the workspace is extended with user information.
+    </ResponseField>
   </Expandable>
 </ResponseField>
 
@@ -784,18 +897,3 @@ The `workspace_invitation` object is available in contexts related to workspace 
     </ResponseField>
   </Expandable>
 </ResponseField>
-
-### Example
-
-Here's an example of a `workspace_invitation` object:
-
-```json
-{
-"id": "018d5355-c857-7044-8284-83e7950685b4",
-"email": "hey@aikeedo.com",
-"created_at": 1716412800,
-"updated_at": 1716412800
-}
-```
-
-This structure provides easy access to workspace invitation information within your Aikeedo theme, allowing you to manage and display invitation data consistently across your application.
