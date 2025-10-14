@@ -1,0 +1,281 @@
+---
+title: CurrencyAPI Integration
+sidebarTitle: CurrencyAPI
+description: 'Integrate CurrencyAPI for real-time currency exchange rates in Aikeedo to support multi-currency pricing and automatic conversion.'
+---
+
+## Introduction
+
+CurrencyAPI integration enables automatic currency conversion in your Aikeedo platform. This is essential when you accept payments in multiple currencies but your payment gateway only supports specific currencies, or when you want to display prices in users' local currencies.
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- An active [CurrencyAPI account](https://currencyapi.com/)
+- Access to your Aikeedo admin panel
+- Multi-currency payment requirements
+
+## Why Use a Currency Rate Provider?
+
+Using a currency rate provider like CurrencyAPI is **highly recommended** for several reasons:
+
+1. **MRR Calculation**: Monthly Recurring Revenue (MRR) calculations depend on accurate exchange rates
+2. **Analytics Accuracy**: Revenue reporting and analytics require proper currency conversion
+3. **Multi-Currency Support**: Enable pricing and payments in multiple currencies
+4. **Automatic Conversion**: Seamlessly convert between currencies during checkout
+
+<Warning>
+The default currency rate provider is set to "None" (null provider). Without a currency rate provider, features like MRR calculation will not work correctly, and multi-currency support will be limited.
+</Warning>
+
+## How CurrencyAPI Works in Aikeedo
+
+CurrencyAPI provides real-time exchange rates that Aikeedo uses to:
+
+1. **Automatic Currency Conversion**: Convert between currencies during checkout
+2. **Multi-Currency Support**: Display prices in different currencies
+3. **Payment Gateway Compatibility**: Convert to supported currencies when processing payments
+4. **Accurate Financial Metrics**: Calculate MRR and other revenue metrics correctly
+
+<Info>
+If your selected currency isn't directly supported by your payment gateway (Stripe or PayPal), Aikeedo automatically converts it to a supported currency using CurrencyAPI rates during checkout.
+</Info>
+
+### Update Frequency
+
+Aikeedo fetches currency rates from CurrencyAPI **once every 4 hours**, which means:
+
+- **6 API requests per day**
+- **~180 API requests per month**
+
+<Tip>
+The free tier offers 300 requests per month, which is more than sufficient for Aikeedo's usage pattern. You don't need a paid plan for standard use!
+</Tip>
+
+## Step-by-Step Setup
+
+<Steps>
+<Step title="Create a CurrencyAPI Account">
+  1. Visit [CurrencyAPI.com](https://currencyapi.com/)
+  2. Click "Get Free API Key" or "Sign Up"
+  3. Complete the registration process
+  4. Verify your email address
+  
+  <Tip>
+  CurrencyAPI offers a free tier with 300 requests per month, which is suitable for testing and small-scale deployments.
+  </Tip>
+</Step>
+
+<Step title="Obtain Your API Key">
+  1. Log in to your CurrencyAPI dashboard
+  2. Navigate to your account dashboard
+  3. Locate your API key (it will be displayed prominently)
+  4. Copy the API key for use in Aikeedo
+  
+  <Note>
+  Keep your API key secure and confidential. Do not share it publicly or commit it to version control.
+  </Note>
+</Step>
+
+<Step title="Configure Aikeedo">
+  1. Log in to your Aikeedo admin panel
+  2. Navigate to **Settings > Billing**
+  3. Locate the "Currency Rate Provider" dropdown
+  4. Select **CurrencyAPI** from the options (default is "None")
+  5. Enter your CurrencyAPI API key in the "API Key" field
+  6. Click "Save changes" to activate the integration
+  
+  <Note>
+  The default currency rate provider is "None" (null provider). Changing it to CurrencyAPI enables proper MRR calculations and multi-currency support.
+  </Note>
+  
+  <Check>
+  CurrencyAPI is now integrated with your Aikeedo platform!
+  </Check>
+</Step>
+
+<Step title="Test the Integration">
+  1. Go to **Settings > General** (or Billing)
+  2. Set a currency that's not directly supported by your payment gateway
+  3. Create a test subscription or purchase
+  4. Verify that currency conversion happens correctly during checkout
+  
+  <Tip>
+  Monitor your CurrencyAPI dashboard to see API requests and ensure the integration is working properly.
+  </Tip>
+</Step>
+</Steps>
+
+## Use Cases
+
+### Multi-Currency Pricing
+
+Display subscription prices in multiple currencies while accepting payments through a single payment gateway.
+
+**Example:**
+- Your payment gateway (Stripe) supports USD, EUR, GBP
+- You want to offer pricing in JPY, AUD, CAD
+- CurrencyAPI converts these currencies to USD during checkout
+
+### Local Currency Display
+
+Show prices in users' local currencies for better user experience, even if payments are processed in a different currency.
+
+### Exchange Rate Management
+
+Keep exchange rates up-to-date automatically without manual intervention, ensuring fair pricing across all currencies.
+
+## Configuration Options
+
+### Default Currency
+
+Set your default currency in **Settings > Billing**:
+
+```
+Settings > Billing > Default Currency
+```
+
+This is the base currency for your platform. All other currencies will be converted relative to this currency.
+
+### Supported Currencies
+
+CurrencyAPI supports 150+ world currencies, including:
+
+- USD (US Dollar)
+- EUR (Euro)
+- GBP (British Pound)
+- JPY (Japanese Yen)
+- AUD (Australian Dollar)
+- CAD (Canadian Dollar)
+- CHF (Swiss Franc)
+- CNY (Chinese Yuan)
+- And many more...
+
+View the complete list at [CurrencyAPI Currencies](https://currencyapi.com/docs/currencies).
+
+## API Rate Limits
+
+CurrencyAPI offers different pricing tiers:
+
+<AccordionGroup>
+<Accordion title="Free Tier (Recommended for Most Users)">
+  - **300 requests per month**
+  - **Perfect for Aikeedo**: With updates every 4 hours, Aikeedo uses only ~180 requests per month
+  - Suitable for production deployments
+  - No credit card required
+  
+  <Check>
+  The free tier is **sufficient for most Aikeedo installations**, including production environments!
+  </Check>
+</Accordion>
+
+<Accordion title="Paid Tiers">
+  - Higher request limits (5,000 to 100,000+ per month)
+  - More frequent update options
+  - Consider only if you need custom update frequencies
+  - [View pricing](https://currencyapi.com/pricing)
+</Accordion>
+</AccordionGroup>
+
+<Info>
+Since Aikeedo fetches rates every 4 hours (180 API calls/month), the free tier provides a comfortable buffer. You only need a paid tier if you modify the update frequency or have multiple Aikeedo installations using the same API key.
+</Info>
+
+## How Aikeedo Uses Exchange Rates
+
+1. **Update Schedule**: Rates are fetched from CurrencyAPI every 4 hours (6 times per day)
+2. **Caching**: Exchange rates are cached between updates to minimize API requests
+3. **MRR Calculations**: Cached rates are used for calculating Monthly Recurring Revenue and other financial metrics
+4. **Checkout Conversion**: When a user checks out:
+   - Their selected currency is checked against payment gateway support
+   - If unsupported, CurrencyAPI rates convert it to a supported currency
+   - Payment is processed in the supported currency
+5. **Accuracy**: Regular updates ensure fair and accurate conversions while staying within free tier limits
+
+<Info>
+With updates every 4 hours, Aikeedo balances rate accuracy with API efficiency, using only ~180 requests per month.
+</Info>
+
+## Troubleshooting
+
+### Exchange Rates Not Updating
+
+**Symptoms:**
+- Prices showing outdated exchange rates
+- Currency conversion seems incorrect
+
+**Solution:**
+1. Verify your CurrencyAPI key is correct
+2. Check that you haven't exceeded your API rate limit
+3. Clear the application cache from the admin panel Status page
+4. Verify CurrencyAPI service status at [status.currencyapi.com](https://status.currencyapi.com/)
+
+### Currency Conversion Not Working
+
+**Symptoms:**
+- Checkout fails with currency errors
+- Prices not converting at checkout
+
+**Solution:**
+1. Ensure CurrencyAPI is selected as the Currency Rate Provider
+2. Verify your API key is entered correctly
+3. Check that the default currency is set in **Settings > Billing**
+4. Ensure the currencies you're using are supported by CurrencyAPI
+5. Review error logs for specific error messages
+
+### API Key Invalid Error
+
+**Symptoms:**
+- Error message about invalid API key
+- Currency conversion fails
+
+**Solution:**
+1. Double-check your API key in the CurrencyAPI dashboard
+2. Ensure there are no extra spaces when pasting the key
+3. Verify your CurrencyAPI account is active
+4. Check if you've exceeded your API rate limit
+
+## Best Practices
+
+1. **Always Use a Currency Rate Provider**: Even for single-currency setups, enable CurrencyAPI for proper MRR calculations
+2. **Start with Free Tier**: The free tier (300 requests/month) is sufficient for Aikeedo's usage (~180 requests/month)
+3. **Monitor API Usage**: Check your CurrencyAPI dashboard occasionally to ensure you're within limits
+4. **Test Before Launch**: Test currency conversion with different currencies before going live
+5. **Keep API Key Secure**: Store your API key securely and never commit it to version control
+6. **Plan for Growth**: If you run multiple Aikeedo installations, consider a paid tier or use separate API keys
+
+## Alternative: No Currency Rate Provider
+
+The default setting is "None" (null provider), which means:
+
+- All transactions use the default currency only
+- No automatic conversion occurs
+- Users must pay in the currency you specify
+- **MRR calculations and revenue analytics will not work correctly**
+- Multi-currency support is disabled
+
+<Warning>
+When set to "None," attempting to use currencies not supported by your payment gateway will result in checkout errors. Additionally, features that depend on currency conversion (like MRR calculation) will not function properly.
+</Warning>
+
+**Recommendation:** Even if you only accept one currency, setting up CurrencyAPI is highly recommended for accurate financial reporting and future flexibility. The free tier is sufficient and requires no ongoing costs.
+
+## Related Guides
+
+- [Billing Overview](/billing/overview) - Configure default currency and billing settings
+- [Stripe Integration](/integrations/stripe) - Set up Stripe payment gateway
+- [PayPal Integration](/integrations/paypal) - Set up PayPal payment gateway
+- [Plans & Subscriptions](/billing/plans-snapshots-subscriptions) - Create pricing plans
+
+## Additional Resources
+
+- [CurrencyAPI Documentation](https://currencyapi.com/docs)
+- [CurrencyAPI Pricing](https://currencyapi.com/pricing)
+- [Supported Currencies List](https://currencyapi.com/docs/currencies)
+- [CurrencyAPI Status Page](https://status.currencyapi.com/)
+
+<Check>
+With CurrencyAPI integrated, your Aikeedo platform can now handle multi-currency transactions seamlessly!
+</Check>
+

@@ -1,18 +1,24 @@
 ---
-title: Main Installation Guide
+title: Installation Guide
 sidebarTitle: Main
-description: A comprehensive guide to install Aikeedo on your server, with detailed steps and solutions for common issues.
+description: 'Step-by-step guide to install Aikeedo on your server, configure the public directory, and complete the installation wizard.'
 ---
 
-Welcome to the Aikeedo installation guide. This tutorial will walk you through the process of setting up Aikeedo on your server.
+import Support from '/snippets/support.mdx';
 
-<Note>
-  If you're using cPanel, please follow our dedicated [cPanel Installation Guide](/get-started/installation/cpanel) as the steps may differ.
-</Note>
+This guide will walk you through the process of installing Aikeedo on your server.
+
+<Warning>
+  **cPanel Users:** If you're using cPanel hosting, you MUST follow our dedicated [cPanel Installation Guide](/setup/installation/cpanel) instead of this guide. The steps are significantly different and this guide will not work for cPanel installations.
+</Warning>
+
+<Card title="cPanel Installation" icon="server" href="/setup/installation/cpanel" horizontal>
+  **Are you using cPanel?** Click here for the correct installation guide for cPanel hosting.
+</Card>
 
 ## Before You Start
 
-1. Ensure your server meets our [requirements](/get-started/server-requirements).
+1. Ensure your server meets our [requirements](/overview/server-requirements).
 2. Prepare a database and note down its name, username, and password.
 
 ## Understanding the Public Directory
@@ -38,7 +44,7 @@ If you extract Aikeedo files to `/var/www/yourdomain.com`, your domain must poin
     2. Upload this zip file to your server, outside of any existing web-accessible directories.
 
     <Note>
-      If you can't find the zip file, refer to our [File Structure](/get-started/file-structure) guide.
+      If you can't find the zip file, refer to our [File Structure](/overview/file-structure) guide.
     </Note>
   </Step>
 
@@ -102,10 +108,6 @@ If you extract Aikeedo files to `/var/www/yourdomain.com`, your domain must poin
     5. Confirm that the installation was successful by checking key features or settings.
 
     Congratulations! You're now ready to explore Aikeedo and leverage its powerful capabilities for your projects.
-
-    <Tip>
-      If you encounter any issues or have questions about your new installation, our support team is here to help. Don't hesitate to reach out!
-    </Tip>
   </Step>
 </Steps>
 
@@ -113,18 +115,19 @@ If you extract Aikeedo files to `/var/www/yourdomain.com`, your domain must poin
 
 If you encounter any issues during the installation process:
 
-1. Double-check that you've followed each step correctly.
-2. Ensure all file permissions are set correctly.
-3. Verify that your server meets all the [requirements](/get-started/server-requirements).
-4. For more detailed troubleshooting steps, please refer to our dedicated [Troubleshooting Guide](/get-started/installation/troubleshooting).
-5. If you're still stuck after trying the solutions in the troubleshooting guide, don't hesitate to [reach out to our support team](mailto:support@aikeedo.com).
+1. Double-check that you've followed each step correctly
+2. Ensure all file permissions are set correctly
+3. Verify that your server meets all the [requirements](/overview/server-requirements)
+4. Check the [Troubleshooting & FAQ](/setup/troubleshooting) page for solutions to common issues
 
 ## Next Steps
 
 After successfully installing Aikeedo:
 
-1. Follow our [Initial Setup Guide](/get-started/initial-setup) to configure your new installation.
+1. Follow our [Initial Setup Guide](/setup/initial-setup) to configure your new installation.
 2. Explore [Website Basics](/website-basics/essentials) to learn about key Aikeedo features.
 3. Consider setting up [email](/email/mailer) for your Aikeedo instance.
 
 Congratulations on installing Aikeedo! We're excited for you to start leveraging its powerful features.
+
+<Support />

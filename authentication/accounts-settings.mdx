@@ -1,9 +1,9 @@
 ---
 title: Account Settings
-description: Configure user account options and security policies for your Aikeedo platform
+description: 'Configure user registration, sign-in policies, and email verification requirements in Aikeedo to balance accessibility and security.'
 ---
 
-The Account Settings page allows you to manage crucial aspects of user accounts on your Aikeedo platform. These settings control user registration, sign-in processes, and email verification policies, ensuring a balance between user accessibility and platform security.
+Account settings control user registration, authentication, and email verification policies for your Aikeedo platform.
 
 ## General Settings
 
@@ -28,6 +28,59 @@ This option determines whether new users can register for accounts on your platf
 <Tip>
   You might want to disable the signup form temporarily for maintenance or to control user influx.
 </Tip>
+
+### Phone Number Collection
+
+Configure whether to collect phone numbers during user registration.
+
+**Available Options:**
+- **None**: Phone number collection is disabled for user registration
+- **Optional**: Users can optionally provide their phone number
+- **Mandatory**: Phone number is required for registration
+
+**Phone Number Collection Purpose:**
+When phone number collection is enabled (Optional or Mandatory), you can provide a purpose statement that will be displayed to users during registration.
+
+- **Purpose**: Explain why you need to collect phone numbers
+- **Display**: This message will be shown to end users during registration
+- **Optional**: Leave blank to hide the explanation
+- **Recommended**: Explain the purpose to build trust and compliance
+
+<Note>
+  This setting applies to new registrations only and does not affect existing user accounts.
+</Note>
+
+### Disposable Email Domains
+
+Control whether users can register with disposable email addresses.
+
+- **Enabled**: Users can sign up with disposable email domains
+- **Disabled**: Registration with disposable email domains is blocked
+
+**Default Protection:**
+Aikeedo blocks 2500+ disposable email domains by default, and this list improves with each update to provide better protection against spam registrations.
+
+**Adding Additional Blocked Domains:**
+If you need to block additional disposable email domains, you can add them to the `/data/domains.txt` file:
+
+1. Navigate to your Aikeedo installation directory
+2. Open or create the `/data/domains.txt` file
+3. Add each domain on a new line
+4. Save the file
+
+These domains will be added to the default block list.
+
+<Note>
+  This setting applies to new registrations only and does not affect existing user accounts.
+</Note>
+
+### Owned Workspace Cap
+
+Limit the number of workspaces a user can own.
+
+- Enter a number to set the maximum limit
+- Leave blank or set to "Unlimited" for no limit
+- This helps control resource usage and prevents workspace spam
 
 ## Email Verification Policy
 
@@ -54,8 +107,16 @@ The email verification policy determines how strictly your platform enforces ema
   The email verification policy does not apply to admin portal access. Admin accounts are managed separately for security reasons.
 </Warning>
 
-Each option offers different balances between user convenience and security, allowing you to tailor the policy to your platform's needs.
+### OAuth Email Status
 
+Control how email verification is handled for OAuth (social login) users.
+
+**Available Options:**
+- **Ignore**: Email verification status from the identity provider will be ignored
+- **Auto**: Email will be marked as verified if verified by the identity provider
+- **Verified**: Email will be marked as verified when signing in through an identity provider even if it is not verified by the identity provider
+
+Each option offers different balances between user convenience and security, allowing you to tailor the policy to your platform's needs.
 
 ## Best Practices
 
@@ -67,9 +128,7 @@ Each option offers different balances between user convenience and security, all
 
 4. **Compliance**: Ensure your account settings comply with relevant data protection regulations in your jurisdiction.
 
-## Related Settings
-
-For a comprehensive approach to user management and security, consider exploring these related areas:
+## Related Guides
 
 - [Identity Providers](/authentication/identity-providers/google) - Set up third-party authentication options
 - [CAPTCHA](/authentication/captcha) - Add an extra layer of security to your forms

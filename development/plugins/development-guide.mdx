@@ -1,22 +1,29 @@
 ---
-title: Building Plugins for Aikeedo
-sidebarTitle: Building Plugins
-description: Learn how to create custom plugins to extend Aikeedo's functionality and tailor your platform to your specific needs.
+title: Plugin Development Guide
+sidebarTitle: Plugin Development
+description: Learn how to create custom plugins to extend Aikeedo v3.x functionality with proper directory structure and integration patterns.
 ---
 
-Plugins are powerful tools that allow you to enhance and customize your Aikeedo platform. This guide will walk you through the process of building a plugin, using a simple Currency Beacon integration as an example.
+import Support from '/snippets/support.mdx';
+
+Plugins are powerful tools that allow you to enhance and customize your Aikeedo platform. This guide will walk you through the process of building a plugin for v3.x, using a simple Currency Beacon integration as an example.
+
+<Note>
+This guide is for Aikeedo v3.x. The plugin structure has been updated from v2.x. Plugins are now located in `/extra/extensions/` directory.
+</Note>
 
 ## What are Aikeedo Plugins?
 
 Aikeedo plugins are Composer packages that extend the functionality of your platform. They allow you to:
 
-- Add new features
+- Add new features and functionality
 - Integrate with third-party services
-- Customize existing functionality
+- Extend existing capabilities
+- Add custom currency rate providers, payment gateways, and more
 
-<Note>
-Plugins give you the flexibility to tailor Aikeedo to your specific requirements without modifying the core codebase.
-</Note>
+<Info>
+Plugins give you the flexibility to tailor Aikeedo to your specific requirements without modifying the core codebase, ensuring easy updates.
+</Info>
 
 ## Prerequisites
 
@@ -34,21 +41,25 @@ Let's create a plugin that integrates [CurrencyBeacon](https://currencybeacon.co
 
 ### Step 1: Create the Plugin Directory
 
-First, create a new directory for your plugin in the `/public/content/plugins` folder of your Aikeedo installation:
+In Aikeedo v3.x, plugins are located in the `/extra/extensions/` directory. Create a new directory for your plugin:
 
 ```bash
-mkdir -p public/content/plugins/heyaikeedo/currency-beacon
+mkdir -p extra/extensions/heyaikeedo/currency-beacon
 ```
 
 <Tip>
-The directory structure should follow the format: `yourorganization/plugin-name`. This naming convention helps identify and organize plugins.
+The directory structure should follow the format: `yourorganization/plugin-name`. This naming convention helps identify and organize plugins consistently.
 </Tip>
+
+<Note>
+Unlike themes, plugins typically don't need a separate `/public/e/` directory unless they provide public-facing assets like CSS or JavaScript files.
+</Note>
 
 ### Step 2: Create the composer.json File
 
-Every Aikeedo plugin requires a `composer.json` file. This file contains essential metadata about your plugin.
+Every Aikeedo plugin requires a `composer.json` file containing essential metadata and dependencies.
 
-Create a `composer.json` file in your plugin directory with the following content:
+Create a `composer.json` file in your plugin directory (`/extra/extensions/heyaikeedo/currency-beacon/composer.json`) with the following content:
 
 ```json
 {
@@ -113,35 +124,184 @@ class Plugin implements PluginInterface
 
 This class implements the `PluginInterface`, which requires a `boot` method. The `boot` method is called when your plugin is loaded by Aikeedo, allowing you to set up any necessary functionality.
 
-### Step 4: Install the Plugin
+### Step 4: Directory Structure
 
-With your plugin structure in place, you can now install it using Composer. Run the following command in the root directory of your Aikeedo installation:
+Your complete plugin structure should look like this:
 
-```bash
-composer require heyaikeedo/currency-beacon
+```
+extra/extensions/heyaikeedo/currency-beacon/
+├── composer.json
+└── src/
+    └── Plugin.php
 ```
 
-This command installs your plugin and its dependencies.
+For more complex plugins, you might have additional directories:
 
-### Step 5: Enable the Plugin
+```
+extra/extensions/heyaikeedo/currency-beacon/
+├── composer.json
+├── src/
+│   ├── Plugin.php
+│   ├── Services/
+│   │   └── CurrencyService.php
+│   └── Config/
+│       └── settings.php
+└── README.md
+```
 
-After installation, you'll need to enable your plugin through the Aikeedo dashboard. Look for the "Plugins" section in your admin panel to activate your new plugin.
+### Step 5: Install the Plugin
 
-## Best Practices and Tips
+With your plugin structure in place, you can now install it using Composer.
 
-1. **Version Control**: Use Git or another version control system to track changes to your plugin.
+<Tabs>
+<Tab title="Via Composer (Packagist)">
+  If your plugin is published on Packagist or a private repository:
+  
+  ```bash
+  composer require heyaikeedo/currency-beacon
+  ```
+</Tab>
 
-2. **Updates**: Regularly update your plugin to maintain compatibility with the latest Aikeedo version.
+<Tab title="Local Development">
+  For local development, add the plugin path to your `composer.json`:
+  
+  ```json
+  {
+    "repositories": [
+      {
+        "type": "path",
+        "url": "./extra/extensions/heyaikeedo/currency-beacon"
+      }
+    ]
+  }
+  ```
+  
+  Then install:
+  
+  ```bash
+  composer require heyaikeedo/currency-beacon
+  ```
+</Tab>
+</Tabs>
+
+### Step 6: Enable the Plugin
+
+After installation, enable your plugin through the Aikeedo admin panel:
+
+<Steps>
+<Step title="Navigate to Plugins">
+  1. Log in to your Aikeedo admin panel
+  2. Go to the **Plugins** section
+</Step>
+
+<Step title="Activate Plugin">
+  1. Locate your new plugin (Currency Beacon) in the list
+  2. Click the toggle or "Activate" button to enable it
+  
+  <Check>
+  Your plugin is now active and functional!
+  </Check>
+</Step>
+</Steps>
+
+## Best Practices
+
+1. **Follow PSR Standards**: Use PSR-4 autoloading and PSR-12 coding standards
+2. **Version Control**: Use Git to track changes and maintain version history
+3. **Semantic Versioning**: Follow semver for version numbers (e.g., 1.0.0, 1.1.0, 2.0.0)
+4. **Documentation**: Include a README.md with installation and usage instructions
+5. **Dependencies**: Only include necessary dependencies to keep the plugin lightweight
+6. **Testing**: Write tests for your plugin's functionality
+7. **Compatibility**: Ensure your plugin works with the latest Aikeedo version
+8. **Security**: Validate and sanitize all inputs, especially from external APIs
+
+## Advanced Topics
+
+### Plugin with Public Assets
+
+If your plugin needs CSS, JavaScript, or images, create an assets directory:
+
+```bash
+mkdir -p public/e/heyaikeedo/currency-beacon/css
+mkdir -p public/e/heyaikeedo/currency-beacon/js
+```
+
+Reference assets from `/e/yourorganization/plugin-name/` in your templates.
+
+### Using Dependency Injection
+
+Leverage Aikeedo's dependency injection container in your plugin:
+
+```php
+public function boot(Context $context): void
+{
+    $container = $context->getContainer();
+    
+    // Register your services
+    $container->set(CurrencyService::class, function() {
+        return new CurrencyService();
+    });
+}
+```
+
+### Hooks and Events
+
+Use Aikeedo's event system to extend functionality:
+
+```php
+public function boot(Context $context): void
+{
+    $dispatcher = $context->getEventDispatcher();
+    
+    $dispatcher->addListener(
+        'currency.rate.fetch',
+        [$this, 'handleCurrencyFetch']
+    );
+}
+```
+
+## Troubleshooting
+
+### Plugin Not Appearing in Admin Panel
+
+- Verify `composer.json` has `"type": "aikeedo-plugin"`
+- Ensure the `name` field matches your directory path
+- Check that `heyaikeedo/composer` is in requirements
+- Run `composer dump-autoload` to refresh autoloader
+- Verify file permissions on the plugin directory
+
+### Plugin Class Not Found
+
+- Check the `extra.entry-class` in `composer.json` matches your class namespace
+- Verify PSR-4 autoload configuration is correct
+- Ensure the `Plugin.php` file is in the correct directory
+- Run `composer dump-autoload -o`
+
+### Plugin Enabled But Not Working
+
+- Check PHP error logs for exceptions
+- Verify the `boot()` method is being called
+- Ensure all dependencies are installed
+- Check that required services are available in the container
 
 ## Example Implementation
 
 For a complete, working example of an Aikeedo plugin, check out the [Currency Beacon Plugin Repository](https://github.com/heyaikeedo/plugins-currency-beacon) on GitHub.
 
-## Need Help?
+This example demonstrates:
+- Proper v3.x directory structure
+- Service integration
+- API communication
+- Error handling
+- Configuration management
 
-If you encounter any issues or have questions about plugin development, don't hesitate to reach out:
+## Related Guides
 
-- Email our support team at [support@aikeedo.com](mailto:support@aikeedo.com)
-- Check out our [API Overview](/development/api/overview) for more advanced integrations
+- [Plugins Overview](/development/plugins/overview) - Understanding plugins and themes
+- [Local Development Guide](/development/local-development-guide) - Set up your dev environment
+- [API Overview](/development/api/overview) - Advanced integration options
+- [Currency Beacon Plugin](https://github.com/heyaikeedo/plugins-currency-beacon) - Example implementation
+
+<Support />
 
 Happy plugin development! 🚀

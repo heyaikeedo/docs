@@ -1,11 +1,11 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
+  "theme": "willow",
   "name": "Aikeedo Docs",
   "colors": {
-    "primary": "#0D9373",
+    "primary": "#24282c",
     "light": "#07C983",
-    "dark": "#0D9373"
+    "dark": "#24282c"
   },
   "description": "Self-hosted software with customizable features to launch your AI SaaS business quickly and generate revenue fast.",
   "logo": {
@@ -20,7 +20,7 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:support@aikeedo.com"
+        "href": "https://aikeedo.com/support/"
       }
     ],
     "primary": {
@@ -29,6 +29,48 @@
       "href": "https://aikeedo.com?utm_source=docs&utm_medium=header"
     }
   },
+  "redirects": [
+    {
+      "source": "/get-started/introduction",
+      "destination": "/overview/introduction"
+    },
+    {
+      "source": "/get-started/get-aikeedo",
+      "destination": "/overview/get-aikeedo"
+    },
+    {
+      "source": "/get-started/file-structure",
+      "destination": "/overview/file-structure"
+    },
+    {
+      "source": "/get-started/server-requirements",
+      "destination": "/overview/server-requirements"
+    },
+    {
+      "source": "/get-started/installation",
+      "destination": "/setup/installation"
+    },
+    {
+      "source": "/get-started/installation/cpanel",
+      "destination": "/setup/installation/cpanel"
+    },
+    {
+      "source": "/get-started/installation/local",
+      "destination": "/setup/installation/local"
+    },
+    {
+      "source": "/get-started/installation/troubleshooting",
+      "destination": "/setup/troubleshooting"
+    },
+    {
+      "source": "/get-started/initial-setup",
+      "destination": "/setup/initial-setup"
+    },
+    {
+      "source": "/get-started/commercial-resources",
+      "destination": "/overview/commercial-resources"
+    }
+  ],
   "navigation": {
     "global": {
       "anchors": [
@@ -54,29 +96,36 @@
         "tab": "Docs",
         "groups": [
           {
-            "group": "Get Started",
+            "group": "Overview",
             "pages": [
-              "get-started/introduction",
-              "get-started/get-aikeedo",
-              "get-started/file-structure",
-              "get-started/server-requirements",
+              "overview/introduction",
+              "overview/get-aikeedo",
+              "overview/file-structure",
+              "overview/server-requirements",
+              "overview/commercial-resources"
+            ]
+          },
+          {
+            "group": "Installation & Setup",
+            "pages": [
               {
                 "group": "Installation",
                 "pages": [
-                  "get-started/installation",
-                  "get-started/installation/cpanel",
-                  "get-started/installation/local",
-                  "get-started/installation/troubleshooting"
+                  "setup/installation",
+                  "setup/installation/cpanel",
+                  "setup/installation/local"
                 ]
               },
-              "get-started/initial-setup",
-              "get-started/commercial-resources"
+              "setup/initial-setup",
+              "setup/configuration",
+              "setup/troubleshooting"
             ]
           },
           {
             "group": "Website Basics",
             "pages": [
               "website-basics/essentials",
+              "website-basics/landing-page",
               "website-basics/pwa",
               "website-basics/branding"
             ]
@@ -201,27 +250,8 @@
             "pages": [
               "development/plugins/overview",
               "development/plugins/development-guide",
-              "development/themes/development-guide"
-            ]
-          },
-          {
-            "group": "Theme Objects",
-            "pages": [
-              "development/themes/objects/address",
-              "development/themes/objects/affiliate",
-              "development/themes/objects/currency",
-              "development/themes/objects/environment",
-              "development/themes/objects/locale",
-              "development/themes/objects/locales",
-              "development/themes/objects/option",
-              "development/themes/objects/plan",
-              "development/themes/objects/plan-snapshot",
-              "development/themes/objects/subscription",
-              "development/themes/objects/theme",
-              "development/themes/objects/theme-locale",
-              "development/themes/objects/user",
-              "development/themes/objects/workspace",
-              "development/themes/objects/workspace-invitation"
+              "development/themes/development-guide",
+              "development/themes/objects"
             ]
           }
         ]

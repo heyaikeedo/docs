@@ -1,0 +1,223 @@
+---
+title: Application Configuration
+sidebarTitle: Configuration
+description: Complete guide to configuring your Aikeedo application settings after installation.
+---
+
+import Support from '/snippets/support.mdx';
+
+After completing the initial technical setup, you'll need to configure your Aikeedo application to match your business requirements. This guide provides a comprehensive checklist of all settings you should review and configure.
+
+<Note>
+You can configure these settings in any order, but we recommend following this checklist to ensure you don't miss any important configurations.
+</Note>
+
+## Essential Settings Checklist
+
+### General Settings
+
+Configure your site's core details including website name, domain settings, SSL configuration, landing page, default app page, and SEO settings.
+
+<Card title="General Settings Guide" icon="gear" href="/website-basics/essentials">
+  Complete step-by-step instructions for configuring all general settings including domain, SSL, and SEO optimization.
+</Card>
+
+### Public Details
+
+Configure your business information and social media presence at **Settings > Public Details**:
+
+**Business Details:**
+- **Business Name**: Your company or organization name
+- **Business Address**: Complete business address for legal and contact purposes
+
+**Social Media Accounts:**
+- X (Twitter), Facebook, Instagram, TikTok
+- Discord, LinkedIn, YouTube, GitHub
+- Telegram, VK (VKontakte)
+
+<Note>
+Social media links are optional but help establish your brand presence and provide additional ways for users to connect with your business.
+</Note>
+
+These details appear in your site footer and contact pages, building trust and credibility with your users.
+
+### Legal Policies
+
+Configure your legal documents at **Settings > Policies**:
+
+- **Terms of services**: Define usage terms and conditions for your platform
+- **Privacy policy**: Explain how you collect, use, and protect user data
+- **Refund policy**: Set clear expectations for refunds and returns
+
+**Important Features:**
+- **Markdown support**: Format your policies using Markdown syntax for better readability
+- **External redirection**: Include full URLs in content to redirect users to external policy pages
+
+<Warning>
+Ensure your policies comply with applicable laws and regulations in your jurisdiction. Consider consulting with a legal professional if needed.
+</Warning>
+
+### Features & Models
+
+Go to **Settings > Features** to control features available to your users. Disable features you don't plan to offer to keep your interface clean and focused.
+
+Navigate to **Settings > Models** to activate specific AI models.
+
+<Info>
+Models must be enabled globally here before they can be used. You'll also need to configure the corresponding AI provider integrations.
+</Info>
+
+### Branding
+
+Customize your platform's look and feel at **Settings > Branding**.
+
+For detailed instructions, see our [Branding Guide](/website-basics/branding).
+
+### Billing & Payments
+
+#### Credit System
+
+Configure credit ratios at **Settings > Credit Ratios**:
+
+- Set how credits convert to different AI operations
+- Define credit costs for different models
+- Adjust ratios based on your pricing strategy
+
+Learn more in our [Unified Credit System](/billing/unified-credit-system) documentation.
+
+#### Plans & Subscriptions
+
+Set up your subscription plans at **Settings > Billing**:
+
+- Create subscription tiers (Free, Pro, Enterprise, etc.)
+- Define credit allocations per plan
+- Set pricing for each tier
+
+For comprehensive guidance, see our [Billing Overview](/billing/overview) and [Plans, Snapshots & Subscriptions](/billing/plans-snapshots-subscriptions) guides.
+
+#### Payment Gateways
+
+Configure payment processors at **Settings > Payments**:
+
+<CardGroup cols={2}>
+<Card title="Stripe" icon="stripe" href="/integrations/stripe">
+  Set up Stripe for card payments and subscriptions
+</Card>
+
+<Card title="PayPal" icon="paypal" href="/integrations/paypal">
+  Configure PayPal for alternative payment options
+</Card>
+</CardGroup>
+
+#### Exchange Rates
+
+Set up currency conversion at **Settings > Exchange**. See our [Currency API Integration](/integrations/currency-api) guide for details.
+
+### Email Configuration
+
+Configure email delivery at **Settings > Email**:
+
+- Choose your email delivery method (SMTP, API, etc.)
+- Configure SMTP server settings
+- Test email delivery
+
+<Card title="Email Configuration" icon="envelope" href="/email/mailer">
+  Follow our comprehensive email setup guide
+</Card>
+
+Also see: [SMTP Configuration](/email/smtp) for detailed SMTP setup instructions.
+
+### Integrations
+
+Connect third-party services at **Settings > Integrations**:
+
+#### AI Provider Integrations
+
+<AccordionGroup>
+<Accordion title="Text Generation Providers">
+  - [OpenAI](/integrations/openai) - GPT models
+  - [Anthropic Claude](/integrations/claude) - Claude models
+  - [Cohere](/integrations/cohere) - Cohere models
+  - [xAI](/integrations/xai) - Grok models
+  - [Custom LLM Servers](/integrations/ollama) - Self-hosted models
+</Accordion>
+
+<Accordion title="Image Generation Providers">
+  - [Stability AI](/integrations/stabilityai) - Stable Diffusion
+  - [Clipdrop](/integrations/clipdrop) - AI image tools
+  - [Fal.ai](/integrations/falai) - Fast AI generation
+</Accordion>
+
+<Accordion title="Voice & Audio Providers">
+  - [ElevenLabs](/integrations/elevenlabs) - Voice synthesis
+  - [Google Cloud Platform](/integrations/gcp) - Speech services
+  - [Azure](/integrations/azure) - Microsoft speech services
+</Accordion>
+</AccordionGroup>
+
+#### Other Integrations
+
+- [Google Analytics](/integrations/google-analytics) - Track site usage
+- [Google Tag Manager](/integrations/google-tag-manager) - Manage tracking tags
+- [OneSignal](/integrations/onesignal) - Push notifications
+- [Intercom](/integrations/intercom) - Customer support chat
+- [Custom Scripts](/integrations/custom-scripts) - Add custom tracking codes
+
+<Tip>
+Start with one or two AI providers to test your setup, then expand to additional providers based on user demand and your business needs.
+</Tip>
+
+### Authentication
+
+Configure user authentication options at **Settings > Authentication**:
+
+- [Account Settings](/authentication/accounts-settings) - Configure registration and login
+- [Social Login Providers](/authentication/identity-providers/google) - Add Google, Facebook, GitHub, LinkedIn
+- [CAPTCHA](/authentication/captcha) - Prevent spam and bot registrations
+
+## Verification Checklist
+
+Before launching your platform to users, verify you've completed:
+
+<Steps>
+<Step title="Essential Settings">
+  - [ ] General settings configured (site name, domain, SEO)
+  - [ ] Public details added (company info, social links)
+  - [ ] Legal policies published (Terms, Privacy)
+</Step>
+
+<Step title="Features & Billing">
+  - [ ] Features enabled for your target audience
+  - [ ] AI models activated and tested
+  - [ ] Subscription plans created and priced
+  - [ ] Payment gateways configured and tested
+</Step>
+
+<Step title="Integrations">
+  - [ ] At least one AI provider configured
+  - [ ] Email delivery configured and tested
+  - [ ] Analytics tracking set up (optional)
+</Step>
+
+<Step title="Testing">
+  - [ ] Create a test user account
+  - [ ] Test subscription purchase flow
+  - [ ] Verify AI features work correctly
+  - [ ] Confirm email delivery
+</Step>
+</Steps>
+
+## Next Steps
+
+After completing your application configuration:
+
+1. **Test Everything**: Create test accounts, make test purchases, and verify all features work as expected
+2. **Customize Branding**: Review our [General Settings](/website-basics/essentials) and [Branding](/website-basics/branding) guides
+3. **Advanced Configuration**: Explore [Advanced Topics](/advanced/localization) like localization and email templates
+4. **Launch**: Open your platform to real users and start growing your business!
+
+<Check>
+Congratulations! Your Aikeedo platform is now fully configured and ready to serve users.
+</Check>
+
+<Support />

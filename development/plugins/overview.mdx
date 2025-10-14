@@ -1,49 +1,118 @@
 ---
-title: Plugins & Themes Overview
+title: Plugins and Themes Overview
 sidebarTitle: Overview
-description: Discover how to enhance your Aikeedo platform's functionality by enabling and configuring plugins, and learn about the difference between plugins and themes.
+description: Discover how to enhance your Aikeedo v3.x platform's functionality by enabling and configuring plugins, and learn about the difference between plugins and themes.
 ---
+
+import Support from '/snippets/support.mdx';
 
 # Understanding Aikeedo Plugins
 
 Plugins are powerful tools that allow you to extend and customize the functionality of your Aikeedo platform. By leveraging plugins, you can tailor your platform to meet specific requirements and provide an enhanced user experience.
 
+<Note>
+This guide reflects the Aikeedo v3.x structure. Plugins and themes are now located in `/extra/extensions/` with assets in `/public/e/`.
+</Note>
+
 ## What are Aikeedo Plugins?
 
 Aikeedo plugins are specialized Composer packages designed to integrate seamlessly with your platform. They offer a wide range of capabilities, including:
 
-- Adding new features
+- Adding new features and functionality
 - Modifying existing functionality
 - Integrating with third-party services
+- Adding payment gateways, currency providers, and more
 
-<Note>
-  Aikeedo plugins are installed in the `/public/content/plugins` directory of your platform.
-</Note>
+## Directory Structure
+
+In Aikeedo v3.x, plugins and themes use a standardized directory structure:
+
+- **Plugin/Theme files**: `/extra/extensions/yourorganization/name/`
+- **Public assets**: `/public/e/yourorganization/name/` (CSS, JS, images)
 
 ## Plugins vs. Themes
 
-While plugins focus on enhancing functionality across your entire Aikeedo platform, themes are a special type of plugin that specifically deal with customizing your landing page:
+While both extend Aikeedo's capabilities, they serve different purposes:
 
-- **Plugins**: 
-  - Enhance functionality throughout your platform
-  - Modify or add features to the app and admin dashboard
-  - Integrate external services
+### Plugins
 
-- **Themes**: 
-  - Customize the look and feel of your landing page
-  - Create custom landing page layouts and designs
-  - Do not affect the app or admin dashboard appearance
+Plugins enhance functionality throughout your platform:
+
+- Add new features to the application
+- Integrate with third-party services (payment gateways, AI providers, etc.)
+- Extend existing functionality
+- Modify backend and admin functionality
+
+**Example plugins:**
+- Currency rate providers (CurrencyAPI, Currency Beacon)
+- Payment gateways
+- Analytics integrations
+- Custom AI model providers
+
+### Themes
+
+Themes customize the visual appearance of your landing page:
+
+- Modify landing page layout and design
+- Customize colors, fonts, and styling
+- Create unique user experiences
+- Do not affect the app or admin dashboard appearance
+
+**Key differences:**
+
+| Aspect | Plugin | Theme |
+|--------|--------|-------|
+| Type in composer.json | `aikeedo-plugin` | `aikeedo-theme` |
+| Purpose | Functionality | Visual design |
+| Affects | Entire platform | Landing page only |
+| Requires assets | Optional | Usually yes |
 
 <Info>
-  Both plugins and themes are installed in the `/public/content/plugins` directory, as themes are considered a specialized type of plugin.
+Both plugins and themes are installed in `/extra/extensions/` and follow the same Composer package structure.
 </Info>
 
 ## Installing Plugins and Themes
 
-You have two convenient options for installing plugins and themes on your Aikeedo platform:
+You have multiple options for installing plugins and themes on your Aikeedo platform:
 
-1. **Aikeedo Dashboard**: Use the intuitive web interface to browse, install, and manage plugins and themes.
-2. **Command Line Interface (CLI)**: For users comfortable with command-line operations, the CLI offers a quick way to install and manage plugins.
+### 1. Via Composer (Recommended)
+
+For published packages on Packagist or private repositories:
+
+```bash
+composer require vendor/package-name
+```
+
+### 2. Local Development
+
+For custom or in-development plugins:
+
+1. Place your plugin/theme in `/extra/extensions/yourorganization/name/`
+2. Add to your root `composer.json`:
+
+```json
+{
+  "repositories": [
+    {
+      "type": "path",
+      "url": "./extra/extensions/yourorganization/name"
+    }
+  ]
+}
+```
+
+3. Install with Composer:
+
+```bash
+composer require yourorganization/name
+```
+
+### 3. Aikeedo Dashboard
+
+Use the web interface to:
+- Browse available plugins and themes
+- Install with one click
+- Manage installed extensions
 
 ## Managing Plugins
 
@@ -66,11 +135,27 @@ To get the most out of Aikeedo plugins, consider the following best practices:
 3. **Keep plugins updated**: Regularly update your plugins to benefit from new features and security patches.
 4. **Monitor performance**: Keep an eye on your platform's performance after installing new plugins to ensure they don't negatively impact speed or functionality.
 
-## Getting Help
+## Developing Plugins and Themes
 
-If you encounter any issues with plugins or have questions about their functionality, don't hesitate to reach out for support:
+Want to create your own plugins or themes? Check out these comprehensive guides:
 
-- Consult the plugin's documentation for specific usage instructions
-- [Contact our support team](mailto:support@aikeedo.com) for personalized assistance
+<CardGroup cols={2}>
+<Card title="Plugin Development Guide" icon="plug" href="/development/plugins/development-guide">
+  Learn to build custom plugins with step-by-step instructions and best practices
+</Card>
 
-By leveraging the power of plugins, you can create a truly unique and feature-rich experience for your Aikeedo platform users.
+<Card title="Theme Development Guide" icon="palette" href="/development/themes/development-guide">
+  Create custom themes to personalize your landing page appearance
+</Card>
+</CardGroup>
+
+## Example Implementations
+
+Learn from real-world examples:
+
+- [Currency Beacon Plugin](https://github.com/heyaikeedo/plugins-currency-beacon) - Currency rate provider integration
+- [Default Theme](https://github.com/heyaikeedo/themes-default) - Reference theme implementation
+
+<Support />
+
+By leveraging the power of plugins and themes, you can create a truly unique and feature-rich experience for your Aikeedo platform users.

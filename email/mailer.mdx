@@ -1,9 +1,9 @@
 ---
 title: Mailer Configuration
-description: Learn how to configure email settings in Aikeedo to ensure effective communication with your users. This guide will walk you through the process of setting up your mailer for optimal performance.
+description: 'Configure email delivery in Aikeedo using SMTP or Null transport, set sender details, and test email functionality for user communications.'
 ---
 
-Proper email configuration is crucial for maintaining smooth communication between your Aikeedo platform and its users. This guide will help you set up and customize your mailer settings to ensure reliable email delivery.
+Proper email configuration ensures reliable delivery of system notifications, password resets, and user communications. This guide covers mailer transport setup and sender configuration.
 
 ## Understanding Mailer Settings
 
@@ -86,11 +86,16 @@ It's always a good idea to test your email configuration to ensure everything is
 
 If you encounter issues with email delivery:
 
-- Double-check your SMTP settings if using SMTP Transport.
-- Verify that your sender email is correctly formatted and from a valid domain.
-- Check your server's firewall settings to ensure it's not blocking outgoing SMTP traffic.
-- Consider using a dedicated email service provider for improved deliverability.
+- Verify your SMTP settings if using SMTP Transport
+- Ensure your sender email is correctly formatted and from a valid domain
+- Check server firewall settings for outgoing SMTP traffic
+- Consider using a dedicated email service provider for improved deliverability
+- Review server logs for detailed error messages
 
-For more advanced email configuration options or if you need help troubleshooting, please refer to our [SMTP Configuration Guide](/email/smtp) or contact our support team.
+For advanced configuration, refer to our [SMTP Configuration Guide](/email/smtp).
 
-By carefully configuring your mailer settings, you ensure that your Aikeedo platform can effectively communicate with users, enhancing their experience and keeping them informed about important updates and actions.
+## Related Guides
+
+- [SMTP Setup](/email/smtp) - Configure SMTP server details
+- [Email Templates](/advanced/email-templates) - Customize email content
+- [Application Configuration](/setup/configuration) - Complete setup checklist
