@@ -43,7 +43,6 @@ These objects are available as properties of other objects:
 
 The `user` object is a fundamental component in Aikeedo themes, providing access to essential user information when a user is logged into their account. This object is globally accessible, allowing you to easily incorporate user-specific data and functionality into your theme.
 
-### Availability
 The `user` object is available globally when a user is logged in. If no user is logged in, the object will be undefined. Always check for the existence of the `user` object before attempting to access its properties.
 
 <Note>
@@ -148,7 +147,6 @@ The `user` object is available globally when a user is logged in. If no user is 
 
 The `affiliate` object provides access to essential affiliate information for users participating in the affiliate program. This object is part of the user object and contains details about the user's affiliate status, earnings, and payout preferences.
 
-#### Availability
 The `affiliate` object is always available as a property of the `user` object when a user is logged in. Affiliate accounts are automatically generated for each user, so you can safely access `user.affiliate` properties without additional checks for its existence.
 
 <ResponseField name="affiliate" type="Affiliate Object">
@@ -206,7 +204,6 @@ The `affiliate` object is always available as a property of the `user` object wh
 
 The `country` object provides access to country information for users. This object contains details about the user's country including name, codes, and flag information.
 
-#### Availability
 The `country` object is available as a property of the `user` object. It may be null if the user's country is not set.
 
 <ResponseField name="country" type="Country Object">
@@ -234,7 +231,6 @@ The `country` object is available as a property of the `user` object. It may be 
 
 The `currency` object provides access to currency information used throughout the system. This object is used to represent various currencies and their properties.
 
-### Availability
 The `currency` object is globally available and represents the global currency set in the billing settings. It can be accessed in other contexts where currency information is needed, such as in `affiliate.currency` or `subscription.currency`.
 
 <ResponseField name="currency" type="Currency Object">
@@ -262,7 +258,6 @@ The `currency` object is globally available and represents the global currency s
 
 The `environment` variable is used to determine the current execution environment in Aikeedo themes. This is important for making environment-specific decisions in your theme logic.
 
-### Availability
 The `environment` variable is available globally throughout the theme.
 
 <ResponseField name="environment" type="string" required>
@@ -273,7 +268,6 @@ The `environment` variable is available globally throughout the theme.
 
 The `locale` object provides access to language and region information used throughout the system. This object is used to represent various locales and their properties.
 
-### Availability
 The `locale` object is available in various contexts throughout the Aikeedo system where language and region information is relevant. It can be accessed in theme templates and components to display localized content, format dates and numbers, or adapt the user interface to specific cultural preferences.
 
 <ResponseField name="locale" type="Locale Object">
@@ -297,7 +291,6 @@ The `locale` object is available in various contexts throughout the Aikeedo syst
 
 The `locales` array provides access to all available language and region configurations in the system. This array contains multiple Locale objects, each representing a specific language-region combination.
 
-### Availability
 The `locales` array is globally available throughout the Aikeedo system. It can be accessed in theme templates, components, and other contexts where information about all supported languages is needed. This array is particularly useful for implementing language selection features or displaying available language options to users.
 
 <ResponseField name="locales" type="array<Locale>" required>
@@ -309,7 +302,6 @@ The `locales` array is globally available throughout the Aikeedo system. It can 
 
 The `Plan` object represents a subscription plan in Aikeedo themes, providing access to essential plan information. This object is part of the `plans` array, which is globally accessible, allowing you to easily incorporate plan-specific data and functionality into your theme.
 
-### Availability
 The `Plan` objects are available globally as part of the `plans` array. You can iterate through this array to access individual plan objects and their properties.
 
 <Note>
@@ -376,7 +368,6 @@ The `Plan` objects are available globally as part of the `plans` array. You can 
 
 The `plan_snapshot` object represents a snapshot of a subscription plan at the time of subscription creation. This object is used in subscriptions to maintain the plan details even if the original plan is modified.
 
-### Availability
 The `plan_snapshot` object is available as a property of the `subscription` object.
 
 <ResponseField name="plan_snapshot" type="Plan Snapshot Object">
@@ -437,7 +428,6 @@ The `plan_snapshot` object is available as a property of the `subscription` obje
 
 The `plan-config` object contains configuration settings for different AI models, tools, and features available in a specific plan. It defines which capabilities are enabled and which models are accessible.
 
-### Availability
 The `plan-config` object is available as a property of the `plan` object. It can be accessed within theme templates when working with plan-related data.
 
 <ResponseField name="plan-config" type="Plan Config Object">
@@ -555,7 +545,6 @@ The `plan-config` object is available as a property of the `plan` object. It can
 
 The `subscription` object provides access to subscription information for a workspace or user. This object contains details about the subscription status, usage, and related information.
 
-### Availability
 The `subscription` object is available within the `workspace` or `user.workspace` objects.
 
 <ResponseField name="subscription" type="Subscription Object">
@@ -626,7 +615,6 @@ The `subscription` object is available within the `workspace` or `user.workspace
 
 The `user` object is a fundamental component in Aikeedo themes, providing access to essential user information when a user is logged into their account. This object is globally accessible, allowing you to easily incorporate user-specific data and functionality into your theme.
 
-### Availability
 The `user` object is available globally when a user is logged in. If no user is logged in, the object will be undefined. Always check for the existence of the `user` object before attempting to access its properties.
 
 <Note>
@@ -731,7 +719,6 @@ The `user` object is available globally when a user is logged in. If no user is 
 
 The `version` variable provides access to the currently installed version of the Aikeedo app. This can be useful for version-specific logic or displaying the app version in your theme.
 
-### Availability
 The `version` variable is available globally throughout the theme.
 
 <ResponseField name="version" type="string" required>
@@ -742,7 +729,6 @@ The `version` variable is available globally throughout the theme.
 
 The `theme` variable provides access to the current theme name being used.
 
-### Availability
 The `theme` variable is available globally throughout the theme.
 
 <ResponseField name="theme" type="string" required>
@@ -753,7 +739,6 @@ The `theme` variable is available globally throughout the theme.
 
 The `nav` variable provides access to the navigation registry for building navigation menus.
 
-### Availability
 The `nav` variable is available globally throughout the theme.
 
 <ResponseField name="nav" type="object" required>
@@ -764,7 +749,6 @@ The `nav` variable is available globally throughout the theme.
 
 The `view_namespace` variable indicates which namespace the current view belongs to.
 
-### Availability
 The `view_namespace` variable is available globally throughout the theme.
 
 <ResponseField name="view_namespace" type="string|null" required>
@@ -778,7 +762,6 @@ The `view_namespace` variable is available globally throughout the theme.
 
 The `config` variable provides access to all configuration settings.
 
-### Availability
 The `config` variable is available globally throughout the theme.
 
 <ResponseField name="config" type="object" required>
@@ -789,7 +772,6 @@ The `config` variable is available globally throughout the theme.
 
 The `option` variable provides access to all option settings configured in the admin panel.
 
-### Availability
 The `option` variable is available globally throughout the theme.
 
 <ResponseField name="option" type="object" required>
@@ -800,7 +782,6 @@ The `option` variable is available globally throughout the theme.
 
 The `workspace` object is a fundamental component in Aikeedo themes, representing a user's working environment and associated settings. This object contains crucial information about the workspace, including subscription details, credit usage, and various configuration options.
 
-### Availability
 The `workspace` object is available globally when a user is logged into the app. Additionally, it is always accessible as a property of the `user` object. Each user has at least one workspace, so you can safely access `workspace` properties or `user.workspace` properties without additional checks for their existence.
 
 <ResponseField name="workspace" type="Workspace Object">
@@ -871,7 +852,6 @@ The `workspace` object is available globally when a user is logged into the app.
 
 The `workspace_invitation` object represents an invitation to join a workspace in Aikeedo themes. This object contains essential information about the invitation, including its unique identifier, the invited email address, and timestamps.
 
-### Availability
 The `workspace_invitation` object is available in contexts related to workspace management, such as when listing pending invitations or processing invitation responses.
 
 <Note>
