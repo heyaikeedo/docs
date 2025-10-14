@@ -35,10 +35,23 @@ Install Aikeedo on a subdomain (`app.yourdomain.com`) and disable the default la
 **Best for:** Users who want complete design freedom with specialized landing page builders.
 </Accordion>
 
-<Accordion title="Option 3: Install Custom Themes">
-Use pre-built themes from our [Marketplace](https://aikeedo.com/marketplace/) or create your own. You can build themes yourself using our [Theme Development Guide](/development/themes/development-guide) or have our team create custom themes for you (contact [sales@aikeedo.com](mailto:sales@aikeedo.com)).
+<Accordion title="Option 3: Use Marketplace Themes">
+Browse and install pre-built themes from our [Marketplace](https://aikeedo.com/marketplace/). These professionally designed themes are ready to use and can be customized to match your brand.
 
 **Best for:** Users who want professional designs without starting from scratch.
+</Accordion>
+
+<Accordion title="Option 4: Build Your Own Theme">
+Create custom themes tailored to your specific needs. You can build themes yourself or have our team create them for you.
+
+**For developers:**
+- Start with our minimal [Theme Starter Kit](https://github.com/heyaikeedo/themes-starter) - the same foundation we use internally
+- Follow our comprehensive [Theme Development Guide](/development/themes/development-guide) for detailed instructions
+
+**For custom development:**
+- Contact [sales@aikeedo.com](mailto:sales@aikeedo.com) to have our team create custom themes for you
+
+**Best for:** Users who need unique designs or have specific branding requirements.
 </Accordion>
 </AccordionGroup>
 
@@ -96,29 +109,40 @@ To customize Aikeedo's default landing page, you'll need to duplicate the theme 
   4. Click **Activate** to enable it
 </Step>
 
-<Step title="Enable Debug Mode">
-  Enable debug mode in your Aikeedo configuration to see changes in real-time during development.
+<Step title="Enable Debug Mode and Disable Cache">
+  For development, you need to enable debug mode and disable app cache:
   
-  <Note>
-  Debug mode helps you identify issues but should never be enabled in production.
-  </Note>
+  1. Navigate to the **Status** page in your admin panel
+  2. **Enable Debug Mode**: This allows you to see changes in real-time during development
+  3. **Disable App Cache**: Disable all caching options on the same page
+  
+  <Warning>
+  Debug mode and disabled cache should never be enabled in production as they significantly impact performance.
+  </Warning>
 </Step>
 
 <Step title="Make Your Changes">
   Edit files in your custom theme directory:
-  - Modify HTML views
+  - **Modify TWIG templates**: Aikeedo uses TWIG for HTML views (`.twig` files)
   - Update CSS styles
   - Add custom JavaScript
   - Replace images
+  
+  <Tip>
+  TWIG templates are located in the `views` directory of your theme. Look for `.twig` files to modify the HTML structure.
+  </Tip>
+</Step>
+
+<Step title="Disable Debug Mode and Re-enable Cache">
+  Once you've completed and tested your changes:
+  1. Navigate to the **Status** page in your admin panel
+  2. **Disable Debug Mode** for optimal performance
+  3. **Re-enable App Cache** for production
+  
 </Step>
 
 <Step title="Clear Cache">
-  After making changes, clear the application cache from the admin panel's Status page.
-</Step>
-
-<Step title="Disable Debug Mode">
-  Once you've completed and tested your changes, disable debug mode for optimal performance.
-  
+  If you have any caching enabled, clear the application cache from the admin panel's Status page after making changes.
   <Check>
   Your customizations are now protected from being overwritten during updates.
   </Check>
@@ -192,12 +216,16 @@ Access the default theme source code and documentation:
   View the complete source code, structure, and implementation of the default landing page theme
 </Card>
 
-### Theme Development Guide
+### Theme Development Resources
 
 For in-depth information on building custom themes:
 
 <Card title="Theme Development Guide" icon="code" href="/development/themes/development-guide">
   Learn about theme architecture, available objects, and best practices for theme development
+</Card>
+
+<Card title="Theme Starter Kit" icon="rocket" href="https://github.com/heyaikeedo/themes-starter">
+  Minimal foundation for building custom themes from scratch - the same base we use internally
 </Card>
 
 ## Best Practices

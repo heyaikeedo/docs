@@ -6,6 +6,42 @@ description: 'Configure billing settings in Aikeedo including default currency, 
 
 ## General Settings
 
+### Billing Address
+
+Control whether billing address information is required during checkout.
+
+- **Enabled**: Billing address will be required at checkout
+- **Disabled**: Billing address is optional
+
+<Note>
+  Address information is required by payment gateways in some countries for compliance and fraud prevention.
+</Note>
+
+### Credit Overuse Allowance
+
+Manage how overused credits are handled when users exceed their plan limits.
+
+- **Enabled**: Overused credits are tracked as workspace debt and automatically deducted from future subscription renewals or credit purchases
+- **Disabled**: Overused credits become lost revenue that cannot be recovered
+
+<Info>
+  This feature helps recover revenue from overused credits while still maintaining usage limits. Workspaces with negative balance are still blocked from new operations until debt is covered.
+</Info>
+
+### Charge for Automatic Title Generation
+
+Control whether automatic title generation incurs a cost.
+
+- **Enabled**: Title generation incurs a cost and is charged to the workspace
+- **Disabled**: Title generation is provided free of charge
+
+### Charge for Dictation
+
+Control whether dictation features incur a cost.
+
+- **Enabled**: Dictation incurs a cost and is charged to the workspace
+- **Disabled**: Dictation is provided free of charge
+
 ### Default Currency
 
 Choose the default currency for your billing system. This setting affects how prices are displayed and transactions are processed throughout your Aikeedo platform.
@@ -75,6 +111,40 @@ Define the plan users will be automatically moved to if their current subscripti
 
 <Note>
   Ensure you have created appropriate pricing plans before configuring the Sign-Up and Fallback plans to provide a smooth user experience.
+</Note>
+
+## Custom Credit Purchases
+
+### Enable Custom Credit Purchases
+
+Allow users to purchase additional credits beyond their subscription plan.
+
+- **Enabled**: Users can purchase additional credits with custom amounts
+- **Disabled**: Users can only use credits included in their subscription plan
+
+### Credits per USD
+
+Set the exchange rate for credit purchases.
+
+- Enter the number of credits users receive per USD spent
+- Example: 100 credits per $1.00 USD
+
+### Minimum Purchase Amount
+
+Set the minimum amount users must spend when purchasing credits.
+
+- Enter the minimum purchase amount in your default currency
+- Example: $10.00 USD minimum purchase
+
+### Maximum Purchase Amount
+
+Set the maximum amount users can spend in a single credit purchase.
+
+- Enter the maximum purchase amount in your default currency
+- Example: $15,000.00 USD maximum purchase
+
+<Note>
+  These limits help control credit purchase volumes and prevent potential abuse while providing flexibility for high-volume users.
 </Note>
 
 ## Related Guides

@@ -19,6 +19,32 @@ The website name appears throughout your platform and represents your brand.
 Choose a memorable name that clearly communicates your platform's purpose to users.
 </Tip>
 
+### Site Domain
+
+Configure your website's domain for proper functionality.
+
+- Enter your domain name in the "Site Domain" field
+- **Important:** Include only domain, subdomain (if any) and port number (if any)
+- **Do not include** protocol (http/https) or path
+- Omit port number if it's 80 or 443
+- Example: `demo.aikeedo.com` or `mysite.com:8080`
+
+<Warning>
+Incorrect domain configuration can cause authentication and payment gateway issues. Make sure to enter only the domain without http:// or https://.
+</Warning>
+
+### SSL Configuration
+
+Enable SSL for secure connections and required features.
+
+- Toggle "Is SSL Enabled?" to "Yes" if you have an SSL certificate installed
+- SSL is required for various features like SSO and Payment Gateways
+- It's highly recommended to enable SSL for production environments
+
+<Note>
+Only enable SSL if you have a valid SSL certificate installed on your server. Enabling without a certificate will cause connection errors.
+</Note>
+
 ### Landing Page
 
 Control the first page visitors see when they arrive at your site.
@@ -29,6 +55,18 @@ Control the first page visitors see when they arrive at your site.
 <Note>
 If you plan to publicly market your platform, keep the landing page enabled to showcase your services to potential users.
 </Note>
+
+### Default App Page
+
+Set the default page users see after logging in.
+
+- Enter the path for your default app page (e.g., `/app`)
+- This setting will be used as the default page for users when they login
+- Admins will always be redirected to the admin dashboard regardless of this setting
+
+<Tip>
+Common values include `/app`, `/app/chat`, or `/app/video` depending on your platform's structure.
+</Tip>
 
 
 ## SEO Optimization
@@ -69,8 +107,3 @@ Your general settings have been updated successfully.
 - [Branding](/website-basics/branding) - Customize logos and colors
 - [Application Configuration](/setup/configuration) - Complete configuration checklist
 - [Email Configuration](/email/mailer) - Set up email delivery
-
-<Tip>
-Periodically review and update your SEO settings as your platform evolves to maintain optimal search engine visibility.
-</Tip>
-

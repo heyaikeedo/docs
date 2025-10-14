@@ -44,7 +44,6 @@ Find your issue and click to jump to the solution:
 
 ## Installation Issues
 
-<a id="assets-not-loading"></a>
 ### Assets Not Loading (CSS, JS, Images)
 
 **Symptoms:**
@@ -91,7 +90,6 @@ The domain is not correctly pointing to the `public` directory.
 
 ---
 
-<a id="404-or-403-errors"></a>
 ### 404 or 403 Errors During Installation
 
 **Symptoms:**
@@ -109,7 +107,8 @@ Domain document root not pointing to the `public` directory, missing files, or i
   Ensure your domain's document root points to the `public` folder:
   
   **For cPanel:**
-  - Main domain: Should point to `public_html` which should be the `public` directory
+  - Main domain: Points to `public_html` by default (this is correct)
+  - Ensure Aikeedo's `public` folder contents are copied to `public_html`
   - Add-on domains/subdomains: Update document root in cPanel to point to the `public` folder
   
   **For VPS/Dedicated:**
@@ -143,7 +142,6 @@ Domain document root not pointing to the `public` directory, missing files, or i
 
 ---
 
-<a id="database-connection"></a>
 ### Database Connection Issues
 
 **Symptoms:**
@@ -192,7 +190,6 @@ If problems persist, try creating a new database and user with full permissions.
 
 ---
 
-<a id="500-internal-server-error"></a>
 ### 500 Internal Server Error During Installation
 
 **Symptoms:**
@@ -277,7 +274,6 @@ PHP configuration issues, incorrect file permissions, or insufficient server res
 
 ---
 
-<a id="installation-wizard-not-loading"></a>
 ### Installation Wizard Not Loading
 
 **Symptoms:**
@@ -305,7 +301,6 @@ Try accessing the site from an incognito/private browsing window to rule out bro
 
 ## Configuration Issues
 
-<a id="does-not-allow-value"></a>
 ### "Does Not Allow the Value" Error
 
 **Symptoms:**
@@ -329,7 +324,6 @@ The Site Domain value is missing in General Settings.
 
 ---
 
-<a id="cannot-select-models"></a>
 ### Cannot Select Models or Send Prompts
 
 **Symptoms:**
@@ -392,7 +386,6 @@ Features and models are not enabled globally, or plan configuration is incomplet
 
 ---
 
-<a id="500-error-generators"></a>
 ### 500 Error on Image Generator or Video Generator
 
 **Symptoms:**
@@ -423,7 +416,6 @@ If you're unsure about credit ratios, start with the default suggestions and adj
 
 ## Database Issues
 
-<a id="mysql-server-gone-away"></a>
 ### MySQL Server Has Gone Away
 
 **Symptoms:**
@@ -506,11 +498,10 @@ If you're on shared hosting and don't have access to `my.cnf`, contact your host
 
 ## Feature-Specific Issues
 
-<a id="title-language-mismatch"></a>
 ### Auto-Generated Titles Don't Match Content Language
 
 **Symptoms:**
-- AI generates titles in English when content is in another language
+- AI generates titles in Spanish when content is in another language
 - Title language doesn't match the generated content language
 
 **Cause:**
@@ -535,28 +526,24 @@ AI models sometimes generate titles in their default language despite instructio
   </Warning>
 </Tab>
 
-<Tab title="Option 2: Try Different Models">
+<Tab title="Option 2: Configure Plan Models">
   Some AI models are better at following language instructions than others:
   
-  1. Navigate to **Settings > Models**
-  2. Enable alternative models (e.g., GPT-4 instead of GPT-3.5)
-  3. Test title generation with different models
-  4. Use the model that best respects language instructions
-  
-  <Tip>
-  Claude models often excel at following specific language instructions.
-  </Tip>
+  1. Navigate to **Plans** in your admin panel
+  2. Edit the plan that's experiencing title language issues
+  3. In the plan configuration, change the title generation model
+  4. **Important:** Check the "Update snapshot" checkbox before saving
+  5. Save the plan changes and test title generation
 </Tab>
 </Tabs>
 
 ---
 
-<a id="files-404-errors"></a>
 ### Uploaded Files Return 404 Not Found Errors
 
 **Symptoms:**
 - Uploaded files show "not found" or 404 errors
-- Generated files (images, audio, documents) are inaccessible
+- Generated files (images, videos, audio, documents etc.) are inaccessible
 - Files exist in storage but cannot be accessed via URL
 - Browser shows 404 when clicking file links
 
@@ -572,7 +559,7 @@ File grouping enabled on local storage, secure URLs enabled, incorrect document 
   1. Log in to the admin panel
   2. Navigate to **Settings > Storage**
   3. Locate the "File Grouping" option
-  4. Change the value from "Workspace" (or any other option) to **"None"**
+  4. Change the value to **"None"**
   5. Click "Save changes"
   
   <Note>
@@ -628,6 +615,35 @@ File grouping enabled on local storage, secure URLs enabled, incorrect document 
   - Ubuntu/Debian: `www-data`
   - CentOS/RHEL: `apache`
   - Nginx: `nginx`
+</Step>
+
+<Step title="Check Cloud Storage CORS Configuration">
+  If you're using cloud storage (AWS S3, DigitalOcean Spaces, etc.), CORS issues may prevent file access:
+  
+  1. **Check your cloud storage CORS configuration:**
+     - Ensure your bucket allows requests from your domain
+     - Verify that the GET method is allowed (generally sufficient for file access)
+     - Check that the correct headers are permitted
+  
+  2. **Example CORS configuration for AWS S3:**
+     ```json
+     [
+       {
+         "AllowedHeaders": ["*"],
+         "AllowedMethods": ["GET"],
+         "AllowedOrigins": ["https://yourdomain.com", "https://www.yourdomain.com"]
+       }
+     ]
+     ```
+  
+  3. **Verify your storage configuration:**
+     - Check **Settings > Storage** in your admin panel
+     - Ensure cloud storage credentials are correct
+     - Verify the bucket/container name and region are accurate
+  
+  <Warning>
+  CORS misconfiguration can cause files to appear uploaded but return 404 errors when accessed. Always test file access after making CORS changes.
+  </Warning>
 </Step>
 
 <Step title="Verify Storage Path">
@@ -702,7 +718,14 @@ If you've tried the solutions above and still need assistance:
   Get expert help from our team with a paid support subscription
 </Card>
 
+For support plan options and pricing, visit [https://aikeedo.com/support/](https://aikeedo.com/support/).
+
+**Before contacting support:**
+- Ensure you have an active [support plan subscription](https://aikeedo.com/support/)
+- Have your Aikeedo license key ready for validation
+
 **When contacting support, include:**
+- Your Aikeedo license key (for purchase validation)
 - Detailed description of the issue
 - Complete error messages (screenshots if possible)
 - Steps to reproduce the problem
@@ -710,6 +733,10 @@ If you've tried the solutions above and still need assistance:
 - Aikeedo version number
 - Relevant error log entries
 - What troubleshooting steps you've already tried
+
+<Warning>
+Support is only available to users with active support plan subscriptions. Requests without valid license keys or active support plans will not be processed.
+</Warning>
 
 <Tip>
 The more detailed information you provide, the faster our support team can help resolve your issue.
