@@ -1,242 +1,195 @@
 ---
 title: Theme Development Guide
 sidebarTitle: Theme Development
-description: Learn how to create and customize themes for your Aikeedo v3.x platform with proper directory structure and asset organization.
+description: Learn how to create and customize themes for your Aikeedo v3.x platform using the modern themes-starter kit with Vite.js, Alpine.js, and Tailwind CSS.
 ---
 
 import Support from '/snippets/support.mdx';
 
 # Building Themes for Aikeedo v3.x
 
-Creating a custom theme for Aikeedo allows you to personalize the look and feel of your platform. This guide covers the v3.x structure for building themes from scratch.
+Creating a custom theme for Aikeedo allows you to personalize the look and feel of your platform. This guide covers the modern approach using the **Aikeedo Theme Starter Kit** - a comprehensive development environment that streamlines theme creation.
 
 <Note>
-This guide is for Aikeedo v3.x. The theme structure has been updated from v2.x. Themes are now located in `/extra/extensions/` with assets in `/public/e/`.
+This guide is for Aikeedo v3.x. We strongly recommend using the [themes-starter kit](https://github.com/heyaikeedo/themes-starter) for new theme development as it provides a modern build system and best practices.
 </Note>
 
-## Understanding Theme Structure
+## Modern Theme Development with Starter Kit
 
-In Aikeedo v3.x, themes consist of two main directories:
+The **Aikeedo Theme Starter Kit** provides a modern development environment with:
 
-1. **Theme files**: `/extra/extensions/yourorganization/theme-name/` - Contains templates, configuration, and localization
-2. **Asset files**: `/public/e/yourorganization/theme-name/` - Contains CSS, JavaScript, images, and other public assets
+- **Vite.js** for fast asset building and hot module replacement
+- **Alpine.js** for lightweight JavaScript interactivity
+- **Tailwind CSS** for utility-first styling
+- **Twig** for PHP templating
+- **Gettext** for internationalization
+- **PHP Composer** package structure
 
-## Getting Started
+## Getting Started with the Starter Kit
 
-### 1. Create the Theme Directories
+### 1. Clone the Starter Repository
 
-Create both the theme and asset directories for your theme. We'll create a theme called "Orbit":
+Start by cloning the themes-starter repository:
 
 ```bash
-# Create theme directory
-mkdir -p extra/extensions/heyaikeedo/orbit
-
-# Create assets directory
-mkdir -p public/e/heyaikeedo/orbit
+git clone https://github.com/heyaikeedo/themes-starter.git my-theme
+cd my-theme
 ```
 
-<Tip>
-The directory structure should follow the format: `yourorganization/theme-name`. Use consistent naming across both directories.
-</Tip>
+### 2. Configure Your Theme Package
 
-### 2. Set Up the Composer Package
-
-Aikeedo themes are Composer packages that require a `composer.json` file for metadata and dependencies.
-
-Create a `composer.json` file in your theme directory (`/extra/extensions/heyaikeedo/orbit/composer.json`). Here's a minimal version that's sufficient for a functional theme:
+Edit `/static/composer.json` with your theme details:
 
 ```json
 {
-    "name": "heyaikeedo/orbit",
-    "type": "aikeedo-theme",
-    "version": "1.0.0",
-    "require": {
-        "heyaikeedo/composer": "^1.0.0"
-    },
-    "extra": {
-        "title": "Orbit",
-        "status": "active"
+  "name": "your-vendor/your-theme-name",
+  "description": "Your theme description",
+  "version": "1.0.0",
+  "type": "aikeedo-theme",
+  "homepage": "https://your-site.com",
+  "license": "AIKEEDO",
+  "authors": [
+    {
+      "name": "Your Name",
+      "email": "your.email@example.com",
+      "homepage": "https://your-site.com",
+      "role": "Developer"
     }
+  ],
+  "support": {
+    "email": "support@your-site.com",
+    "docs": "https://docs.your-site.com/"
+  },
+  "require": {
+    "heyaikeedo/composer": "^1.0.0"
+  },
+  "extra": {
+    "entry-class": "YourVendor\\ThemeName\\Theme",
+    "title": "Your Theme Title",
+    "description": "Your theme description",
+    "logo": "https://your-site.com/logo.png",
+    "icon": "https://your-site.com/icon.png",
+    "status": "active",
+    "public": [
+      "assets",
+      ".vite"
+    ]
+  },
+  "autoload": {
+    "psr-4": {
+      "YourVendor\\ThemeName\\": "src/"
+    }
+  }
 }
-````
+```
 
-This minimal version includes the essential fields needed for your theme to function properly.
+<Warning>
+**Important**: Replace `YourVendor\\ThemeName` with your actual namespace. The namespace in `autoload.psr-4` must match your `entry-class` namespace.
+</Warning>
 
-<Note>
-  The `type` attribute must be set to `aikeedo-theme`. This is crucial for Aikeedo to recognize and properly handle your package as a theme.
-</Note>
+### 3. Set Up Environment
 
-For a more comprehensive `composer.json` file, you can use the following extended version:
-
-```json
-{
-    "name": "heyaikeedo/orbit",
-    "description": "Orbit theme for Aikeedo",
-    "version": "1.0.0",
-    "type": "aikeedo-theme",
-    "homepage": "https://aikeedo.com",
-    "time": "2024-03-21",
-    "license": "AIKEEDO",
-    "authors": [
-        {
-            "name": "Aikeedo",
-            "email": "hey@aikeedo.com",
-            "homepage": "https://aikeedo.com",
-            "role": "Owner"
-        }
-    ],
-    "support": {
-        "chat": "https://aikeedo.com/",
-        "docs": "https://docs.aikeedo.com/",
-        "email": "support@aikeedo.com",
-        "forum": "https://aikeedo.com/",
-        "issues": "https://aikeedo.com/",
-        "rss": "https://aikeedo.com/",
-        "source": "https://github.com/heyaikeedo",
-        "wiki": "https://docs.aikeedo.com/"
-    },
-    "require": {
-        "heyaikeedo/composer": "^1.0.0"
-    },
-    "extra": {
-        "title": "Orbit",
-        "description": "Orbit theme for Aikeedo",
-        "logo": "https://aikeedo.com/",
-        "icon": "https://aikeedo.com/",
-        "status": "active"
-    },
-    "autoload": {}
-}
-````
-
-This extended version provides more detailed information about your theme, including author details, support links, and additional metadata.
-
-<Note>
-  The `name` field in `composer.json` must match the path to your theme directory (e.g., `heyaikeedo/orbit`). This uniquely identifies your theme.
-</Note>
-
-<Tip>
-  Start with the minimal version and expand your `composer.json` file as your theme grows and requires more detailed information. Remember to always keep the `type` set to `aikeedo-theme`.
-</Tip>
-
-### 3. Create the Template Structure
-
-Aikeedo uses the Twig templating engine to render pages. Create the templates directory and main template:
+Create your local environment file:
 
 ```bash
-mkdir -p extra/extensions/heyaikeedo/orbit/templates
+cp .env .env.local
 ```
 
-Create a `templates/index.twig` file in your theme directory with a basic HTML structure:
-
-```twig
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Orbit Theme</title>
-  
-  {# Load CSS from assets directory #}
-  <link rel="stylesheet" href="/e/heyaikeedo/orbit/css/styles.css">
-</head>
-<body>
-  <h1>Welcome to Orbit</h1>
-  <p>This is the Orbit theme for Aikeedo.</p>
-  
-  {# Load JavaScript from assets directory #}
-  <script src="/e/heyaikeedo/orbit/js/app.js"></script>
-</body>
-</html>
-```
-
-<Tip>
-Assets are served from `/e/yourorganization/theme-name/` path. Reference them using absolute paths starting with `/e/`.
-</Tip>
-
-### 4. Create Asset Files
-
-Create your CSS, JavaScript, and other assets in the public assets directory:
+Configure `.env.local` with your paths:
 
 ```bash
-# Create asset subdirectories
-mkdir -p public/e/heyaikeedo/orbit/css
-mkdir -p public/e/heyaikeedo/orbit/js
-mkdir -p public/e/heyaikeedo/orbit/assets
+# Windows path example:
+BUILD_DIR=C:/xampp/htdocs/aikeedo/extra/extensions/your-vendor/your-theme-name
+
+# Linux/Mac path example:
+BUILD_DIR=/var/www/aikeedo/extra/extensions/your-vendor/your-theme-name
+
+# Aikeedo server URL (required for development)
+AIKEEDO_SERVER=http://localhost:8000
 ```
 
-Create a basic stylesheet (`public/e/heyaikeedo/orbit/css/styles.css`):
+<Warning>
+**Critical**: The final path segments (`your-vendor/your-theme-name`) MUST match your composer.json package name!
+</Warning>
 
-```css
-body {
-  font-family: system-ui, -apple-system, sans-serif;
-  margin: 0;
-  padding: 20px;
-  background-color: #f5f5f5;
-}
+### 4. Install Dependencies
 
-h1 {
-  color: #333;
-}
-```
-
-Create a basic JavaScript file (`public/e/heyaikeedo/orbit/js/app.js`):
-
-```javascript
-console.log('Orbit theme loaded');
-```
-
-### 5. Set Up Localization (Optional)
-
-Create a locale directory for multilingual support:
+Install npm packages:
 
 ```bash
-mkdir -p extra/extensions/heyaikeedo/orbit/locale
+npm install
 ```
 
-Add translation files following the same structure as the default theme. See [Localization](/advanced/localization) for more details.
+Verify installation:
 
-## Directory Structure Summary
-
-Your complete theme structure should look like this:
-
-```
-extra/extensions/heyaikeedo/orbit/
-├── composer.json
-├── templates/
-│   └── index.twig
-└── locale/
-    └── en-US.po (optional)
-
-public/e/heyaikeedo/orbit/
-├── css/
-│   └── styles.css
-├── js/
-│   └── app.js
-└── assets/
-    └── (images, fonts, etc.)
+```bash
+# Should list alpinejs and other dependencies
+npm list
 ```
 
-## Activating Your Theme
+### 5. Start Development Server
+
+```bash
+npm run dev
+```
+
+This will:
+- Start Vite dev server on port 5174
+- Watch for file changes
+- Copy static files to `BUILD_DIR`
+- Extract translations automatically
+
+### 6. Register Theme with Aikeedo
+
+In your Aikeedo installation directory:
+
+```bash
+# Add your theme as a requirement
+composer require your-vendor/your-theme-name
+```
+
+### 7. Configure Aikeedo
+
+Add or update these settings in your Aikeedo's `.env` file:
+
+```bash
+# Required for development
+THEME_ASSETS_SERVER=http://localhost:5174/
+
+# Set environment to development
+ENVIRONMENT=dev
+
+# Enable debug mode for development
+DEBUG=1
+
+# Disable caching for development
+CACHE=0
+```
+
+### 8. Verify Installation
+
+```bash
+# Your theme should be here
+ls /path/to/aikeedo/public/content/plugins/your-vendor/your-theme-name
+```
+
+### 9. Activate Your Theme
 
 <Steps>
-<Step title="Install via Composer">
-  If your theme is a Composer package, install it:
-  
-  ```bash
-  composer require heyaikeedo/orbit
-  ```
-  
-  <Note>
-  For local development, you can manually place files in the directories and skip Composer installation.
-  </Note>
+<Step title="Log into Admin Panel">
+  Access your Aikeedo admin panel
 </Step>
 
-<Step title="Enable in Admin Panel">
-  1. Log in to your Aikeedo admin panel
-  2. Navigate to the **Themes** page
-  3. Locate your new theme (Orbit)
-  4. Click the "Activate" button to enable your theme
+<Step title="Navigate to Themes">
+  Go to the Themes section in the admin panel
+</Step>
+
+<Step title="Find Your Theme">
+  Locate your theme in the list of available themes
+</Step>
+
+<Step title="Activate Theme">
+  Click "Publish" to activate your theme
   
   <Check>
   Your theme is now active and visible to users!
@@ -244,29 +197,97 @@ public/e/heyaikeedo/orbit/
 </Step>
 </Steps>
 
-## Further Development
+## Project Structure
 
-Now that you have the basic structure in place, you can start customizing your theme:
+The themes-starter kit provides a well-organized structure:
 
-### Frontend Build Tools
-
-Choose a frontend build tool that suits your workflow:
-
-- **Vite** (recommended): Fast, modern build tool with HMR
-- **Webpack**: More established, highly configurable
-- **Parcel**: Zero-configuration bundler
-
-Example Vite setup:
-
-```javascript
-// vite.config.js
-export default {
-  build: {
-    outDir: '../../public/e/heyaikeedo/orbit',
-    emptyOutDir: true
-  }
-}
 ```
+theme-starter/
+├── src/                    # Frontend source
+│   ├── js/               # JavaScript files
+│   │   ├── components/  # Custom elements
+│   │   └── index.js    # Main JS entry
+│   └── css/             # CSS files
+│       ├── base.css    # Base styles
+│       └── index.css   # Main CSS entry
+│
+├── static/                # PHP package structure
+│   ├── composer.json     # Package definition
+│   ├── templates/       # Twig template files
+│   ├── sections/       # Reusable template sections
+│   ├── snippets/      # Template partials
+│   ├── layouts/       # Base layouts
+│   ├── locale/        # Translation files (.po)
+│   └── src/          # PHP source files
+│
+└── scripts/              # Build and utility scripts
+    ├── pack.mjs        # Theme packaging
+    ├── release.mjs    # Release creation
+    └── locale-extract.mjs # Translation extraction
+```
+
+## Development Features
+
+### Hot Module Replacement
+
+The starter kit provides instant development feedback:
+
+- **Instant CSS updates** via Tailwind CSS
+- **Alpine.js component reloading** for JavaScript changes
+- **Full page reload** for Twig template changes
+- **Automatic static file copying** to your Aikeedo installation
+
+### Custom Elements
+
+The starter kit includes pre-built custom elements:
+
+```html
+<!-- Dark/Light Mode Switcher -->
+<mode-switcher>
+  <button class="text-2xl">
+    <i class="ti ti-moon-stars dark:hidden"></i>
+    <i class="hidden ti ti-sun-filled dark:block"></i>
+  </button>
+</mode-switcher>
+
+<!-- Avatar Component -->
+<x-avatar title="User Name" src="/path/to/avatar.jpg" length="2"></x-avatar>
+```
+
+### Twig Templates
+
+Use the modern Twig templating system:
+
+```twig
+{% extends "@theme/layouts/theme.twig" %}
+
+{% block template %}
+  <div class="container">
+    {% include "@theme/sections/header.twig" %}
+    {{ content }}
+  </div>
+{% endblock %}
+```
+
+### Internationalization
+
+The starter kit includes automatic translation extraction:
+
+- **Automatic string extraction** to PO files
+- **Multiple language support** with Gettext
+- **Translation file watching** during development
+- **Uses PHP's Gettext** for translations
+
+### Available Commands
+
+| Command         | Purpose                          |
+| --------------- | -------------------------------- |
+| `npm run dev`   | Start Vite development server    |
+| `npm run build` | Build production assets          |
+| `npm run serve` | Preview production build         |
+| `npm run locale`| Extract translatable strings     |
+| `npm run pack`  | Create installable theme package |
+| `npm run release`| Create distribution package      |
 
 ### Theme Objects
 
@@ -279,73 +300,47 @@ Aikeedo provides several objects for use in Twig templates:
 
 Refer to the [Theme Objects](/development/themes/objects/address) documentation for complete details.
 
-### Study the Default Theme
-
-For inspiration and best practices, examine the [Default Aikeedo theme](https://github.com/heyaikeedo/themes-default/):
-
-- Modern build setup with Vite
-- Component-based architecture
-- Responsive design patterns
-- Accessibility best practices
-
 ## Best Practices
 
-1. **Separate Concerns**: Keep theme files in `/extra/extensions/` and assets in `/public/e/`
-2. **Responsive Design**: Ensure your theme looks good on all device sizes
+1. **Use the Starter Kit**: Always start with the [themes-starter](https://github.com/heyaikeedo/themes-starter) for new themes
+2. **Responsive Design**: Ensure your theme looks good on all device sizes using Tailwind CSS
 3. **Accessibility**: Follow WCAG guidelines to make your theme usable for everyone
 4. **Performance**: 
-   - Minify CSS and JavaScript
-   - Optimize images
-   - Use lazy loading for images
-   - Implement asset caching
+   - Leverage Vite's built-in optimization
+   - Use Tailwind's utility classes for efficient CSS
+   - Implement lazy loading for images
+   - Take advantage of Alpine.js's lightweight nature
 5. **Version Control**: Use Git to track changes and maintain version history
 6. **Documentation**: Document your theme's features and customization options
 7. **Testing**: Test across different browsers and devices
 
-## Protecting Customizations from Updates
-
-<Warning>
-Changes to the default theme will be overwritten during app updates. Always create a custom theme for modifications.
-</Warning>
-
-To protect your customizations:
-
-1. **Duplicate the Default Theme**: Copy the entire theme structure
-2. **Rename Your Theme**: Update `composer.json` with your organization name
-3. **Copy Assets**: Duplicate assets to your new theme's `/public/e/` directory
-4. **Activate Custom Theme**: Enable your custom theme in the admin panel
-
-See the [Landing Page Customization](/website-basics/landing-page) guide for detailed duplication steps.
-
-## Troubleshooting
-
-### Theme Not Appearing in Admin Panel
-
-- Verify `composer.json` has `"type": "aikeedo-theme"`
-- Ensure the `name` field matches your directory path
-- Check file permissions on the theme directory
-- Run `composer dump-autoload` to refresh Composer's autoloader
+## Common Setup Issues
 
 ### Assets Not Loading
 
-- Verify assets are in `/public/e/yourorganization/theme-name/`
-- Check that asset paths start with `/e/` in templates
-- Clear browser cache and application cache
-- Verify web server has read permissions on asset files
+If theme assets aren't loading:
 
-### Styles Not Applying
+- Verify `THEME_ASSETS_SERVER` in Aikeedo's `.env`
+- Ensure Vite server is running on port 5174
+- Check proxy settings in `vite.config.mjs`
 
-- Check browser console for 404 errors on CSS files
-- Verify CSS file paths are correct
-- Ensure CSS is loaded in the `<head>` section
-- Clear any CDN or proxy caches
+### Template Changes Not Reflecting
+
+1. Clear Aikeedo's cache
+2. Check `BUILD_DIR` path is correct
+3. Verify file permissions
+
+### Build Problems
+
+- Verify all paths in `.env.local`
+- Check write permissions on `BUILD_DIR`
+- Review Vite build output for errors
 
 ## Related Guides
 
-- [Landing Page Customization](/website-basics/landing-page) - Customize the default landing page
 - [Theme Objects](/development/themes/objects/address) - Available objects for templates
 - [Localization](/advanced/localization) - Add multilingual support
-- [Default Theme Repository](https://github.com/heyaikeedo/themes-default) - Reference implementation
+- [Themes Starter Repository](https://github.com/heyaikeedo/themes-starter) - Modern development starter kit
 
 <Support />
 
