@@ -196,12 +196,12 @@
               {
                 "group": "Cloud Storage",
                 "pages": [
-                  "integrations/cloud-storage",
-                  "integrations/aws-s3",
-                  "integrations/digital-ocean-spaces",
-                  "integrations/cloudflare-r2",
-                  "integrations/wasabi",
-                  "integrations/minio"
+                  "integrations/cloud-storage/overview",
+                  "integrations/cloud-storage/aws-s3",
+                  "integrations/cloud-storage/digital-ocean-spaces",
+                  "integrations/cloud-storage/cloudflare-r2",
+                  "integrations/cloud-storage/wasabi",
+                  "integrations/cloud-storage/minio"
                 ]
               },
               {
