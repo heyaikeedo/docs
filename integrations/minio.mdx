@@ -1,0 +1,128 @@
+---
+title: "MinIO"
+description: "Configure MinIO self-hosted object storage for file uploads and AI-generated content in Aikeedo. Complete control over your data with S3-compatible API."
+---
+
+import Support from '/snippets/support.mdx';
+
+## Overview
+
+MinIO AIStor is a high-performance, S3-compatible object storage server that you can self-host. It gives you complete control over your data while maintaining compatibility with S3 APIs, making it perfect for private cloud deployments or when you need full data sovereignty.
+
+**Key features:**
+- **Self-hosted** - Complete control over your data and infrastructure
+- **S3-compatible API** - Easy integration with existing S3 tools and libraries
+- **High performance** - Optimized for speed and efficiency
+- **Data sovereignty** - Keep your data on your own infrastructure
+- **Enterprise features** - Advanced security, monitoring, and management
+
+<Note>
+MinIO integration is available only if the Cloud Storage plugin is purchased from the [Aikeedo Marketplace](https://aikeedo.com/marketplace/).
+</Note>
+
+## Prerequisites
+
+Before configuring MinIO:
+
+1. **Cloud Storage Plugin** - Purchase from [Aikeedo Marketplace](https://aikeedo.com/marketplace/)
+2. **MinIO AIStor Installation** - Follow the [official installation guide](https://docs.min.io/enterprise/aistor-object-store/)
+3. **Bucket** - Create a bucket for your files
+4. **Access Keys** - Generate API credentials
+5. **Network Access** - Ensure Aikeedo can reach MinIO
+
+## Configuration Steps
+
+<Steps>
+<Step title="Access AIStor Console">
+  Open the AIStor web console:
+  
+  1. Navigate to your AIStor console URL
+  2. Login with your admin credentials
+  3. Ensure you have the necessary permissions for bucket and access key management
+  
+  <Note>
+  For detailed installation and setup instructions, refer to the [official AIStor installation guide](https://docs.min.io/enterprise/aistor-object-store/).
+  </Note>
+</Step>
+
+<Step title="Create Bucket">
+  Create a bucket for your files:
+  
+  1. In the AIStor console, go to **Buckets**
+  2. Click **Create Bucket**
+  3. Enter bucket name (e.g., `aikeedo-files`)
+  4. Choose access policy (Private recommended)
+  5. Click **Create Bucket**
+  
+  <Note>
+  For detailed bucket management, refer to the [official bucket management documentation](https://docs.min.io/enterprise/aistor-object-store/administration/console/managing-objects/).
+  </Note>
+</Step>
+
+<Step title="Create Access Keys">
+  Generate API credentials:
+  
+  1. Go to **Access Keys** in the AIStor console
+  2. Click **Create Access Key**
+  3. Enter a name for the key (e.g., `aikeedo-access`)
+  4. Copy the **Access Key** and **Secret Key**
+  5. Save credentials securely
+  
+  <Note>
+  For detailed access management, refer to the [official IAM documentation](https://docs.min.io/enterprise/aistor-object-store/administration/iam/access/).
+  </Note>
+</Step>
+
+<Step title="Configure in Aikeedo">
+  In your admin panel:
+  
+  1. Go to **Settings** > **Cloud storage** > **MinIO**
+  2. Toggle **Status** to **Enabled**
+  3. Enter **Origin endpoint**: `http://your-server:port` (use your configured port)
+  4. Enter **Custom domain** (optional domain for MinIO)
+  5. Enter **Bucket name**: Your MinIO bucket name
+  6. Enter **Path prefix** (optional subfolder)
+  7. Enter **Access key**: Your MinIO access key
+  8. Enter **Secret key**: Your MinIO secret key
+  9. Click **Save changes**
+</Step>
+</Steps>
+
+## Configuration Fields
+
+**Required fields:**
+- **Origin endpoint** - MinIO server endpoint URL (e.g., `http://your-server:port`)
+- **Bucket name** - Name of your MinIO bucket
+- **Access key** - MinIO access key for authentication
+- **Secret key** - MinIO secret key for authentication
+
+**Optional fields:**
+- **Custom domain** - Custom domain for serving files through reverse proxy
+- **Path prefix** - Optional subfolder within your bucket for organizing files
+
+<Note>
+For detailed server configuration options, refer to the [official core settings documentation](https://docs.min.io/enterprise/aistor-object-store/reference/aistor-server/settings/core/?tab=object-store-cli-options-configuration-setting).
+</Note>
+
+
+## Troubleshooting
+
+**Connection refused:**
+- Check if MinIO server is running
+- Verify the configured port is open and accessible
+- Check firewall settings
+- Ensure correct endpoint URL
+
+**Access denied errors:**
+- Verify access keys are correct
+- Check bucket name matches exactly
+- Ensure bucket exists and is accessible
+- Verify network connectivity
+
+**Files not uploading:**
+- Check server resources (CPU, RAM, disk)
+- Verify network latency between Aikeedo and MinIO
+- Ensure data directory is accessible
+- Check for disk errors
+
+<Support />

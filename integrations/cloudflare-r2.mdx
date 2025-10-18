@@ -1,0 +1,177 @@
+---
+title: "Cloudflare R2"
+description: "Configure Cloudflare R2 cloud storage for file uploads and AI-generated content in Aikeedo. S3-compatible storage with zero egress fees."
+---
+
+import Support from '/snippets/support.mdx';
+
+## Overview
+
+Cloudflare R2 is an S3-compatible object storage service that offers zero egress fees, making it cost-effective for applications with high data transfer requirements. It's integrated with Cloudflare's global network for optimal performance.
+
+## Prerequisites
+
+Before configuring Cloudflare R2:
+
+1. **Cloudflare Account** - Create an account at [cloudflare.com](https://cloudflare.com)
+2. **R2 Bucket** - Create a bucket for your files
+3. **API Token** - Generate R2 API credentials
+4. **Domain** - Optional custom domain setup
+
+## Configuration Steps
+
+<Steps>
+<Step title="Create R2 Bucket">
+  In your Cloudflare dashboard:
+  
+  1. Go to **R2 Object Storage** in the left sidebar
+  2. Click **Create bucket**
+  3. Enter a unique bucket name (e.g., `your-app-storage`)
+  4. Choose location:
+     - **Automatic** (recommended) - Cloudflare chooses optimal location
+     - **Specify jurisdiction** - For data residency requirements
+  5. Select storage class:
+     - **Standard** (recommended) - For objects accessed at least once a month
+     - **Infrequent Access** - For objects accessed less than once a month
+  6. Click **Create bucket**
+  
+  <Note>
+  Bucket names must be globally unique across all Cloudflare accounts and are permanent once created. Choose a name that reflects your application.
+  </Note>
+  
+  <Info>
+  By default, buckets are not publicly accessible. You can access objects through the API or by binding the bucket to a Worker. Bucket access can be changed to Public at any time.
+  </Info>
+</Step>
+
+<Step title="Generate API Token">
+  Create R2 API credentials:
+  
+  1. Go to **R2 Object Storage** in the left sidebar
+  2. Click **Manage API tokens**
+  3. Choose token type:
+     - **Account API token** (recommended for production) - Tied to the account, remains active even when you leave the organization
+     - **User API token** (for development) - Tied to your user account, becomes inactive if you leave the organization
+  4. Click **Create Account API token** or **Create User API token**
+  5. Configure the token:
+     - **Token name**: Enter a descriptive name (e.g., `aikeedo-storage`)
+     - **Permissions**: Select **Object Read & Write** (allows read, write, and list objects in specific buckets)
+     - **Specify bucket(s)**: Choose **Apply to specific buckets only** and select your bucket
+     - **TTL**: Set to **Forever** or your preferred duration
+  6. Click **Create User API Token** (or **Create Account API Token**)
+  7. Copy the **Access Key ID** and **Secret Access Key** from the success page
+  8. Save credentials securely
+  
+  <Warning>
+  You will not be able to access your Secret Access Key again after this step. Copy and record both values to avoid losing them.
+  </Warning>
+  
+  <Note>
+  The endpoint format is: `https://<ACCOUNT_ID>.r2.cloudflarestorage.com/<bucket_name>`. You can copy this directly from your R2 bucket settings.
+  </Note>
+</Step>
+
+<Step title="Configure CORS">
+  Set up CORS for your domain:
+  
+  1. Go to your R2 bucket
+  2. Click **Settings** tab
+  3. Scroll to **CORS Policy** section
+  4. Click **Edit** button
+  5. In the JSON editor, configure the CORS policy:
+  
+  ```json
+  [
+    {
+      "AllowedOrigins": [
+        "https://yourdomain.com",
+        "https://www.yourdomain.com"
+      ],
+      "AllowedMethods": [
+        "GET"
+      ]
+    }
+  ]
+  ```
+  
+  6. Click **Save**
+  
+  <Note>
+  Replace `yourdomain.com` with your actual domain. For development, you can use `["*"]` for AllowedOrigins, but this is not recommended for production.
+  </Note>
+  
+  <Warning>
+  The CORS policy uses JSON format in Cloudflare R2. Make sure your JSON syntax is valid before saving.
+  </Warning>
+</Step>
+
+<Step title="Configure in Aikeedo">
+  In your admin panel:
+  
+  1. Go to **Settings** > **Cloud storage** > **Cloudflare R2**
+  2. Toggle **Status** to **Enabled**
+  3. Enter **S3 API Endpoint**: 
+     - Go to your R2 bucket settings in Cloudflare dashboard
+     - Copy the **S3 API** URL from the General section
+     - Paste it into the S3 API Endpoint field
+  4. Enter **Public access domain**: 
+     - Use your custom domain (e.g., `https://cdn.yourdomain.com`) or R2.dev subdomain
+     - **Must include the `https://` protocol**
+     - If you've enabled Secure URLs, include the S3 API endpoint here
+     - Otherwise, URLs will be public
+     
+  <Info>
+  While Cloudflare R2 URLs are publicly accessible by design, Aikeedo ensures security by using hard-to-guess unique addresses for all uploaded files.
+  </Info>
+  5. Enter **Bucket name**: Your R2 bucket name
+  6. Enter **Path prefix** (optional subfolder)
+  7. Enter **Access key ID**: Your R2 access key ID
+  8. Enter **Secret access key**: Your R2 secret access key
+  9. Click **Save changes**
+</Step>
+
+<Step title="Activate Cloudflare R2">
+  Enable Cloudflare R2 as your storage provider:
+  
+  1. Go to **Settings** > **Storage settings**
+  2. In the **Adapter** dropdown, select **Cloudflare R2**
+  3. Configure **Group files** and **Secure URLs** as needed
+  4. Click **Save changes**
+</Step>
+</Steps>
+
+## Configuration Fields
+
+**Required fields:**
+- **S3 API Endpoint** - R2 S3 API endpoint URL (copy from bucket settings General section)
+- **Public access domain** - Public domain for accessing files (must include `https://` protocol, use custom domain or R2.dev subdomain)
+- **Bucket name** - Name of your R2 bucket
+- **Access key ID** - R2 access key ID for authentication
+- **Secret access key** - R2 secret access key for authentication
+
+**Optional fields:**
+- **Path prefix** - Optional subfolder within your bucket for organizing files
+
+
+## Troubleshooting
+
+**Access denied errors:**
+- Verify API token has correct permissions (Object Read & Write recommended)
+- Check bucket name matches exactly
+- Ensure S3 API endpoint format is correct: `https://<ACCOUNT_ID>.r2.cloudflarestorage.com/<bucket_name>`
+- Verify access keys are valid and not expired
+- Check if token is scoped to the correct bucket
+
+**CORS issues:**
+- Check CORS configuration in bucket settings using the JSON editor
+- Verify allowed origins include your domain (with https://)
+- Ensure allowed methods include GET (sufficient for Aikeedo)
+- Validate JSON syntax is correct before saving
+
+**Files not uploading:**
+- Verify bucket name and endpoint are correct
+- Check network connectivity to Cloudflare
+- Ensure bucket exists and is accessible
+- Verify API token permissions are sufficient
+
+<Support />

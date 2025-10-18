@@ -1,0 +1,158 @@
+---
+title: "Wasabi"
+description: "Configure Wasabi cloud storage for file uploads and AI-generated content in Aikeedo. High-performance S3-compatible storage with competitive pricing."
+---
+
+import Support from '/snippets/support.mdx';
+
+## Overview
+
+Wasabi is a high-performance cloud storage service that offers S3-compatible API with competitive pricing and no egress fees. It's designed for businesses that need reliable, fast storage without the complexity of traditional cloud providers.
+
+**Key features:**
+- **No egress fees** - Download as much as you want without additional charges
+- **S3-compatible API** - Full AWS S3 API compatibility with additional features
+- **Always consistent** - Immediate consistency for all operations (no eventual consistency)
+- **11 9's durability** - Enterprise-grade reliability
+- **Hot cloud storage** - Fast access to all data
+- **Global availability** - Multiple regions worldwide
+
+## Prerequisites
+
+Before configuring Wasabi:
+
+1. **Wasabi Account** - Create an account at [wasabi.com](https://wasabi.com)
+2. **Bucket** - Create a bucket for your files
+3. **Access Keys** - Generate API credentials
+4. **Region** - Choose appropriate region
+
+## Configuration Steps
+
+<Steps>
+<Step title="Create Bucket">
+  In your Wasabi console:
+  
+  1. On the Wasabi menu, click **Buckets**
+  2. In the upper right of the Console panel, click **Create Bucket**
+  3. Enter a unique DNS-compliant bucket name (e.g., `your-app-storage`)
+  4. Select the region where you want the bucket to reside
+  5. Click **Create Bucket** to create immediately, or click **Next** to configure additional properties
+  6. If continuing with setup, review bucket properties (versioning, logging, replication, tags) and click **Create Bucket**
+  
+  <Note>
+  Bucket names must be globally unique across all Wasabi accounts. Names must be 3-63 characters long, begin with a lowercase letter or number, and consist of lowercase letters, numbers, periods, and/or dashes. Cannot contain underscores, end with a dash, have consecutive periods, or use dashes adjacent to periods.
+  </Note>
+</Step>
+
+<Step title="Create Access Keys">
+  Generate API credentials:
+  
+  1. Follow the steps in [Creating a User Account and Access Key](https://docs.wasabi.com/docs/creating-a-user-account-and-access-key#creating-a-user)
+  2. Create a new user account or use an existing one
+  3. Generate access keys for the user
+  4. Copy the **Access Key** and **Secret Key**
+  5. Save credentials securely
+  
+  <Warning>
+  Access keys provide full access to your Wasabi account. Store them securely.
+  </Warning>
+</Step>
+
+<Step title="Configure CORS">
+  Set up CORS for your domain:
+  
+  1. Go to your bucket settings
+  2. Click **Permissions** tab
+  3. Scroll to **CORS Configuration**
+  4. Click **Edit** button
+  5. In the JSON editor, configure the CORS policy:
+  
+  ```json
+  [
+    {
+      "AllowedOrigins": [
+        "https://yourdomain.com",
+        "https://www.yourdomain.com"
+      ],
+      "AllowedMethods": [
+        "GET"
+      ],
+      "AllowedHeaders": [
+        "*"
+      ],
+      "MaxAgeSeconds": 3000
+    }
+  ]
+  ```
+  
+  6. Click **Save**
+  
+  <Note>
+  Wasabi uses JSON format for CORS configuration. Wasabi automatically provides CORS headers when an Origin header is present in requests, but you can also configure custom CORS policies for more specific control. For detailed CORS configuration, refer to the [official Wasabi CORS documentation](https://docs.wasabi.com/docs/cross-origin-resource-sharing-cors). Replace `yourdomain.com` with your actual domain.
+  </Note>
+  
+  <Warning>
+  The CORS policy uses JSON format in Wasabi. Make sure your JSON syntax is valid before saving.
+  </Warning>
+</Step>
+
+<Step title="Configure in Aikeedo">
+  In your admin panel:
+  
+  1. Go to **Settings** > **Cloud storage** > **Wasabi**
+  2. Toggle **Status** to **Enabled**
+  3. Enter **Endpoint**: `https://s3.<region>.wasabisys.com` (replace `<region>` with your actual region code)
+  4. Select **Region** from dropdown
+  5. Enter **Custom domain** (optional CDN domain)
+  6. Enter **Bucket name**: Your Wasabi bucket name
+  7. Enter **Path prefix** (optional subfolder)
+  8. Enter **Access key**: Your Wasabi access key
+  9. Enter **Secret key**: Your Wasabi secret key
+  10. Click **Save changes**
+</Step>
+
+<Step title="Activate Wasabi">
+  Enable Wasabi as your storage provider:
+  
+  1. Go to **Settings** > **Storage settings**
+  2. In the **Adapter** dropdown, select **Wasabi**
+  3. Configure **Group files** and **Secure URLs** as needed
+  4. Click **Save changes**
+</Step>
+</Steps>
+
+## Configuration Fields
+
+**Required fields:**
+- **Endpoint** - Wasabi S3 endpoint URL (e.g., `https://s3.us-east-1.wasabisys.com`)
+- **Region** - Wasabi region where your bucket is located
+- **Bucket name** - Name of your Wasabi bucket
+- **Access key** - Wasabi access key for authentication
+- **Secret key** - Wasabi secret key for authentication
+
+**Optional fields:**
+- **Custom domain** - Custom domain for serving files through CDN
+- **Path prefix** - Optional subfolder within your bucket for organizing files
+
+
+## Troubleshooting
+
+**Access denied errors:**
+- Verify access keys are correct and active
+- Check bucket name matches exactly
+- Ensure bucket exists in the correct region
+- Verify endpoint URL includes correct region
+
+**CORS issues:**
+- Check CORS configuration in bucket settings
+- Verify allowed origins include your domain (with https://)
+- Ensure allowed methods include GET (sufficient for Aikeedo)
+- Test with browser developer tools
+
+**Files not uploading:**
+- Verify bucket name and region are correct
+- Check network connectivity to Wasabi
+- Ensure bucket exists and is accessible
+- Verify endpoint URL format is correct
+
+<Support />

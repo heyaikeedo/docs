@@ -1,0 +1,144 @@
+---
+title: "Digital Ocean Spaces"
+description: "Configure Digital Ocean Spaces cloud storage for file uploads and AI-generated content in Aikeedo. S3-compatible storage with simple pricing."
+---
+
+import Support from '/snippets/support.mdx';
+
+## Overview
+
+Digital Ocean Spaces is an S3-compatible object storage service that offers simple pricing, easy setup, and global CDN integration. It's an excellent choice for developers who want AWS S3 compatibility without the complexity of AWS services.
+
+**Key features:**
+- **Predictable pricing** - Simple, transparent pricing model
+- **Built-in CDN** - Global content delivery network included
+- **Unlimited buckets** - Create up to 100 buckets per subscription
+- **Custom subdomain** - Use your own domain for file delivery
+- **S3-compatible API** - Easy integration with existing tools
+
+## Prerequisites
+
+Before configuring Digital Ocean Spaces:
+
+1. **DigitalOcean Account** - Create an account at [digitalocean.com](https://digitalocean.com)
+2. **Space** - Create a Space for your files
+3. **API Keys** - Generate Spaces access keys
+4. **Domain** - Optional custom domain for CDN
+
+## Configuration Steps
+
+<Steps>
+<Step title="Create Space">
+  In your DigitalOcean control panel:
+  
+  1. Go to **Spaces Object Storage** in the left sidebar
+  2. Click **Create Bucket**
+  3. Choose a datacenter region (e.g., Frankfurt FRA1, San Francisco SFO3)
+  4. Optionally enable **CDN** for faster delivery
+  5. Enter a unique bucket name (e.g., `your-app-files`)
+  6. Select a project (e.g., `aikeedo`)
+  7. Click **Create a Spaces Bucket**
+  
+  <Note>
+  Bucket names must be globally unique across all DigitalOcean accounts. Names must be in lowercase, 3-63 characters long, and may contain dashes. **Cannot contain dots (.) or other special characters.**
+  </Note>
+</Step>
+
+<Step title="Generate API Keys">
+  Create API keys for Spaces access:
+  
+  1. Go to **Spaces Object Storage** in the left sidebar
+  2. Click the **Access Keys** tab
+  3. Click **Generate New Key**
+  4. In the **Create Access Key** dialog:
+     - Select **Limited Access** (recommended) or **Full Access**
+     - If using Limited Access:
+       - Select specific buckets from the list
+       - Choose **Read/Write/Delete** permissions for each bucket (required for Aikeedo)
+     - Enter a name for the key (e.g., `aikeedo-access`)
+     - Note: Key names can only contain alphanumeric characters, dashes and periods
+  5. Click **Create Access Key**
+  6. Copy the **Access Key** and **Secret Key**
+  7. Save credentials securely
+  
+  <Warning>
+  API keys provide access to your Spaces. Store them securely.
+  </Warning>
+</Step>
+
+<Step title="Configure CORS">
+  Set up CORS for your domain:
+  
+  1. Go to your Space settings
+  2. Click **Settings** tab
+  3. Scroll to **CORS Configurations**
+  4. Click **Add a Rule** to open **Advanced CORS Options**
+  5. Configure the CORS settings:
+   - **Origin**: `https://yourdomain.com` (or `*` for all origins)
+   - **Allowed Methods**: Check `GET` (sufficient for Aikeedo)
+   - **Allowed Headers**: No special headers required for Aikeedo
+   - **Access Control Max Age**: `3000` (or `0` for no caching)
+  6. Click **Save CORS Configuration**
+  
+  <Note>
+  CDN and CORS configurations may not apply immediately. Wait a few moments and try again if you encounter issues.
+  </Note>
+</Step>
+
+<Step title="Configure in Aikeedo">
+  In your admin panel:
+  
+  1. Go to **Settings** > **Cloud storage** > **Digital Ocean Spaces**
+  2. Toggle **Status** to **Enabled**
+  3. Enter **Origin endpoint**: 
+     - Go to your Space in DigitalOcean
+     - Copy the **Origin Endpoint** URL (e.g., `https://cdnaikeedocom.fra1.digitaloceanspaces.com`)
+     - Paste it into the Origin endpoint field
+  4. Enter **Custom domain** (optional CDN domain)
+  5. Enter **Bucket name**: Your Space name
+  6. Enter **Path prefix** (optional subfolder)
+  7. Enter **Access key**: Your Spaces access key
+  8. Enter **Secret key**: Your Spaces secret key
+  9. Click **Save changes**
+</Step>
+
+<Step title="Activate Digital Ocean Spaces">
+  Enable Digital Ocean Spaces as your storage provider:
+  
+  1. Go to **Settings** > **Storage settings**
+  2. In the **Adapter** dropdown, select **Digital Ocean Spaces**
+  3. Configure **Group files** and **Secure URLs** as needed
+  4. Click **Save changes**
+</Step>
+</Steps>
+
+## Configuration Fields
+
+**Required fields:**
+- **Origin endpoint** - Spaces endpoint URL (e.g., `https://your-space.region.digitaloceanspaces.com`)
+- **Bucket name** - Name of your DigitalOcean Space
+- **Access key** - Spaces access key for authentication
+- **Secret key** - Spaces secret key for authentication
+
+**Optional fields:**
+- **Custom domain** - Custom domain for CDN (if you have a custom domain for your Space)
+- **Path prefix** - Optional subfolder within your Space for organizing files
+
+## Troubleshooting
+
+**Access denied errors:**
+- Verify API keys are correct and active
+- Check Space name matches exactly
+- Ensure Space is not restricted
+
+**CORS issues:**
+- Check CORS configuration in Space settings
+- Verify allowed origins include your domain
+- Ensure allowed methods include required operations
+
+**Files not uploading:**
+- Verify region in endpoint URL
+- Check network connectivity to DigitalOcean
+- Ensure Space exists and is accessible
+
+<Support />

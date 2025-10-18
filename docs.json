@@ -194,6 +194,17 @@
                 ]
               },
               {
+                "group": "Cloud Storage",
+                "pages": [
+                  "integrations/cloud-storage",
+                  "integrations/aws-s3",
+                  "integrations/digital-ocean-spaces",
+                  "integrations/cloudflare-r2",
+                  "integrations/wasabi",
+                  "integrations/minio"
+                ]
+              },
+              {
                 "group": "Other",
                 "pages": [
                   "integrations/onesignal",
