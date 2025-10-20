@@ -1,0 +1,114 @@
+---
+title: Iyzico Integration
+sidebarTitle: Iyzico
+description: 'Configure the Iyzico payment gateway in Aikeedo via UI: enter keys, set currency, and add webhooks. No coding required.'
+---
+
+Iyzico enables secure card payments and subscriptions in Turkey. This guide shows how to configure the ready‑to‑use plugin in Aikeedo using your Iyzico dashboard. No code is needed.
+
+<Note>
+  Subscription management (Abonelik Yönetimi) is provided by Iyzico as an add‑on. To use subscriptions, enable it from the <strong>Eklentiler</strong> section in your Iyzico dashboard. Learn more: [Iyzico Abonelik](https://docs.iyzico.com/urunler/abonelik).
+ </Note>
+
+## Prerequisites
+
+Make sure you have:
+
+- An active [Iyzico merchant account](https://www.iyzico.com/)
+- Access to your Aikeedo admin panel
+- Your domain with SSL (HTTPS)
+- A business registered in Turkey (required by Iyzico)
+
+## Step 1: Get your Iyzico API keys
+
+From the Iyzico dashboard:
+
+1. Log in to the [Iyzico Merchant Panel](https://merchant.iyzipay.com/login) or Sandbox panel if testing.
+2. Go to **Ayarlar > Firma Ayarları** (Settings > Merchant Settings).
+3. In the **API Anahtarları** card you will see:
+   - **API Anahtarı** (API Key) — public key
+   - **Güvenlik Anahtarı** (Secret Key)
+4. Copy both values. You will paste them into Aikeedo.
+
+<Warning>
+  Keep your Secret Key confidential. Do not share it publicly.
+</Warning>
+
+## Step 2: Configure Iyzico in Aikeedo
+
+1. In Aikeedo, open **Payments** and click **Iyzico**.
+2. In the **Details** section:
+   - **Status**: Enable to turn on Iyzico.
+   - **Charge Currency**: Choose the currency to charge customers. Options include: Turkish Lira (TRY), US Dollar (USD), Euro (EUR), British Pound (GBP), Norwegian Krone (NOK), Russian Ruble (RUB), Swiss Franc (CHF), or **Inherit** to use your default.
+   - **Mode**: Select **Sandbox** for testing or **Live** for production.
+3. In the **Keys** section (Sandbox or Live tab):
+   - **API public key**: paste your Iyzico API Key.
+   - **Secret key**: paste your Iyzico Secret Key.
+4. In the **Webhooks** card, Aikeedo shows your read‑only webhook URL.
+   - Copy this URL; you will paste it into the Iyzico dashboard in the next step.
+5. Click **Save changes**.
+
+<Check>
+  Iyzico is now connected. New payments will be processed through Iyzico according to your selected mode and currency.
+</Check>
+
+## Step 3: Add webhook URLs in Iyzico
+
+To receive payment and subscription notifications from Iyzico:
+
+1. In the Iyzico dashboard, open **Ayarlar > Firma Ayarları**.
+2. In **İşyeri Bildirimleri** (Merchant Notifications), enable notifications and paste the webhook URL you copied from Aikeedo into the **İşyeri Bildirimleri Url** field.
+3. If you use subscriptions, in **İşyeri Abonelik Ödeme Bildirimleri** enable both toggles and paste the same webhook URL into:
+   - **Başarılı Abonelik Bildirimleri Url**
+   - **Başarısız Abonelik Bildirimleri Url**
+4. Save changes in the Iyzico dashboard.
+
+<Tip>
+  Using the same single webhook URL for all merchant and subscription events is recommended. Aikeedo routes events automatically.
+</Tip>
+
+## Testing
+
+To test without real charges:
+
+1. In Aikeedo, set **Mode** to **Test**.
+2. Log in to the [Iyzico Sandbox](https://sandbox-merchant.iyzipay.com/).
+3. Use Iyzico test cards to perform a payment or a subscription: [Test Kartları](https://docs.iyzico.com/ek-bilgiler/test-kartlari).
+4. Check that the transaction appears in Aikeedo and that webhooks are received.
+
+<Note>
+  Sandbox uses test cards and does not move money. Switch to Live only after successful tests.
+</Note>
+
+## Going live
+
+1. Replace Sandbox keys in Aikeedo with your Live **API Key** and **Secret Key** from Iyzico.
+2. Ensure **İşyeri Bildirimleri** and (if applicable) **Abonelik Ödeme Bildirimleri** point to your production domain.
+3. Change **Mode** to **Live** and save.
+
+## Troubleshooting
+
+<AccordionGroup>
+<Accordion title="Invalid API credentials">
+  Verify you pasted the correct key pair (API Key and Güvenlik Anahtarı) for the selected mode (Sandbox/Live).
+</Accordion>
+
+<Accordion title="No webhooks received">
+  Confirm notifications are enabled in Iyzico and that the URL matches `{your_domain}/webhooks/iyzico` over HTTPS.
+</Accordion>
+
+<Accordion title="Currency or amount mismatch">
+  If a currency rate provider is configured in Aikeedo, amounts will be converted to the selected Charge Currency automatically.
+</Accordion>
+
+<Accordion title="Subscriptions not created">
+  Ensure the Iyzico Abonelik add‑on is purchased and enabled under <strong>Eklentiler</strong> in the Iyzico dashboard, and subscription notification URLs are set.
+</Accordion>
+</AccordionGroup>
+
+## Additional resources
+
+- [Iyzico Abonelik (official docs)](https://docs.iyzico.com/urunler/abonelik)
+- [Iyzico Merchant Panel – Sandbox](https://sandbox-merchant.iyzipay.com/)
+- [Iyzico Test Cards](https://docs.iyzico.com/ek-bilgiler/test-kartlari)
+- [Iyzico Website](https://www.iyzico.com/)
