@@ -1,0 +1,130 @@
+---
+title: Razorpay Integration
+sidebarTitle: Razorpay
+description: 'Configure the Razorpay plugin in Aikeedo using API keys and webhooks.'
+---
+
+Razorpay enables secure payments and subscriptions for the Indian market. This guide shows you how to fetch keys from Razorpay and paste them into Aikeedo.
+
+<Note>
+  Razorpay is available as a ready‑to‑use plugin in Aikeedo. You only need to copy keys and configure webhooks.
+</Note>
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- An active [Razorpay merchant account](https://razorpay.com/)
+- Access to your Aikeedo admin panel
+- Your domain using HTTPS (valid SSL certificate)
+- Business eligibility for accepting payments in India
+
+## Step 1: Set up your Razorpay account
+
+If you are new to Razorpay:
+
+1. Visit the [Razorpay website](https://razorpay.com/) and click Sign Up”.
+2. Complete onboarding and KYC verification.
+3. Wait for account approval (usually 1–2 business days).
+
+## Step 2: Get your API keys in Razorpay
+
+1. Log in to the [Razorpay Dashboard](https://dashboard.razorpay.com/).
+2. Select the mode at the top: **Test** or **Live**.
+3. Go to **Account & Settings → API Keys** and click **Generate Key** for the selected mode.
+4. Copy the following from the pop‑up:
+   - **Key Id** (starts with `rzp_test_` in Test or `rzp_live_` in Live)
+   - **Key Secret** (shown once when generated)
+
+<Warning>
+  Keep your Key Secret confidential. It is shown only once on generation; store it securely.
+</Warning>
+
+<Info>
+  Generating **Live** keys may require your website/app details to be verified in Razorpay. Only users with Owner or Admin role can access API Keys. See Razorpay’s guide: [API Keys](https://razorpay.com/docs/payments/dashboard/account-settings/api-keys/).
+</Info>
+
+## Step 3: Configure required Razorpay settings for subscriptions
+
+These settings are mandatory when you sell subscriptions:
+
+- **Enable Flash Checkout** in your Razorpay Dashboard. See Razorpay’s docs: [Subscriptions – Flash Checkout](https://razorpay.com/docs/payments/subscriptions/#flash-checkout).
+- **Fee bearer model** must be set to **You pay the fees**. The “Convenience fee model” is not supported for subscriptions. See Razorpay’s guide: [Configuration – Fee bearer model](https://razorpay.com/docs/payments/dashboard/account-settings/configuration/#manage-fee-bearer-model).
+
+<Warning>
+  Without these settings, subscription payments will fail.
+</Warning>
+
+## Step 4: Create a webhook in Razorpay
+
+1. In the Razorpay Dashboard, go to **Accounts & Settings → Webhooks**.
+2. Click **Add New Webhook**.
+3. Set the Webhook URL to your site URL followed by `/webhooks/razorpay`, for example: `https://your-domain.com/webhooks/razorpay`.
+4. Select **All events**.
+5. Set a **Webhook secret** (any random string). Copy it—you will paste the same value into Aikeedo.
+6. Save the webhook.
+
+<Tip>
+  The webhook secret must match exactly in Razorpay and in Aikeedo.
+</Tip>
+
+## Step 5: Enable Razorpay in Aikeedo
+
+Open the Aikeedo admin and go to **Payments → Razorpay**. Fill in the sections as shown in the Aikeedo dashboard screenshot.
+
+### Details section
+
+1. **Status**: Enable the toggle to turn on Razorpay.
+2. **Charge Currency**: Choose your billing currency. If you use a currency different from your default currency and have a currency rate provider configured, amounts are converted automatically.
+3. **Mode**: Choose **Test** for testing or **Live** for real payments.
+
+<Info>
+  For subscriptions, ensure Flash Checkout is enabled and Fee bearer is set to “You pay the fees” in Razorpay, as noted above.
+</Info>
+
+### Keys section
+
+1. **API Key Id**: Paste the value from Razorpay.
+2. **API Key Secret**: Paste the secret from Razorpay.
+
+### Webhooks section
+
+1. **Webhook URL**: This is shown in the Aikeedo UI. Create the same URL in Razorpay.
+2. **Webhook secret**: Paste the exact secret you set in Razorpay.
+3. Click **Save changes**.
+
+<Check>
+  Razorpay is now connected. You can accept payments and create subscriptions.
+</Check>
+
+## Testing your integration
+
+1. Set **Mode** to **Test** in Aikeedo and use your Razorpay Test keys.
+2. Make a test purchase or subscription using Razorpay’s test methods: [Test Card Details](https://razorpay.com/docs/payments/payments/test-card-details/).
+3. Confirm you see payment updates in Aikeedo and in the Razorpay Dashboard.
+
+<Note>
+  The test environment does not move real funds. Switch to Live mode only after successful tests.
+</Note>
+
+## Troubleshooting
+
+<AccordionGroup>
+<Accordion title="Subscription payments fail">
+  Check that Flash Checkout is enabled and Fee bearer is set to “You pay the fees” in Razorpay. See: [Subscriptions – Flash Checkout](https://razorpay.com/docs/payments/subscriptions/#flash-checkout) and [Configuration – Fee bearer model](https://razorpay.com/docs/payments/dashboard/account-settings/configuration/#manage-fee-bearer-model).
+</Accordion>
+
+<Accordion title="No webhook events received">
+  Verify your site is accessible via HTTPS, the Webhook URL matches `https://your-domain.com/webhooks/razorpay`, and the secret matches in both places.
+</Accordion>
+
+<Accordion title="Invalid API credentials">
+  Re‑copy the API Key Id and API Key Secret from **Accounts & Settings → API Keys** and paste them into Aikeedo.
+</Accordion>
+</AccordionGroup>
+
+## Additional resources
+
+- Razorpay Subscriptions – Flash Checkout: [Subscriptions – Flash Checkout](https://razorpay.com/docs/payments/subscriptions/#flash-checkout)
+- Fee bearer model configuration: [Configuration – Fee bearer model](https://razorpay.com/docs/payments/dashboard/account-settings/configuration/#manage-fee-bearer-model)
+- Test cards and sandbox methods: [Test Card Details](https://razorpay.com/docs/payments/payments/test-card-details/)

@@ -165,6 +165,7 @@
                   "integrations/payment-gateways/custom-payment-method",
                   "integrations/payment-gateways/yookassa",
                   "integrations/payment-gateways/paystack",
+                  "integrations/payment-gateways/razorpay",
                   "integrations/payment-gateways/iyzico",
                   "integrations/payment-gateways/cryptomus"
                 ]
