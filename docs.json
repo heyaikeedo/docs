@@ -159,8 +159,16 @@
               {
                 "group": "Payment Gateways",
                 "pages": [
-                  "integrations/stripe",
-                  "integrations/paypal"
+                  "integrations/payment-gateways/overview",
+                  "integrations/payment-gateways/stripe",
+                  "integrations/payment-gateways/paypal",
+                  "integrations/payment-gateways/bank-transfer",
+                  "integrations/payment-gateways/custom-payment-method",
+                  "integrations/payment-gateways/yookassa",
+                  "integrations/payment-gateways/paystack",
+                  "integrations/payment-gateways/razorpay",
+                  "integrations/payment-gateways/iyzico",
+                  "integrations/payment-gateways/cryptomus"
                 ]
               },
               {

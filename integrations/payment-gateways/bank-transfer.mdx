@@ -1,0 +1,292 @@
+---
+title: Bank Transfer Payment
+sidebarTitle: Bank Transfer
+description: 'Configure bank transfer payments in Aikeedo with domestic and international transfer options, beneficiary details, and bank information for secure offline payment processing.'
+---
+
+import Support from '/snippets/support.mdx';
+
+Bank Transfer is a built-in payment method in Aikeedo that allows customers to pay via direct bank transfers. This payment option supports both domestic and international transfers with comprehensive bank details configuration.
+
+## Overview
+
+Bank Transfer payments provide an alternative to online payment gateways, allowing customers to transfer funds directly to your business bank account. This method is particularly useful for:
+
+- High-value transactions
+- B2B payments
+- Customers who prefer traditional banking methods
+- Regions with limited online payment gateway support
+
+<Note>
+Bank Transfer is a built-in payment method and doesn't require additional plugins or external service setup.
+</Note>
+
+## Prerequisites
+
+Before configuring bank transfer payments, ensure you have:
+
+- A business bank account with domestic and/or international transfer capabilities
+- Complete bank details including routing numbers, SWIFT codes, and addresses
+- Beneficiary information for your business
+- Bank-issued documents (if required by your bank)
+
+## Configuration
+
+### Accessing Bank Transfer Settings
+
+1. Log in to your Aikeedo admin panel
+2. Navigate to **Settings > Payments > Bank Transfer**
+3. You'll see three main configuration sections:
+   - **Details** (General settings)
+   - **Domestic Transfer** (Local bank transfers)
+   - **International Transfer** (Cross-border transfers)
+
+### General Settings (Details)
+
+Configure the basic bank transfer settings:
+
+<Steps>
+<Step title="Enable Bank Transfer">
+  Toggle the **Status** switch to "Enabled" to activate bank transfer payments.
+</Step>
+
+<Step title="Configure Payment Types">
+  Set the **Enabled for** dropdown to specify which payment types support bank transfers:
+  - One time payments (Recommended)
+  - One-time and annual payments
+  - All payments
+</Step>
+
+<Step title="Set Payment Method">
+  Choose **One time payments (Recommended)** from the dropdown for standard bank transfer processing.
+  
+  <Warning>
+  Since bank transfers require manual verification, it's recommended to enable them only for one-time payments to avoid complications with recurring payment processing.
+  </Warning>
+</Step>
+</Steps>
+
+### Domestic Transfer Configuration
+
+Set up domestic bank transfer details for local payments:
+
+<Steps>
+<Step title="Enable Domestic Transfers">
+  Toggle the **Status** switch to "Enabled" for domestic transfers.
+</Step>
+
+<Step title="Configure Beneficiary Details">
+  Enter your business information:
+  - **Beneficiary name / Account holder**: Your business legal name
+  - **Account number**: Your business bank account number
+  - **Beneficiary address**: Complete business address
+</Step>
+
+<Step title="Set Bank Details">
+  Provide your bank's information:
+  - **Bank name**: Your bank's official name
+  - **Routing number**: Bank routing number (US) or sort code (UK)
+  - **Bank address**: Complete bank branch address
+  - **Currency**: Select the primary currency (e.g., US Dollar)
+  - **Tax ID**: Your business tax identification number (optional)
+  - **Reference / Memo**: Payment reference information (optional)
+</Step>
+
+<Step title="Upload Bank Requisites">
+  If required by your bank, upload supporting documents:
+  - Click **Browse files** to upload bank-issued documents
+  - Use **View current** to review uploaded files
+  - Use **Delete** to remove outdated documents
+</Step>
+</Steps>
+
+### International Transfer Configuration
+
+Configure international bank transfer details for cross-border payments:
+
+<Steps>
+<Step title="Enable International Transfers">
+  Toggle the **Status** switch to "Enabled" for international transfers.
+</Step>
+
+<Step title="Set Beneficiary Details">
+  Enter international transfer information:
+  - **Beneficiary name / Account holder**: Your business legal name
+  - **IBAN / Account number**: International Bank Account Number
+  - **Beneficiary address**: Complete business address including country
+</Step>
+
+<Step title="Configure Bank Details">
+  Provide international banking information:
+  - **Bank name**: Your bank's official name
+  - **SWIFT / BIC Code**: Bank Identifier Code for international transfers
+  - **Bank address**: Complete bank address including country
+  - **Currency**: Select the currency for international transfers
+  - **Tax ID**: Your business tax identification number (optional)
+  - **Reference / Memo**: Payment reference with bank details
+</Step>
+
+<Step title="Set Corresponding Bank (Optional)">
+  If your bank requires an intermediary bank:
+  - **Bank name**: Corresponding bank name
+  - **SWIFT / BIC Code**: Corresponding bank's SWIFT code
+  - **Account number**: Your account number with the corresponding bank
+  - **Bank address**: Corresponding bank's address
+  - Upload any required bank requisites documents
+</Step>
+</Steps>
+
+## Payment Processing Flow
+
+### For Customers
+
+When customers choose bank transfer payment:
+
+1. **Payment Selection**: Customer selects "Bank Transfer" from available payment methods during checkout
+2. **Order Placement**: Customer clicks "Place order" to complete the purchase
+3. **Payment Instructions**: Customer is redirected to order details page with comprehensive bank transfer instructions
+4. **Transfer Execution**: Customer initiates transfer through their bank using provided details
+5. **Order Tracking**: Customer can monitor order status in their billing overview
+6. **Order Fulfillment**: Order is processed after payment verification by admin
+
+<Note>
+Payment details are provided after placing the order, not during checkout. This ensures customers have complete banking information before initiating transfers.
+</Note>
+
+### For Administrators
+
+To process bank transfer payments:
+
+1. **Access Orders**: Navigate to **Billing > Orders** in admin panel to view all orders
+2. **Filter Pending Orders**: Select "Pending" status from the filter options to view all orders awaiting manual verification (including bank transfers and other manual payment methods)
+3. **Review Order Details**: Click on individual orders to view customer and payment information
+4. **Verify Payments**: Check your bank account for incoming transfers matching order details
+5. **Update Order Status**: Use **Approve** or **Reject** buttons to update order status
+6. **Process Orders**: Approved orders are processed immediately and cannot be reverted
+
+<Warning>
+Bank transfer payments require manual verification. Always confirm payment receipt before fulfilling orders. Once approved or rejected, orders cannot be reverted.
+</Warning>
+
+## Order Management
+
+### Admin Order Management
+
+Bank transfer orders appear in the admin panel with "Pending" status until manually verified. Note that the pending orders list includes all manual payment methods, not just bank transfers:
+
+1. **Access Orders**: Navigate to **Billing > Orders** in the admin panel to view all orders
+2. **Filter Pending Orders**: Select "Pending" status from the filter options to view all orders awaiting manual verification (including bank transfers and other manual payment methods)
+3. **Review Order Details**: Click on any order to view:
+   - Customer information and workspace details
+   - Order summary (plan, credits, total amount)
+   - Payment gateway information (Yookassa transaction ID)
+   - Order creation date and status
+
+### Order Status Actions
+
+For each pending bank transfer order, you can:
+
+- **Approve**: Click the green "Approve" button to confirm payment and fulfill the order
+- **Reject**: Click the gray "Reject" button to cancel the order if payment is not received
+
+### Customer Order Tracking
+
+Customers can track their bank transfer orders through their billing overview:
+
+1. **Access Billing**: Navigate to billing overview from the main dashboard
+2. **View Orders**: Check the "Latest orders" section for pending bank transfer orders
+3. **Order Details**: Click on any order to view detailed bank transfer instructions
+4. **Status Updates**: Order status updates automatically when admin approves payment
+
+### Customer Checkout Experience
+
+When customers select bank transfer as their payment method:
+
+1. **Payment Method Selection**: During checkout, customers can choose "Bank Transfer" from available payment options
+2. **Order Placement**: After selecting bank transfer, customers click "Place order" to complete the purchase
+3. **Order Confirmation**: The system creates a pending order and redirects to order details page
+4. **Bank Transfer Instructions**: Customers receive comprehensive banking details including:
+   - Order ID for reference
+   - Beneficiary information (company name, account details)
+   - Bank details (name, routing number, SWIFT code)
+   - Complete addresses for both beneficiary and bank
+   - Correspondent bank information (for international transfers)
+   - Download option for bank requisites
+
+<Note>
+The checkout page displays "Payment details will be provided after placing the order" to inform customers that banking information comes after order creation.
+</Note>
+
+## Best Practices
+
+### Security Considerations
+
+- **Verify Payments**: Always confirm payment receipt before order fulfillment
+- **Document Everything**: Keep records of all bank transfer transactions
+- **Secure Information**: Protect sensitive banking information
+- **Regular Reconciliation**: Regularly reconcile bank statements with orders
+
+### Customer Communication
+
+- **Clear Instructions**: Provide detailed, easy-to-follow transfer instructions
+- **Reference Numbers**: Include order numbers in transfer references
+- **Timeline Expectations**: Set clear expectations for payment processing time
+- **Support Contact**: Provide customer support for payment-related questions
+
+### Documentation Requirements
+
+- **Bank Statements**: Keep copies of bank statements for verification
+- **Transfer Confirmations**: Save transfer confirmation documents
+- **Order Records**: Maintain detailed order and payment records
+- **Compliance**: Ensure compliance with local banking regulations
+
+## Troubleshooting
+
+### Common Issues
+
+**Payment Not Received**
+- Verify bank account details are correct
+- Check if transfer is still in progress
+- Contact your bank for transfer status
+
+**Incorrect Transfer Details**
+- Verify customer provided correct reference information
+- Check if transfer was sent to correct account
+- Contact customer for clarification
+
+**International Transfer Delays**
+- International transfers can take 1-5 business days
+- Check with your bank for processing times
+- Verify all international banking codes are correct
+
+### Verification Process
+
+1. **Check Bank Account**: Review recent transactions in your bank account
+2. **Match Details**: Compare transfer details with order information in admin panel
+3. **Verify Order ID**: Ensure the order ID matches the reference provided to customer
+4. **Contact Bank**: If needed, contact your bank for verification
+5. **Update Order Status**: Use the "Approve" button in admin panel to confirm payment
+
+### Order Status Management
+
+**Pending Orders**
+- Orders remain in "Pending" status until manually approved
+- Customers cannot use purchased credits until order is approved
+- Orders can be rejected if payment is not received within reasonable time
+
+**Approved Orders**
+- Orders are processed immediately upon approval
+- Credits are immediately available to customers
+- Orders cannot be reverted or reversed once approved
+
+**Rejected Orders**
+- Orders are cancelled and credits are not provided
+- Orders cannot be reverted or reversed once rejected
+- Customers should be notified of rejection with reason
+- New orders can be placed if payment issues are resolved
+
+<Check>
+Bank Transfer payments are now configured and ready to accept customer payments through direct bank transfers.
+</Check>
+
+<Support />

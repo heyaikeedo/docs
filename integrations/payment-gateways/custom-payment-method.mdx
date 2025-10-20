@@ -1,0 +1,306 @@
+---
+title: Manual Payment Method
+sidebarTitle: Manual Payment
+description: 'Configure custom manual payment methods in Aikeedo with custom instructions, file uploads, and flexible payment processing for unique business requirements.'
+---
+
+import Support from '/snippets/support.mdx';
+
+Manual Payment Method is a built-in payment option in Aikeedo that allows you to create custom payment instructions for customers. This flexible payment method is perfect for unique business requirements, offline payments, or specific payment processes that don't fit standard payment gateways.
+
+## Overview
+
+Custom Payment Method provides complete flexibility in how customers pay for your services. You can define custom payment instructions, upload supporting files, and create payment flows that match your specific business needs.
+
+This payment method is ideal for:
+
+- Offline payment processes
+- Custom payment instructions
+- Business-specific payment requirements
+- Alternative payment methods not covered by standard gateways
+- Manual payment verification processes
+
+<Note>
+Manual Payment Method is a built-in payment option and doesn't require additional plugins or external service setup.
+</Note>
+
+## Prerequisites
+
+Before configuring manual payment methods, ensure you have:
+
+- Clear payment instructions for your customers
+- Any supporting documentation or files ready for upload
+- A defined process for verifying custom payments
+- Customer support procedures for payment-related inquiries
+
+## Configuration
+
+### Accessing Manual Payment Settings
+
+1. Log in to your Aikeedo admin panel
+2. Navigate to **Settings > Payments > Manual Payment** (or **Settings > Payments > [Your Method Name]** if already configured)
+3. You'll see the "Manual payment settings" configuration page
+
+<Note>
+The navigation path changes based on configuration status:
+- **Before configuration**: **Settings > Payments > Manual Payment**
+- **After configuration**: **Settings > Payments > [Your Method Name]** (where [Your Method Name] is the method name you've defined)
+</Note>
+
+### Basic Configuration
+
+Configure the fundamental settings for your custom payment method:
+
+<Steps>
+<Step title="Enable Custom Payment Method">
+  Toggle the **Status** switch to "Enabled" to activate custom payment processing.
+</Step>
+
+<Step title="Configure Payment Types">
+  Set the **Enabled for** dropdown to specify which payment types support custom payment methods:
+  - One time payments (Recommended)
+  - One-time and annual payments
+  - All payments
+</Step>
+
+<Step title="Set Payment Method">
+  Choose **One time payments (Recommended)** from the dropdown for standard custom payment processing.
+  
+  <Warning>
+  Since custom payment methods require manual verification, it's recommended to enable them only for one-time payments to avoid complications with recurring payment processing.
+  </Warning>
+</Step>
+</Steps>
+
+### Payment Method Details
+
+Define how your custom payment method appears to customers:
+
+<Steps>
+<Step title="Set Method Name">
+  Enter a **Method name** that will be displayed to customers at checkout:
+  - Use a clear, descriptive name (e.g., "Check Payment", "Money Order", "Corporate Purchase Order")
+  - This name appears in the payment options during checkout
+  - The navigation path will change to **Settings > Payments > [Your Method Name]** after saving
+  - Keep it concise but informative
+</Step>
+
+<Step title="Configure Payment Instructions">
+  Provide detailed **Payment instructions** for customers:
+  - Enter step-by-step instructions customers should follow
+  - Include all necessary details for payment completion
+  - Specify any required information or documentation
+  - Mention processing times and next steps
+  
+  <Tip>
+    Be as detailed as possible. Include contact information, reference numbers, and any specific requirements.
+  </Tip>
+</Step>
+</Steps>
+
+### Optional File Upload
+
+Enhance your payment instructions with supporting documentation:
+
+<Steps>
+<Step title="Upload Instructions File">
+  Add an optional **Instructions file** to provide additional guidance:
+  - Click **Browse files** to upload supporting documents
+  - Upload PDFs, images, or other relevant files
+  - Use **View current** to review uploaded files
+  - Use **Delete** to remove outdated files
+  
+  <Info>
+    Supported file types typically include PDF, DOC, DOCX, JPG, PNG, and other common formats.
+  </Info>
+</Step>
+</Steps>
+
+## Payment Processing Flow
+
+### For Customers
+
+When customers choose your custom payment method:
+
+1. **Payment Selection**: Customer selects your custom payment method from available payment methods during checkout
+2. **Order Placement**: Customer clicks "Place order" to complete the purchase
+3. **Payment Instructions**: Customer is redirected to order details page with your custom payment instructions
+4. **Transfer Execution**: Customer follows your specific payment process using provided instructions
+5. **Order Tracking**: Customer can monitor order status in their billing overview
+6. **Order Fulfillment**: Order is processed after payment verification by admin
+
+<Note>
+Payment details are provided after placing the order, not during checkout. Customers are immediately redirected to the order details page where they can view complete payment instructions for initiating payments.
+</Note>
+
+### For Administrators
+
+To process custom payment method orders:
+
+1. **Access Orders**: Navigate to **Billing > Orders** in admin panel to view all orders
+2. **Filter Pending Orders**: Select "Pending" status from the filter options to view all orders awaiting manual verification (including custom payment methods and other manual payment methods)
+3. **Review Order Details**: Click on individual orders to view customer and payment information
+4. **Verify Payments**: Confirm payment completion through your defined process
+5. **Update Order Status**: Use **Approve** or **Reject** buttons to update order status
+6. **Process Orders**: Approved orders are processed immediately and cannot be reverted
+
+<Warning>
+Custom payment methods require manual verification. Always confirm payment completion before fulfilling orders. Once approved or rejected, orders cannot be reverted.
+</Warning>
+
+## Order Management
+
+### Admin Order Management
+
+Custom payment method orders appear in the admin panel with "Pending" status until manually verified. Note that the pending orders list includes all manual payment methods, not just custom payment methods:
+
+1. **Access Orders**: Navigate to **Billing > Orders** in the admin panel to view all orders
+2. **Filter Pending Orders**: Select "Pending" status from the filter options to view all orders awaiting manual verification (including custom payment methods and other manual payment methods)
+3. **Review Order Details**: Click on any order to view:
+   - Customer information and workspace details
+   - Order summary (plan, credits, total amount)
+   - Payment method information
+   - Order creation date and status
+
+### Order Status Actions
+
+For each pending custom payment method order, you can:
+
+- **Approve**: Click the green "Approve" button to confirm payment and fulfill the order
+- **Reject**: Click the gray "Reject" button to cancel the order if payment is not received
+
+### Customer Order Tracking
+
+Customers can track their custom payment method orders through their billing overview:
+
+1. **Access Billing**: Navigate to billing overview from the main dashboard
+2. **View Orders**: Check the "Latest orders" section for pending custom payment method orders
+3. **Order Details**: Click on any order to view detailed payment instructions
+4. **Status Updates**: Order status updates automatically when admin approves payment
+
+### Customer Checkout Experience
+
+When customers select your custom payment method as their payment method:
+
+1. **Payment Method Selection**: During checkout, customers can choose your custom payment method from available payment options
+2. **Order Placement**: After selecting the custom payment method, customers click "Place order" to complete the purchase
+3. **Order Confirmation**: The system creates a pending order and redirects to order details page
+4. **Payment Instructions**: Customers receive comprehensive payment instructions including:
+   - Order ID for reference
+   - Custom payment instructions you've configured
+   - Any uploaded instruction files
+   - Contact information for support
+
+<Note>
+The checkout page displays "Payment details will be provided after placing the order" to inform customers that payment instructions come after order creation.
+</Note>
+
+## Best Practices
+
+### Instruction Writing
+
+**Clear and Concise**
+- Use simple, easy-to-understand language
+- Break complex processes into numbered steps
+- Include all necessary contact information
+- Specify exact amounts and reference numbers
+
+**Complete Information**
+- Include all required payment details
+- Specify processing times and deadlines
+- Mention any required documentation
+- Provide multiple contact methods
+
+### Customer Communication
+
+**Proactive Support**
+- Provide clear contact information for questions
+- Set realistic expectations for processing times
+- Offer multiple ways to reach support
+- Follow up on pending payments
+
+**Documentation**
+- Keep records of all custom payment transactions
+- Maintain copies of payment confirmations
+- Document any special arrangements
+- Track payment processing times
+
+### Security Considerations
+
+**Payment Verification**
+- Always verify payment completion before order fulfillment
+- Use secure methods for payment confirmation
+- Protect sensitive customer information
+- Maintain audit trails for all transactions
+
+**Documentation Security**
+- Secure storage of payment-related files
+- Regular backup of payment records
+- Access controls for sensitive information
+- Compliance with data protection regulations
+
+## Common Use Cases
+
+### Offline Payments
+- Cash payments for local customers
+- Check payments for B2B transactions
+- Money order or cashier's check payments
+- In-person payment collection
+
+### Specialized Payment Methods
+- Cryptocurrency payments
+- Wire transfers with specific instructions
+- Payment plans or installments
+- Corporate purchase orders
+
+### Regional Payment Methods
+- Local payment systems not supported by standard gateways
+- Bank-specific payment processes
+- Government or institutional payment methods
+- Alternative financial services
+
+## Troubleshooting
+
+### Common Issues
+
+**Unclear Instructions**
+- Review and simplify payment instructions
+- Test instructions with a sample customer
+- Gather feedback and improve clarity
+- Provide multiple contact methods for questions
+
+**Payment Verification Delays**
+- Establish clear verification procedures
+- Set up automated notifications for new orders
+- Create escalation procedures for delayed payments
+- Maintain regular communication with customers
+
+**File Upload Issues**
+- Check file size and format requirements
+- Ensure files are accessible and properly formatted
+- Test file uploads before going live
+- Provide alternative access methods if needed
+
+### Order Status Management
+
+**Pending Orders**
+- Orders remain in "Pending" status until manually approved
+- Customers cannot use purchased credits until order is approved
+- Orders can be rejected if payment is not received within reasonable time
+
+**Approved Orders**
+- Orders are processed immediately upon approval
+- Credits are immediately available to customers
+- Orders cannot be reverted or reversed once approved
+
+**Rejected Orders**
+- Orders are cancelled and credits are not provided
+- Orders cannot be reverted or reversed once rejected
+- Customers should be notified of rejection with reason
+- New orders can be placed if payment issues are resolved
+
+<Check>
+Manual Payment Method is now configured and ready to accept payments through your custom payment process.
+</Check>
+
+<Support />

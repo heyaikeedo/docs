@@ -1,0 +1,137 @@
+---
+title: YooKassa Integration
+sidebarTitle: YooKassa
+description: 'Configure YooKassa payment gateway in Aikeedo with API credentials and subscription handling for secure online payments in Russia and CIS countries.'
+---
+
+YooKassa integration enables secure payment processing and subscription management for your Aikeedo platform, specifically designed for the Russian and CIS markets. This guide covers account setup and API configuration.
+
+<Note>
+  YooKassa integration is available as a separate plugin that must be purchased from the [Aikeedo Marketplace](https://aikeedo.com/marketplace/) before you can configure this payment gateway.
+</Note>
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- An active [YooKassa merchant account](https://yookassa.ru/)
+- Access to your Aikeedo admin panel
+- Your domain properly configured with SSL enabled
+- A valid business registration in Russia or CIS countries
+
+## Step 1: Set Up Your YooKassa Account
+
+If you haven't already, sign up for a YooKassa merchant account:
+
+1. Visit the [YooKassa website](https://yookassa.ru/) and click "Подключить" (Connect)
+2. Follow the prompts to create and verify your merchant account
+3. Complete the business verification process with required documents
+4. Wait for account approval (typically 1-3 business days)
+
+<Note>
+  YooKassa requires business registration in Russia or CIS countries. Personal accounts are not supported for merchant services.
+</Note>
+
+## Step 2: Obtain YooKassa API Credentials
+
+To connect Aikeedo with YooKassa, you'll need to retrieve your API credentials:
+
+### Get Your Shop ID
+
+1. Log in to your [YooKassa Dashboard](https://yookassa.ru/my)
+2. In the left sidebar, find your **Shop ID** under your organization name
+   - It will show your organization name with "ShopID XXXXXXX"
+
+### Get Your API Secret Key
+
+1. In the left sidebar, click on **Интеграция** (Integration)
+2. Select **Ключи API** (API Keys) from the integration submenu
+3. You'll find your **Секретный ключ** (Secret Key) in the API Keys section
+
+<Warning>
+  Keep your Secret Key confidential! Never share it publicly or include it in client-side code. If you lose your key, you can regenerate it using the refresh icon in the dashboard.
+</Warning>
+
+## Step 3: Configure YooKassa in Aikeedo
+
+Now that you have your YooKassa account set up, configure the integration in Aikeedo:
+
+1. Log in to your Aikeedo admin panel
+2. Navigate to **Payments** in the main menu
+3. Click on **YooKassa**
+
+### Details Section
+
+Configure the general settings:
+
+1. **Status**: Toggle the switch to enable YooKassa payments
+2. **Charge Currency**: Select your preferred currency
+   - **Russian Ruble**: Use RUB for all transactions
+   - **Inherit**: Use your platform's default currency (e.g., USD) without conversion
+   - If you select a currency different from your default and have a currency rate provider set up, amounts will be automatically converted
+3. **VAT code**: Select the appropriate VAT rate for Russian tax compliance
+   - This information is only for the YooKassa receipt
+   - Plan prices must be set tax inclusive
+4. **Mode**: Choose between:
+   - **Test**: For testing payments with YooKassa's test environment
+   - **Live**: For processing real transactions
+
+### Keys Section
+
+Enter your API credentials:
+
+1. **Shop ID**: Enter your YooKassa Shop ID (required)
+2. **API secret key**: Enter your YooKassa Secret Key (required)
+3. Click **Save changes** to apply your settings
+
+<Check>
+  Congratulations! YooKassa payments are now enabled on your Aikeedo platform.
+</Check>
+
+## Testing Your Integration
+
+Before going live, it's crucial to test your YooKassa integration:
+
+1. Set the YooKassa payment gateway to "Test" mode in the Details section
+2. Use [YooKassa's test card numbers](https://yookassa.ru/developers/payment-acceptance/testing-and-going-live/testing) to simulate various payment scenarios
+3. Create a test subscription or product purchase
+4. Verify that payments are processed correctly
+
+<Note>
+  YooKassa test environment uses special test card numbers and doesn't process real payments. Always test thoroughly before switching to live mode.
+</Note>
+
+
+## Troubleshooting
+
+If you encounter any issues with your YooKassa integration, try these steps:
+
+1. **Verify API Credentials**: Double-check your Shop ID and Secret Key in the Keys section
+2. **Check Mode Setting**: Ensure you're using Test mode for testing and Live mode for production
+3. **Verify Currency**: Make sure your selected currency is supported by YooKassa
+4. **Test Payments**: Use YooKassa's test card numbers to verify the integration works correctly
+
+### Common Issues
+
+<AccordionGroup>
+<Accordion title="Invalid API Credentials">
+  Double-check your Shop ID and Secret Key. You can find these in your YooKassa Dashboard under Integration > API Keys.
+</Accordion>
+
+<Accordion title="Payment Processing Issues">
+  Ensure you're using the correct mode (Test for testing, Live for production) and that your currency is supported.
+</Accordion>
+
+<Accordion title="VAT Code Issues">
+  Make sure you've selected the correct VAT code for your business type and that your plan prices are set tax inclusive.
+</Accordion>
+</AccordionGroup>
+
+## Additional Resources
+
+- [YooKassa Developer Documentation](https://yookassa.ru/developers?lang=en)
+- [YooKassa API Reference](https://yookassa.ru/developers/api?lang=en#intro)
+- [Payment Methods Guide](https://yookassa.ru/developers/payment-acceptance/overview)
+- [Testing Guide](https://yookassa.ru/developers/payment-acceptance/testing-and-going-live/testing)
+
+By following this guide, you've successfully integrated YooKassa payments into your Aikeedo platform, providing your users with a secure and convenient payment experience tailored for the Russian and CIS markets.
