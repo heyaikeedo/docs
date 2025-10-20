@@ -1,0 +1,151 @@
+---
+title: Paystack Integration
+sidebarTitle: Paystack
+description: 'Configure Paystack payment gateway in Aikeedo with API credentials and subscription handling for secure online payments across Africa.'
+---
+
+Paystack integration enables secure payment processing and subscription management for your Aikeedo platform, specifically designed for African markets. This guide covers account setup and API configuration.
+
+<Note>
+  Paystack integration is available as a separate plugin that must be purchased from the [Aikeedo Marketplace](https://aikeedo.com/marketplace/) before you can configure this payment gateway.
+</Note>
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- An active [Paystack merchant account](https://paystack.com/)
+- Access to your Aikeedo admin panel
+- Your domain properly configured with SSL enabled
+- A valid business registration in supported African countries
+
+## Step 1: Set Up Your Paystack Account
+
+If you haven't already, sign up for a Paystack merchant account:
+
+1. Visit the [Paystack website](https://paystack.com/) and click "Create a free account"
+2. Follow the prompts to create and verify your merchant account
+3. Complete the business verification process with required documents
+4. Wait for account approval (typically 1-2 business days)
+
+<Note>
+  Paystack requires business registration in supported African countries. Personal accounts are not supported for merchant services.
+</Note>
+
+## Step 2: Obtain Paystack API Credentials
+
+To connect Aikeedo with Paystack, you'll need to retrieve your API credentials:
+
+1. Log in to your [Paystack Dashboard](https://dashboard.paystack.com/)
+2. Navigate to **Settings** > **API Keys & Webhooks**
+3. You'll find your credentials:
+   - **Public Key**: Starts with `pk_test_` (test) or `pk_live_` (live)
+   - **Secret Key**: Starts with `sk_test_` (test) or `sk_live_` (live)
+
+<Warning>
+  Keep your Secret Key confidential! Never share it publicly or include it in client-side code.
+</Warning>
+
+## Step 3: Configure Paystack in Aikeedo
+
+Now that you have your Paystack account set up, configure the integration in Aikeedo:
+
+1. Log in to your Aikeedo admin panel
+2. Navigate to **Settings > Payments** page
+3. Click on **Paystack**
+
+### Details Section
+
+Configure the general settings:
+
+1. **Status**: Toggle the switch to enable Paystack payments
+2. **Charge Currency**: Select your preferred currency
+   - **Inherit**: Use your platform's default currency
+   - **Nigerian Naira (NGN)**: Default for Nigeria
+   - **Ghanaian Cedi (GHS)**: For Ghana
+   - **Kenyan Shilling (KES)**: For Kenya
+   - **South African Rand (ZAR)**: For South Africa
+   - **US Dollar (USD)**: International transactions
+   - If you select a currency different from your default and have a currency rate provider set up, amounts will be automatically converted
+3. **Mode**: Choose between:
+   - **Test**: For testing payments with Paystack's test environment
+   - **Live**: For processing real transactions
+
+### Keys Section
+
+Enter your API credentials:
+
+1. **API public key**: Enter your Paystack public key (starts with `pk_test_` for test mode or `pk_live_` for live mode)
+2. **API secret key**: Enter your Paystack secret key (starts with `sk_test_` for test mode or `sk_live_` for live mode)
+3. Click **Save changes** to apply your settings
+
+### Webhooks Section
+
+Configure webhook notifications:
+
+1. **Webhook URL**: The webhook URL is automatically set to `{your_domain}/webhooks/paystack`
+2. Copy this URL and add it to your Paystack Dashboard:
+   - Go to **Settings** > **API Keys & Webhooks** in your Paystack Dashboard
+   - Enter the webhook URL in the **Test Webhook URL** field (or **Live Webhook URL** for production)
+   - Click **Save changes** in your Paystack Dashboard
+
+<Note>
+  The webhook URL will automatically handle all necessary payment events including successful payments, failed payments, and subscription updates. No additional configuration is required in Aikeedo.
+</Note>
+
+<Check>
+  Congratulations! Paystack payments are now enabled on your Aikeedo platform.
+</Check>
+
+## Testing Your Integration
+
+Before going live, it's crucial to test your Paystack integration:
+
+1. Set the Paystack payment gateway to "Test" mode in the Details section
+2. Use [Paystack's test card numbers](https://paystack.com/docs/payments/test-payments) to simulate various payment scenarios:
+3. Create a test subscription or product purchase
+4. Verify that payments are processed correctly
+
+<Note>
+  Paystack test environment uses special test card numbers and doesn't process real payments. Always test thoroughly before switching to live mode.
+</Note>
+
+## Troubleshooting
+
+If you encounter any issues with your Paystack integration, try these steps:
+
+1. **Verify API Credentials**: Double-check your API Public Key and Secret Key in the Keys section
+2. **Check Mode Setting**: Ensure you're using Test mode for testing and Live mode for production
+3. **Verify Currency**: Make sure your selected currency is supported by Paystack
+4. **Test Payments**: Use Paystack's test card numbers to verify the integration works correctly
+5. **Check Webhook Configuration**: Ensure your webhook URL is properly configured in both Aikeedo and Paystack
+
+### Common Issues
+
+<AccordionGroup>
+<Accordion title="Invalid API Credentials">
+  Double-check your API Public Key and Secret Key. You can find these in your Paystack Dashboard under Settings > API Keys & Webhooks.
+</Accordion>
+
+<Accordion title="Payment Processing Issues">
+  Ensure you're using the correct mode (Test for testing, Live for production) and that your currency is supported.
+</Accordion>
+
+<Accordion title="Webhook Not Working">
+  Verify that your webhook URL is properly configured in your Paystack Dashboard and that your domain has SSL enabled.
+</Accordion>
+
+<Accordion title="Currency Conversion Issues">
+  If you have a currency rate provider set up, ensure it supports the currencies you're using. The amount will be automatically converted to your chosen charge currency.
+</Accordion>
+</AccordionGroup>
+
+## Additional Resources
+
+- [Paystack Developer Documentation](https://paystack.com/docs)
+- [Paystack API Reference](https://paystack.com/docs/api/)
+- [Webhook Events Documentation](https://paystack.com/docs/api/#events)
+- [Test Payments Guide](https://paystack.com/docs/payments/test-payments)
+- [Supported Countries and Currencies](https://paystack.com/docs/payments/currencies)
+
+By following this guide, you've successfully integrated Paystack payments into your Aikeedo platform, providing your users with a secure and convenient payment experience tailored for African markets.

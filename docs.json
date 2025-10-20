@@ -163,7 +163,8 @@
                   "integrations/payment-gateways/paypal",
                   "integrations/payment-gateways/bank-transfer",
                   "integrations/payment-gateways/custom-payment-method",
-                  "integrations/payment-gateways/yookassa"
+                  "integrations/payment-gateways/yookassa",
+                  "integrations/payment-gateways/paystack"
                 ]
               },
               {
