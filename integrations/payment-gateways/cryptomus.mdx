@@ -1,0 +1,151 @@
+---
+title: Cryptomus Integration
+sidebarTitle: Cryptomus
+description: 'Configure Cryptomus payment gateway in Aikeedo with API credentials for secure cryptocurrency payments and digital asset transactions.'
+---
+
+Cryptomus integration enables secure cryptocurrency payment processing for your Aikeedo platform, supporting various digital currencies and blockchain networks. This guide covers account setup and API configuration.
+
+<Note>
+  Cryptomus integration is available as a separate plugin that must be purchased from the [Aikeedo Marketplace](https://aikeedo.com/marketplace/) before you can configure this payment gateway.
+</Note>
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- An active [Cryptomus merchant account](https://cryptomus.com/gateway)
+- Access to your Aikeedo admin panel
+- Your domain properly configured with SSL enabled
+- A verified business entity
+
+## Step 1: Set Up Your Cryptomus Account
+
+If you haven't already, sign up for a Cryptomus merchant account:
+
+1. Visit the [Cryptomus website](https://cryptomus.com/gateway) and click "Get Started"
+2. Register using your email or phone number
+3. Create a merchant account for payment processing
+4. Complete the business verification process
+5. Wait for account approval and moderation
+
+<Note>
+  Cryptomus requires domain verification to ensure the legitimacy of your platform. This can be done through DNS records, meta tags, or HTML file upload.
+</Note>
+
+## Step 2: Obtain Cryptomus API Credentials
+
+To connect Aikeedo with Cryptomus, you'll need to retrieve your API credentials:
+
+1. Log in to your [Cryptomus Dashboard](https://cryptomus.com/dashboard)
+2. Navigate to **Business** > **Merchants**
+3. Select your project and click **Merchant Settings**
+4. In the **API Integration** section, you'll find your credentials:
+   - **Merchant ID**: Your unique merchant identifier (e.g., `1bd8163d-92e0-4c1d-9452-5b4dc212f307`)
+   - **Payment API Key**: Your API key for payment operations (e.g., `Dgke********3stU`)
+
+<Warning>
+  Keep your Payment API Key confidential! Never share it publicly or include it in client-side code.
+</Warning>
+
+## Step 3: Pass KYB Verification and Domain Verification
+
+Before you can process payments, you need to pass Cryptomus verification:
+
+1. **KYB (Know Your Business) Verification**: 
+   - Click "Pass KYB" in your merchant settings
+   - Provide required business documents and information
+   - This ensures your safety by preventing fraud in financial transactions
+2. **Domain Verification**: Choose one of these methods:
+   - **DNS Record**: Add a TXT record to your domain
+   - **Meta Tag**: Insert a meta tag in your website's head section
+   - **HTML File**: Upload an HTML file to your website root
+3. **Wait for Approval**: Cryptomus will review your application
+
+<Note>
+  Both KYB verification and domain verification are mandatory for security and compliance purposes. Without them, your merchant account cannot process payments.
+</Note>
+
+## Step 3: Configure Cryptomus in Aikeedo
+
+Now that you have your Cryptomus account set up, configure the integration in Aikeedo:
+
+1. Log in to your Aikeedo admin panel
+2. Navigate to **Payments** in the main menu
+3. Click on **Cryptomus**
+
+### Details Section
+
+Configure the general settings:
+
+1. **Status**: Toggle the switch to enable Cryptomus payments
+2. **Charge Currency**: Select your preferred currency
+   - **Inherit**: Use your platform's default currency (USD)
+   - **Custom**: Choose from a wide range of fiat currencies including USD, EUR, GBP, and many others
+   - If you select a currency different from your default and have a currency rate provider set up, amounts will be automatically converted
+3. **Enabled for** (required field):
+   - **One-time payments**: Single transactions only
+   - **One-time and monthly payments**: Both single and recurring subscriptions (recommended)
+
+### Keys Section
+
+Enter your API credentials:
+
+1. **Merchant ID**: Enter your Cryptomus Merchant ID (e.g., `1bd8163d-92e0-4c1d-9452-5b4dc212f307`)
+2. **Payment API Key**: Enter your Cryptomus Payment API Key
+3. Click **Save changes** to apply your settings
+
+<Check>
+  Congratulations! Cryptomus payments are now enabled on your Aikeedo platform.
+</Check>
+
+
+## Testing Your Integration
+
+Before going live, it's crucial to test your Cryptomus integration:
+
+1. Create test plans with small prices to verify payment processing
+2. Test different cryptocurrency networks
+3. Test payment confirmation and order updates
+
+<Warning>
+  Always test thoroughly with small amounts before processing larger payments. Cryptocurrency transactions are irreversible.
+</Warning>
+
+
+## Troubleshooting
+
+If you encounter any issues with your Cryptomus integration, try these steps:
+
+1. **Verify API Credentials**: Double-check your Merchant ID and Payment API Key in the Keys section
+2. **Check KYB Verification**: Ensure your merchant account has passed KYB verification in the merchant settings
+3. **Check Domain Verification**: Ensure your domain is properly verified
+4. **Test Payments**: Create test plans with small amounts to verify the integration works correctly
+
+### Common Issues
+
+<AccordionGroup>
+<Accordion title="Invalid API Credentials">
+  Double-check your Merchant ID and Payment API Key. You can find these in your Cryptomus Dashboard under Business > Merchants > Merchant Settings.
+</Accordion>
+
+<Accordion title="Payment Processing Issues">
+  Ensure your merchant account has passed KYB verification and domain verification. Check that your domain is properly verified and your merchant account has passed moderation.
+</Accordion>
+
+<Accordion title="KYB Verification Required">
+  If you see "KYB not verified" in your merchant settings, click "Pass KYB" and provide the required business documents and information to complete the verification process.
+</Accordion>
+
+<Accordion title="Annual Payments Not Working">
+  Cryptomus does not support annual payments. Only one-time payments and monthly subscriptions are available. This limitation is clearly indicated in the settings interface.
+</Accordion>
+</AccordionGroup>
+
+## Additional Resources
+
+- [Cryptomus API Documentation](https://doc.cryptomus.com/)
+- [Cryptomus Business Dashboard](https://cryptomus.com/dashboard)
+- [Supported Cryptocurrencies](https://cryptomus.com/currencies)
+
+By following this guide, you've successfully integrated Cryptomus payments into your Aikeedo platform, providing your users with a secure and convenient cryptocurrency payment experience.
