@@ -160,7 +160,8 @@
                 "group": "Payment Gateways",
                 "pages": [
                   "integrations/payment-gateways/stripe",
-                  "integrations/payment-gateways/paypal"
+                  "integrations/payment-gateways/paypal",
+                  "integrations/payment-gateways/bank-transfer"
                 ]
               },
               {
