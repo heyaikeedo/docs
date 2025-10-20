@@ -159,8 +159,8 @@
               {
                 "group": "Payment Gateways",
                 "pages": [
-                  "integrations/stripe",
-                  "integrations/paypal"
+                  "integrations/payment-gateways/stripe",
+                  "integrations/payment-gateways/paypal"
                 ]
               },
               {
