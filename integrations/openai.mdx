@@ -20,20 +20,66 @@ Follow these simple steps to connect OpenAI with your Aikeedo platform:
 4. Copy the generated API key—you'll need this for Aikeedo.
 
 <Note>
-  Keep your API key secure. It provides access to OpenAI's services and should not be shared publicly.
+  Keep your API key secure. It provides access to OpenAI's services and should
+  not be shared publicly.
 </Note>
 
 ### Step 2: Configure Aikeedo
 
 1. Log in to your Aikeedo admin panel.
 2. Navigate to **Settings > OpenAI**.
-3. Paste your OpenAI API key into the designated field.
-4. Click **Save Changes** to activate the integration.
+3. Paste your OpenAI API key into the **API Secret** field.
+4. Configure webhook settings (see Step 3 below).
+5. Click **Save Changes** to activate the integration.
 
 <Check>
   Congratulations! OpenAI is now integrated with your Aikeedo platform.
 </Check>
 
+### Step 3: Configure Webhooks (Required)
+
+<Warning>
+  Webhook configuration is required for OpenAI integration to function properly.
+</Warning>
+
+To enable real-time event notifications from OpenAI, you need to configure webhooks:
+
+1. **Set up Webhook URL**: The webhook URL is automatically provided as `https://your-domain.com/webhooks/openai`
+2. **Configure OpenAI Dashboard**:
+   - Go to your [OpenAI Webhooks Settings](https://platform.openai.com/settings/project/webhooks)
+   - Create a new webhook endpoint using the provided webhook URL
+3. **Set Webhook Secret**:
+   - Generate a webhook secret in your OpenAI dashboard
+   - Copy the secret and paste it into the **Webhook secret** field in Aikeedo
+4. **Select Events**: Ensure the following events are selected in your OpenAI webhook configuration:
+   - `video.completed`
+   - `video.failed`
+
+<Note>
+  Make sure to select all listed events in your OpenAI webhook configuration for
+  proper functionality.
+</Note>
+
+## Custom API Keys (BYOK)
+
+Aikeedo supports Bring Your Own Key (BYOK) functionality for OpenAI integration:
+
+- **Workspace-level API keys**: Workspace owners can provide their own OpenAI API key
+- **System override**: When configured, the workspace-specific API key takes precedence over the system-wide API key
+- **Credit management**: Custom API keys bypass workspace credit deductions for OpenAI services
+- **Subscription requirement**: A valid subscription plan and credit balance are still required for other features and API services
+
+<Warning>
+  **BYOK is not available for features that require OpenAI webhooks.** Models
+  such as Sora 2 and Sora 2 Pro always use the system-wide API key because they
+  depend on webhook notifications for proper functionality.
+</Warning>
+
+<Info>
+  BYOK is particularly useful for organizations that want to manage their own
+  OpenAI billing and usage directly. For detailed information about BYOK
+  configuration and setup, see the [BYOK documentation](/advanced/byok).
+</Info>
 
 ## Aikeedo Tools Powered by OpenAI
 
@@ -59,20 +105,44 @@ To make the most of your OpenAI integration:
 
 If you encounter issues with the OpenAI integration, try these steps:
 
-1. Verify that your API key is correct and active.
-2. Check your OpenAI account for any usage limits or restrictions.
-3. Ensure your Aikeedo platform is up to date.
-4. Confirm you have sufficient credit balance in your OpenAI platform account.
-5. If you receive an error message like "The model *01-preview does not exist or you do not have access to it":
-   - This error comes directly from OpenAI and indicates that o1 models are not enabled for your account.
-   - Currently, o1 models are only available for tier 4 and tier 5 accounts.
-   - Check which models are accessible to you on the [OpenAI Playground](https://platform.openai.com/playground).
-6. For model-specific issues, verify that your account has access to the required models.
+1. **API Key Issues**:
+
+   - Verify that your API key is correct and active
+   - Check your OpenAI account for any usage limits or restrictions
+   - Confirm you have sufficient credit balance in your OpenAI platform account
+
+2. **Webhook Configuration**:
+
+   - Ensure webhook URL is correctly configured in your OpenAI dashboard
+   - Verify that the webhook secret matches between OpenAI and Aikeedo
+   - Check that all required events (`video.completed`, `video.failed`) are selected
+
+3. **General Issues**:
+
+   - Ensure your Aikeedo platform is up to date
+   - Check network connectivity and firewall settings
+   - Verify SSL certificates are valid for webhook endpoints
+
+4. **Model Access Issues**:
+
+   - For model-specific issues, verify that your account has access to the required models
+   - If you receive an error message like "The model [model-name] does not exist or you do not have access to it":
+     - This error comes directly from OpenAI and indicates that the specific model is not enabled for your account
+     - Some models may require specific account tiers or permissions
+     - Check which models are accessible to you on the [OpenAI Playground](https://platform.openai.com/playground)
+   - Ensure your OpenAI account has sufficient credits and the correct billing setup for the models you're trying to use
+
+5. **BYOK Issues**:
+   - If using custom API keys, ensure the workspace-specific key is valid and active
+   - Verify that the custom key has the necessary permissions for required models
+   - For comprehensive BYOK troubleshooting and configuration details, refer to the [BYOK documentation](/advanced/byok)
 
 <Tip>
-  Regularly review your OpenAI usage and available models to ensure smooth integration with Aikeedo.
+  Regularly review your OpenAI usage and available models to ensure smooth
+  integration with Aikeedo.
 </Tip>
 
 <Note>
-  Remember to review OpenAI's usage policies and pricing to ensure compliance and manage costs effectively.
+  Remember to review OpenAI's usage policies and pricing to ensure compliance
+  and manage costs effectively.
 </Note>
