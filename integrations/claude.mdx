@@ -19,20 +19,35 @@ Follow these steps to connect Claude AI with your Aikeedo platform:
 3. Locate and copy your API key—you'll need this for Aikeedo.
 
 <Note>
-  Keep your API key secure and confidential. It grants access to Claude AI services and should not be shared publicly.
+  Keep your API key secure and confidential. It grants access to Claude AI
+  services and should not be shared publicly.
 </Note>
 
 ### Step 2: Configure Aikeedo
 
 1. Log in to your Aikeedo admin panel.
 2. Navigate to **Settings > Anthropic / Claude AI**.
-3. Paste your Claude AI API key into the designated "API Key" field.
+3. Paste your Claude AI API key into the "API Key" field.
 4. Click **Save changes** to activate the integration.
 
 <Check>
   Great job! Claude AI is now integrated with your Aikeedo platform.
 </Check>
 
+## Custom API Keys (BYOK)
+
+Aikeedo supports Bring Your Own Key (BYOK) functionality for Claude AI integration:
+
+- **Workspace-level API keys**: Workspace owners can provide their own Claude AI API key
+- **System override**: When configured, the workspace-specific API key takes precedence over the system-wide API key
+- **Credit management**: Custom API keys bypass workspace credit deductions for Claude AI services
+- **Subscription requirement**: A valid subscription plan and credit balance are still required for other features and API services
+
+<Info>
+  BYOK is particularly useful for organizations that want to manage their own
+  Claude AI billing and usage directly. For detailed information about BYOK
+  configuration and setup, see the [BYOK documentation](/advanced/byok).
+</Info>
 
 ## Aikeedo Tools Powered by Claude AI
 
@@ -55,11 +70,23 @@ To maximize your Claude AI integration:
 
 If you encounter issues with the Claude AI integration:
 
-1. Verify that your API key is correct and active.
-2. Check your Anthropic account for any usage limits or restrictions.
-3. Ensure your Aikeedo platform is up to date.
-4. If you receive error messages related to model access or quotas, verify your account status with Anthropic.
+1. **API Key Issues**:
+
+   - Verify that your API key is correct and active
+   - Check your Anthropic account for any usage limits or restrictions
+   - Ensure your Aikeedo platform is up to date
+
+2. **Model Access and Quota Issues**:
+
+   - If you receive error messages related to model access or quotas, verify your account status with Anthropic
+   - Ensure your Anthropic account has sufficient credits and the correct billing setup for the models you're trying to use
+
+3. **BYOK Issues**:
+   - If using custom API keys, ensure the workspace-specific key is valid and active
+   - Verify that the custom key has the necessary permissions for required models
+   - For comprehensive BYOK troubleshooting and configuration details, refer to the [BYOK documentation](/advanced/byok)
 
 <Note>
-  Remember to review Anthropic's usage policies and pricing to ensure compliance and manage costs effectively as you scale your Claude AI integration.
+  Remember to review Anthropic's usage policies and pricing to ensure compliance
+  and manage costs effectively as you scale your Claude AI integration.
 </Note>
