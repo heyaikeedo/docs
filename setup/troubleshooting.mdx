@@ -98,12 +98,12 @@ The domain is not correctly pointing to the `public` directory.
 - Installation wizard not accessible
 
 **Cause:**
-Domain document root not pointing to the `public` directory, missing files, or incorrect permissions.
+Domain document root not pointing to the `public` directory, missing files, incorrect permissions, or web server configuration issues preventing proper request routing.
 
 **Solution:**
 
 <Steps>
-<Step title="Verify Document Root">
+<Step title="Verify Document Root Configuration">
   Ensure your domain's document root points to the `public` folder:
   
   **For cPanel:**
@@ -113,6 +113,108 @@ Domain document root not pointing to the `public` directory, missing files, or i
   
   **For VPS/Dedicated:**
   - Set document root to `/path/to/aikeedo/public`
+  
+  <Tip>
+  Accessing your domain should automatically redirect you to `/install` if the document root is correctly configured.
+  </Tip>
+</Step>
+
+<Step title="Configure Web Server">
+  Configure your web server to serve PHP applications and rewrite all requests to `/public/index.php`:
+  
+  <Tabs>
+  <Tab title="Nginx">
+    Ensure your server block is configured correctly:
+    
+    ```nginx /etc/nginx/sites-available/aikeedo
+    server {
+        listen 80;
+        listen [::]:80;
+        server_name yourdomain.com www.yourdomain.com;
+        root /path/to/aikeedo/public;
+        
+        # Add index.php to the list
+        index index.php index.html index.htm index.nginx-debian.html;
+        
+        # Increase the maximum upload size
+        client_max_body_size 256M;
+        
+        location / {
+            # First attempt to serve request as file, then
+            # as directory, then fall back to index.php
+            try_files $uri $uri/ /index.php$is_args$query_string;
+        }
+        
+        # Pass PHP scripts to FastCGI server
+        location ~ \.php$ {
+            include snippets/fastcgi-php.conf;
+            
+            # Fix for PHP files downloading instead of execute
+            fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+            fastcgi_param DOCUMENT_ROOT $realpath_root;
+            
+            # With php-fpm (or other unix sockets):
+            fastcgi_pass unix:/run/php/php-fpm.sock;
+            # With php-cgi (or other tcp sockets):
+            # fastcgi_pass 127.0.0.1:9000;
+            
+            fastcgi_connect_timeout 300s;
+            fastcgi_send_timeout 300s;
+            fastcgi_read_timeout 300s;
+        }
+        
+        # Deny access to .htaccess files, if Apache's document root
+        # concurs with nginx's one
+        location ~ /\.ht {
+            deny all;
+        }
+    }
+    ```
+    
+    <Note>
+    After configuring, test your Nginx configuration: `sudo nginx -t` and reload: `sudo systemctl reload nginx`
+    
+    Adjust the `fastcgi_pass` socket path to match your PHP-FPM configuration. Common locations:
+    - `/run/php/php-fpm.sock` (generic)
+    - `/run/php/php8.2-fpm.sock` (version-specific)
+    - `/var/run/php/php8.2-fpm.sock` (alternative path)
+    </Note>
+  </Tab>
+  
+  <Tab title="Apache">
+    Ensure your virtual host is configured correctly with proper rewrite rules:
+    
+    ```apache /etc/apache2/sites-available/aikeedo.conf
+    <VirtualHost *:80>
+        ServerName yourdomain.com
+        ServerAlias www.yourdomain.com
+        DocumentRoot /path/to/aikeedo/public
+    
+        <Directory /path/to/aikeedo/public>
+            Options -Indexes +FollowSymLinks
+            AllowOverride All
+            Require all granted
+        </Directory>
+    </VirtualHost>
+    ```
+    
+    <Note>
+    Ensure `mod_rewrite` is enabled: `sudo a2enmod rewrite` and reload Apache: `sudo systemctl reload apache2`
+    </Note>
+  </Tab>
+  </Tabs>
+  
+  <Warning>
+  The server configurations provided above are minimal samples. Consult with your server administrator for the correct configuration for your specific server environment, especially if you're using load balancers, reverse proxies, or have specific security requirements.
+  </Warning>
+</Step>
+
+<Step title="Verify .htaccess File (Apache)">
+  If you're using Apache, ensure the `.htaccess` file is present in the `public` directory. Aikeedo includes this file by default with the correct rewrite rules.
+  
+  <Note>
+  Hidden files may not be visible by default. Enable "Show hidden files" in your FTP client or file manager if you need to verify the file exists.
+  </Note>
 </Step>
 
 <Step title="Check File Extraction">
@@ -131,14 +233,42 @@ Domain document root not pointing to the `public` directory, missing files, or i
   ```
 </Step>
 
-<Step title="Verify .htaccess File">
-  Ensure the `.htaccess` file is present in the `public` directory.
+<Step title="Verify Virtual Host Settings">
+  Double-check that all virtual host settings are correctly configured:
   
-  <Note>
-  Hidden files may not be visible by default. Enable "Show hidden files" in your FTP client or file manager.
-  </Note>
+  - **Document Root**: Must point to `/path/to/aikeedo/public` (not the root directory)
+  - **Server Name/Alias**: Must match your domain exactly
+  - **PHP Handler**: Configured correctly (PHP-FPM for Nginx, mod_php or PHP-FPM for Apache)
+  - **Rewrite Rules**: Enabled and properly configured to route all requests to `index.php`
+</Step>
+
+<Step title="Test Configuration">
+  After making changes:
+  
+  1. Test web server configuration:
+     - Nginx: `sudo nginx -t`
+     - Apache: `sudo apache2ctl configtest`
+  
+  2. Reload your web server:
+     ```bash
+     # Nginx
+     sudo systemctl reload nginx
+     
+     # Apache
+     sudo systemctl reload apache2
+     ```
+  
+  3. Visit your domain - you should be automatically redirected to `/install`
+  
+  <Check>
+  If you're redirected to `/install`, your server configuration is correct.
+  </Check>
 </Step>
 </Steps>
+
+<Warning>
+All requests must be rewritten to `/public/index.php` for the application to function correctly. Without proper rewrite rules, you'll encounter 404 errors on all routes except the home page.
+</Warning>
 
 ---
 
