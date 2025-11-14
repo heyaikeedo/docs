@@ -37,8 +37,9 @@ Find your issue and click to jump to the solution:
 - [MySQL Server Has Gone Away](#mysql-server-has-gone-away)
 
 ### Feature-Specific Issues
-- [Auto-Generated Titles Don't Match Content Language](#auto-generated-titles-don’t-match-content-language)
+- [Auto-Generated Titles Don't Match Content Language](#auto-generated-titles-don't-match-content-language)
 - [Uploaded Files Return 404 Not Found Errors](#uploaded-files-return-404-not-found-errors)
+- [Generated Images/Videos Not Loading](#generated-images%2Fvideos-not-loading)
 
 ---
 
@@ -805,6 +806,130 @@ For production environments requiring secure file access or workspace-based file
 **Related Documentation:**
 - [Secure URLs](/advanced/secure-urls) - Configure secure file access
 - [cPanel Installation](/setup/installation/cpanel) - Document root configuration for cPanel
+
+---
+
+### Generated Images/Videos Not Loading
+
+**Symptoms:**
+- Generated images or videos fail to display after creation
+- Broken image/video placeholders appear instead of content
+- 404 or 403 errors when accessing generated media files
+- Files appear to generate successfully but cannot be viewed
+
+**Cause:**
+Incomplete initial setup, cloud storage CORS misconfiguration, incorrect `.env` file configuration (especially for cPanel installations), or Secure URLs/Group files settings enabled when using local storage.
+
+**Solution:**
+
+<Steps>
+<Step title="Verify Initial Setup Completion">
+  Ensure you've completed all steps in the [Initial Setup Guide](/setup/initial-setup):
+  
+  1. Verify your site domain is configured correctly in **Settings > General**
+  2. Check that storage settings are properly configured in **Settings > Storage settings**
+  3. Ensure all required integrations are set up if using cloud storage
+  
+  <Warning>
+  Skipping or incorrectly completing initial setup steps can prevent generated files from being accessible.
+  </Warning>
+</Step>
+
+<Step title="Check Cloud Storage CORS Configuration">
+  If you're using cloud storage (AWS S3, DigitalOcean Spaces, Cloudflare R2, etc.), CORS misconfiguration is a common cause:
+  
+  1. **Access your cloud storage provider's console** (AWS S3, DigitalOcean, etc.)
+  2. **Navigate to your bucket/container settings**
+  3. **Review CORS configuration** - it must allow requests from your domain
+  4. **Update CORS rules** if needed:
+  5. **Save the CORS configuration**
+  6. **Test by generating a new image or video**
+  
+  <Note>
+  CORS rules must include your exact domain (with protocol: `https://` or `http://`). Wildcards may not work for all storage providers.
+  </Note>
+  
+  <Tip>
+  See the [Cloud Storage Overview](/integrations/cloud-storage/overview) and provider-specific guides for detailed CORS configuration instructions.
+  </Tip>
+</Step>
+
+<Step title="Check Secure URLs and Group Files Settings">
+  The **Secure URLs** and **Group files** options should only be enabled when using cloud storage (AWS S3, DigitalOcean Spaces, etc.):
+  
+  1. Navigate to **Settings > Storage settings** in the admin panel
+  2. Review the **Secure URLs** and **Group files** settings
+  3. **If using local storage**, ensure both options are disabled:
+     - **Secure URLs**: Should be turned **Off**
+     - **Group files**: Should be set to **None**
+  4. **If using cloud storage**, these options can be enabled as needed
+  5. Click "Save changes"
+  
+  <Warning>
+  **Secure URLs** and **Group files** are designed for cloud storage only. Enabling these options with local storage can cause generated files to be inaccessible.
+  </Warning>
+  
+  <Note>
+  Changing these settings only affects newly generated files. Files that were already generated with the previous settings will remain unchanged. If the issue stems from Secure URLs, previously generated files can be made accessible by fixing file permissions (see the "Verify Storage Path and Permissions" step below). Otherwise, you may need to regenerate images or videos after adjusting these settings.
+  </Note>
+</Step>
+
+<Step title="Verify .env File Configuration (cPanel Users)">
+  If you're using cPanel, the `.env` file configuration is critical:
+  
+  1. **Locate your `.env` file** in the Aikeedo root directory (not in `public_html`)
+  2. **Find the `PUBLIC_DIR` setting** - it may be commented out with `#`
+  3. **For main domain installations**, ensure it's set correctly:
+     ```env
+     PUBLIC_DIR=public_html
+     ```
+  4. **Remove the `#` symbol** if the line is commented out
+  5. **Save the file**
+  
+  <Warning>
+  If you're using cPanel and the `PUBLIC_DIR` setting is missing or incorrect, generated files will not be accessible. This is a critical step that must be completed during installation.
+  </Warning>
+  
+  <Note>
+  For add-on domains or subdomains in cPanel where the document root points directly to the `public` folder, you may not need to set `PUBLIC_DIR` or it should be set to `public`. Refer to the [cPanel Installation Guide](/setup/installation/cpanel) for your specific setup.
+  </Note>
+</Step>
+
+<Step title="Verify Storage Path and Permissions">
+  Check that your storage configuration is correct:
+  
+  1. Navigate to **Settings > Storage settings** in the admin panel
+  2. Verify the storage driver is set correctly (Local, S3, etc.)
+  3. If using local storage, ensure the storage path is writable:
+     ```bash
+     # Check storage directory permissions
+     ls -la /path/to/aikeedo/public/uploads/
+     
+     # Set correct permissions if needed
+     chmod -R 755 /path/to/aikeedo/public/uploads/
+     chown -R www-data:www-data /path/to/aikeedo/public/uploads/
+     ```
+  4. If using cloud storage, verify:
+     - Bucket/container name is correct
+     - Region is correctly configured
+     - Access keys are valid and have proper permissions
+     - Bucket/container exists and is accessible
+  
+  <Check>
+  Test by generating a new image or video. If it loads correctly, the configuration is working.
+  </Check>
+</Step>
+</Steps>
+
+<Warning>
+**For cPanel users:** If you skipped or incorrectly completed the `.env` file configuration step during installation (specifically the `PUBLIC_DIR=public_html` setting), generated files will not load correctly. This is one of the most common causes of this issue on cPanel hosting. Refer to the [cPanel Installation Guide](/setup/installation/cpanel) and ensure you've completed the "Update the Environment File" step correctly.
+</Warning>
+
+**Related Documentation:**
+- [Initial Setup Guide](/setup/initial-setup) - Complete setup configuration
+- [cPanel Installation](/setup/installation/cpanel) - Critical `.env` file configuration
+- [Cloud Storage Overview](/integrations/cloud-storage/overview) - Cloud storage setup and CORS configuration
+- [Secure URLs](/advanced/secure-urls) - Secure file access configuration
 
 ---
 
