@@ -29,9 +29,10 @@ Find your issue and click to jump to the solution:
 - [Installation Wizard Not Loading](#installation-wizard-not-loading)
 
 ### Configuration Issues
-- ["Does Not Allow the Value" Error](#”does-not-allow-the-value”-error)
+- ["Does Not Allow the Value" Error](#"does-not-allow-the-value"-error)
 - [Cannot Select Models or Send Prompts](#cannot-select-models-or-send-prompts)
 - [500 Error on Image Generator or Video Generator](#500-error-on-image-generator-or-video-generator)
+- [Save Button Does Nothing](#save-button-does-nothing)
 
 ### Database Issues
 - [MySQL Server Has Gone Away](#mysql-server-has-gone-away)
@@ -542,6 +543,132 @@ If you're unsure about credit ratios, start with the default suggestions and adj
 **Related Documentation:**
 - [Unified Credit System](/billing/unified-credit-system)
 - [Application Configuration](/setup/configuration)
+
+---
+
+### Save Button Does Nothing
+
+**Symptoms:**
+- Clicking "Save changes" or other save buttons in the admin panel has no effect
+- No error message appears
+- Page appears to be unresponsive after clicking save
+- Changes are not saved
+
+**Cause:**
+Most commonly a backend PHP error that's preventing the request from completing. Can also be a frontend JavaScript issue.
+
+**Solution:**
+
+<Steps>
+<Step title="Check Browser Console for Frontend Errors">
+  Before clicking the save button, check for frontend errors:
+  
+  1. Open your browser's developer console:
+     - **Chrome/Edge**: Press `F12` or `Ctrl+Shift+I` (Windows/Linux) / `Cmd+Option+I` (Mac)
+     - **Firefox**: Press `F12` or `Ctrl+Shift+K` (Windows/Linux) / `Cmd+Option+K` (Mac)
+     - **Safari**: Enable Developer menu first, then press `Cmd+Option+I`
+  
+  2. Look for any red error messages in the console
+  3. Review error details - they often indicate the specific issue
+  
+  <Note>
+  If you see errors in the console before clicking save, the issue is likely frontend-related. Note the error messages for troubleshooting.
+  </Note>
+</Step>
+
+<Step title="Check Server Error Logs (Apache/Nginx)">
+  If no frontend errors are visible, first check server-level error logs, as the issue might occur before the request reaches PHP:
+  
+  1. **Locate your web server error log**:
+     ```bash
+     # Apache
+     /var/log/apache2/error.log
+     # or
+     /var/log/httpd/error_log
+     
+     # Nginx
+     /var/log/nginx/error.log
+     ```
+  
+  2. **View recent errors**:
+     ```bash
+     tail -f /path/to/error.log
+     ```
+  
+  3. **Click the save button** while monitoring the log
+  4. **Review any error messages** that appear
+  
+  <Note>
+  Server-level errors can include issues like request timeouts, connection problems, or web server configuration errors that prevent requests from reaching PHP.
+  </Note>
+</Step>
+
+<Step title="Check PHP Error Logs (Backend Issue)">
+  If no server-level errors are found, check PHP error logs:
+  
+  1. **Locate your PHP error log** (common locations):
+     ```bash
+     # PHP-FPM
+     /var/log/php8.2-fpm.log
+     # or check php.ini for error_log location
+     # You can find it with: php -i | grep error_log
+     ```
+  
+  2. **View recent errors**:
+     ```bash
+     tail -f /path/to/php-error.log
+     ```
+  
+  3. **Click the save button** while monitoring the log
+  4. **Review the error message** that appears in the log
+  
+  <Tip>
+  The error log will show the exact PHP error preventing the save operation from completing. Common issues include database errors, permission problems, or missing dependencies.
+  </Tip>
+</Step>
+
+<Step title="Enable DEBUG Mode and Check API Response">
+  Alternatively, enable DEBUG mode to get more detailed error information:
+  
+  1. **Enable DEBUG mode** from the admin panel:
+     - Navigate to **Status** page in the admin panel
+     - Enable DEBUG mode using the toggle or button provided
+  
+  2. **Open your browser's developer console** (see step 1 above)
+  
+  3. **Navigate to the Network tab** in the developer console
+  
+  4. **Click the save button** again
+  
+  5. **Look for the API request** that was made when you clicked save (usually shows as a POST request)
+  
+  6. **Click on the request** to view details:
+     - Check the **Status Code** (should be between 200 and 299 for success, 4xx/5xx for errors)
+     - Check the **Response** tab to see the response body
+     - Review any error messages in the response
+  
+  <Warning>
+  Remember to disable DEBUG mode from the Status page after troubleshooting, as it can expose sensitive information in production environments.
+  </Warning>
+</Step>
+
+<Step title="Address the Specific Error">
+  Based on the error information you've gathered:
+  
+  - **Database errors**: Check database connection and permissions
+  - **Permission errors**: Verify file/directory permissions (see [500 Internal Server Error](#500-internal-server-error-during-installation))
+  - **Missing dependencies**: Ensure all required PHP extensions are installed
+  - **Frontend JavaScript errors**: Check for conflicting scripts or browser compatibility issues
+  
+  <Tip>
+  The specific error message will guide you to the exact solution. Common fixes include updating file permissions, fixing database credentials, or installing missing PHP extensions.
+  </Tip>
+</Step>
+</Steps>
+
+**Related Documentation:**
+- [500 Internal Server Error During Installation](#500-internal-server-error-during-installation) - Permission and PHP configuration issues
+- [Database Connection Issues](#database-connection-issues) - Database-related errors
 
 ---
 
