@@ -954,7 +954,7 @@ Incomplete initial setup, cloud storage CORS misconfiguration, incorrect `.env` 
   Ensure you've completed all steps in the [Initial Setup Guide](/setup/initial-setup):
   
   1. Verify your site domain is configured correctly in **Settings > General**
-  2. Check that storage settings are properly configured in **Settings > Storage settings**
+  2. Check that storage settings are properly configured in **Settings > File storage**
   3. Ensure all required integrations are set up if using cloud storage
   
   <Warning>
@@ -984,7 +984,7 @@ Incomplete initial setup, cloud storage CORS misconfiguration, incorrect `.env` 
 <Step title="Check Secure URLs and Group Files Settings">
   The **Secure URLs** and **Group files** options should only be enabled when using cloud storage (AWS S3, DigitalOcean Spaces, etc.):
   
-  1. Navigate to **Settings > Storage settings** in the admin panel
+  1. Navigate to **Settings > File storage** in the admin panel
   2. Review the **Secure URLs** and **Group files** settings
   3. **If using local storage**, ensure both options are disabled:
      - **Secure URLs**: Should be turned **Off**
@@ -1025,7 +1025,7 @@ Incomplete initial setup, cloud storage CORS misconfiguration, incorrect `.env` 
 <Step title="Verify Storage Path and Permissions">
   Check that your storage configuration is correct:
   
-  1. Navigate to **Settings > Storage settings** in the admin panel
+  1. Navigate to **Settings > File storage** in the admin panel
   2. Verify the storage driver is set correctly (Local, S3, etc.)
   3. If using local storage, ensure the storage path is writable:
      ```bash
