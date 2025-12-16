@@ -7,11 +7,20 @@ description: Stay up-to-date with the latest features and improvements by follow
 Keeping your Aikeedo installation current ensures you benefit from the latest features, security patches, and performance enhancements. This guide provides a comprehensive, step-by-step process for updating Aikeedo, suitable for users of all technical levels.
 
 <Warning>
-  <b>Upgrading from v2.x to v3.0?</b> This guide is <u>not</u> suitable for major version upgrades. To upgrade from v2.x to v3.0, you must follow the dedicated <a href="/versioning/release-notes#migration-guide-upgrading-from-v2-x-to-v3-0">Migration Guide</a> instead. Attempting to use the standard update process may result in data loss or a broken installation.
+  <b>Upgrading from v2.x to v3.0?</b> This guide is <u>not</u> suitable for
+  major version upgrades. To upgrade from v2.x to v3.0, you must follow the
+  dedicated{' '}
+  <a href="/versioning/release-notes#migration-guide-upgrading-from-v2-x-to-v3-0">
+    Migration Guide
+  </a>{' '}
+  instead. Attempting to use the standard update process may result in data loss
+  or a broken installation.
 </Warning>
 
 <Note>
-  The migration guide is required for all major version upgrades (e.g., v2.x to v3.0). Use this update guide only for minor or patch updates within the same major version.
+  The migration guide is required for all major version upgrades (e.g., v2.x to
+  v3.0). Use this update guide only for minor or patch updates within the same
+  major version.
 </Note>
 
 ## Before You Begin
@@ -25,7 +34,8 @@ Before initiating the update process, it's crucial to take a few preparatory ste
 3. **Backup Your Data**: As a precautionary measure, create a complete backup of your Aikeedo data. This step is crucial to prevent any potential data loss during the update process.
 
 <Note>
-  Always perform updates in a staging environment first, if possible, to ensure compatibility with your specific setup.
+  Always perform updates in a staging environment first, if possible, to ensure
+  compatibility with your specific setup.
 </Note>
 
 ## Update Process
@@ -33,17 +43,21 @@ Before initiating the update process, it's crucial to take a few preparatory ste
 Follow these steps to update your Aikeedo installation:
 
 1. **Download the Latest Version**:
+
    - Obtain the latest Aikeedo package from the official source.
    - Extract the downloaded zip file on your local machine.
 
 2. **Locate the Update File**:
+
    - Find the `aikeedo-server-files.zip` file within the extracted contents.
 
 3. **Access the Admin Panel**:
+
    - Log in to your Aikeedo admin panel.
    - Navigate to the "Update" page in the admin dashboard.
 
 4. **Upload the Update File**:
+
    - Click on the "Choose File" button.
    - Select the `aikeedo-server-files.zip` file you located earlier.
 
@@ -52,19 +66,9 @@ Follow these steps to update your Aikeedo installation:
    - Follow any on-screen instructions carefully.
 
 <Warning>
-  The update process may take several minutes to complete. Do not close your browser or interrupt the process until it's finished.
+  The update process may take several minutes to complete. Do not close your
+  browser or interrupt the process until it's finished.
 </Warning>
-
-6. **Special Step for cPanel Users**:
-   If your installation environment requires the web root directory to be `public_html` instead of `public` (common in cPanel installations for the main domain), you'll need to take an additional manual step:
-
-   - Copy all files from the `public` directory to the `public_html` directory.
-   - Make sure to include hidden files and folders (such as `.htaccess` file or `.vite` directory).
-   - If necessary, enable the option to view hidden files in your file manager.
-
-<Note>
-  This step is crucial for ensuring all required files are in the correct location. Failing to copy hidden files may result in functionality issues.
-</Note>
 
 ## Post-Update Steps
 
@@ -75,6 +79,7 @@ After the update process completes:
 2. **Clear Cache**: In most cases, this step is not necessary. Aikeedo automatically manages its cache during updates. However, if you notice any display issues, you may want to clear your browser cache as a troubleshooting step.
 
 3. **Test Functionality**: Thoroughly test all aspects of your Aikeedo installation, including:
+
    - User authentication
    - AI-powered features
    - Payment integrations (if applicable)
