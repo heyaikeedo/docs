@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "willow",
+  "theme": "aspen",
   "name": "Aikeedo Docs",
   "colors": {
     "primary": "#24282c",
@@ -13,9 +13,6 @@
     "dark": "/logo/dark.svg"
   },
   "favicon": "/favicon.svg",
-  "background": {
-    "decoration": "windows"
-  },
   "navbar": {
     "links": [
       {
