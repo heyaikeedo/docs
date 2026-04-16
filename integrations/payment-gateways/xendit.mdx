@@ -1,0 +1,105 @@
+---
+title: 'Xendit'
+sidebarTitle: 'Xendit'
+description: 'Configure Xendit as a payment gateway in Aikeedo to accept one-time and recurring payments across Southeast Asia.'
+---
+
+import Support from '/snippets/support.mdx';
+
+The Xendit plugin adds payment acceptance for Southeast Asia to your Aikeedo platform. It supports one-time payment links and recurring subscription plans across six regional currencies, serving customers in Indonesia, the Philippines, Vietnam, Thailand, Singapore, and Malaysia.
+
+<Note>
+  Xendit is an additional plugin available for purchase from the [Aikeedo
+  Marketplace](https://aikeedo.com/marketplace/xendit/). Install it from your
+  admin panel before following this guide.
+</Note>
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- A [Xendit](https://www.xendit.co/) business account
+- The Xendit plugin installed on your Aikeedo installation
+- Access to your Aikeedo admin panel
+
+## Supported currencies
+
+Xendit supports the following Southeast Asian currencies:
+
+| Currency | Country     |
+| -------- | ----------- |
+| IDR      | Indonesia   |
+| PHP      | Philippines |
+| VND      | Vietnam     |
+| THB      | Thailand    |
+| SGD      | Singapore   |
+| MYR      | Malaysia    |
+
+## Step 1: Obtain your API key and webhook token
+
+1. Log in to your [Xendit Dashboard](https://dashboard.xendit.co/).
+2. Navigate to **Settings > API Keys**.
+3. Copy your **Secret API Key** (starts with `xnd_`).
+
+<Warning>
+  Keep your secret API key confidential. Never share it publicly or commit it to
+  version control.
+</Warning>
+
+To authenticate incoming webhooks:
+
+1. In the Xendit Dashboard, navigate to **Settings > Webhooks**.
+2. Copy the **Webhook Verification Token** shown at the top of the page. Aikeedo uses this token to verify that incoming webhook events are genuine.
+
+## Step 2: Configure the webhook
+
+1. In the Xendit Dashboard, navigate to **Settings > Webhooks**.
+2. Under the relevant event types, add your webhook URL:
+   ```
+   https://your-aikeedo-domain.com/webhooks/xendit
+   ```
+3. Enable at minimum the **Subscription** events to keep subscription status in sync.
+4. Save the webhook configuration.
+
+## Step 3: Enable Xendit in Aikeedo
+
+1. Log in to your Aikeedo admin panel.
+2. Navigate to **Settings > Payments > Xendit**.
+3. Toggle the switch to enable Xendit.
+4. Enter your **Secret API Key**.
+5. Enter your **Webhook Verification Token**.
+6. Click **Save changes**.
+
+<Check>Xendit is now enabled on your platform.</Check>
+
+## Payment flows
+
+**One-time payments** — Aikeedo creates a Xendit payment session (payment link) and redirects the customer to the Xendit-hosted payment page. After payment, the customer is redirected back to your platform.
+
+**Recurring subscriptions** — Aikeedo creates a Xendit recurring plan and redirects the customer to an authorization page for the initial payment. Subsequent billing cycles are charged automatically. When a subscription is cancelled in Aikeedo, the corresponding Xendit recurring plan is inactivated.
+
+<Note>
+  Xendit recurring plans do not support billing dates on days 29–31. If a
+  subscription would fall on one of those days, Aikeedo automatically shifts the
+  anchor date to the 1st of the following month.
+</Note>
+
+## Testing
+
+Xendit provides a test mode accessible with test-mode API keys. To test your integration:
+
+1. In the Xendit Dashboard, switch to **Test Mode** and copy your test-mode Secret API Key.
+2. Enter the test key in **Settings > Payments > Xendit** in Aikeedo.
+3. Use Xendit's test payment methods to simulate one-time and recurring payment scenarios.
+4. Verify that webhook events are received and subscription statuses are updated correctly in Aikeedo.
+
+Switch back to your live API key when you are ready to accept real payments.
+
+## Troubleshooting
+
+- **Payments not completing**: Verify that your secret API key is correct and that the account is active in Xendit.
+- **Webhooks not received**: Confirm that the webhook URL is publicly accessible and that the correct event types are subscribed in the Xendit Dashboard.
+- **Webhook verification failures**: Ensure the **Webhook Verification Token** in Aikeedo matches the token shown in the Xendit Dashboard under **Settings > Webhooks**.
+- **Recurring plan errors**: Check that your Xendit account is enabled for recurring payments and that the selected currency is supported in your account region.
+
+<Support />

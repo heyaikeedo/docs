@@ -1,0 +1,70 @@
+---
+title: 'Stripe Tax Engine'
+sidebarTitle: 'Stripe Tax'
+description: 'Configure automatic tax calculation in Aikeedo using the Stripe Tax Engine plugin, powered by the Stripe Tax Calculations API.'
+---
+
+import Support from '/snippets/support.mdx';
+
+The Stripe Tax Engine plugin integrates Aikeedo's billing system with the [Stripe Tax Calculations API](https://stripe.com/docs/tax). When active, it automatically determines the correct tax amount for each purchase based on the customer's billing address and your Stripe Tax configuration — without requiring you to manually define rates or rules.
+
+<Note>
+  Stripe Tax Engine is an additional plugin available for purchase from the
+  [Aikeedo Marketplace](https://aikeedo.com/marketplace/stripe-tax/). Install it
+  from your admin panel before following this guide.
+</Note>
+
+<Note>
+  This plugin calculates tax for standard (non-hosted) Stripe checkout flows. If
+  you use [Stripe Hosted
+  Checkout](/integrations/payment-gateways/stripe#form-types), consider using
+  [Stripe Automatic Tax
+  Collection](/integrations/payment-gateways/stripe#stripe-automatic-tax-collection)
+  instead, which handles tax entirely within the Stripe-hosted flow.
+</Note>
+
+## Prerequisites
+
+The settings page includes a built-in checklist that shows whether all prerequisites are met:
+
+- **Stripe integration enabled** — Stripe must be enabled in your payment settings. Tax is only calculated while Stripe is active; if Stripe is disabled, no tax lines are added.
+- **Secret key configured** — your Stripe secret key must be set in the Stripe payment settings.
+- **Stripe Tax active on account** — Stripe Tax must be activated in your [Stripe Dashboard](https://dashboard.stripe.com/tax/registrations), with registrations for the jurisdictions where you have tax obligations.
+
+<Warning>
+  Tax will only be calculated for jurisdictions where you have an active
+  registration in your Stripe account. Review [Stripe's Tax
+  documentation](https://stripe.com/docs/tax) to understand what registrations
+  are required for your business.
+</Warning>
+
+## Configuration
+
+Navigate to **Settings > Tax Engines > Stripe Tax** in your admin panel.
+
+### Product tax code (optional)
+
+A Stripe product tax code tells Stripe what you sell (for example, SaaS vs. physical goods) so the correct tax rules apply. Enter the code in the **Tax code** field (format: `txcd_...`).
+
+If left blank, Stripe uses the default tax code configured in your Stripe Dashboard Tax settings.
+
+To find the right code:
+
+- [Stripe Tax: product tax categories](https://stripe.com/docs/tax/tax-categories) — lists common codes for software, SaaS, and other product types.
+- [Stripe Dashboard: Tax settings](https://dashboard.stripe.com/settings/tax) — set your default product tax code and manage Stripe Tax for your account.
+
+### API keys
+
+Stripe Tax uses the same API keys as your Stripe Payments integration. No separate key configuration is required on this page.
+
+## Activating the plugin
+
+Once configured, select **Stripe Tax** as the active tax engine in **Settings > Billing Configuration > Tax engine**. See the [Tax Engines overview](/integrations/tax-engines/overview#selecting-the-active-tax-engine) for details.
+
+## Troubleshooting
+
+- **Checklist items not passing**: Address each failing item — ensure Stripe is enabled in Payments, the secret key is set, and Stripe Tax is active on your Stripe account.
+- **Tax not appearing at checkout**: Confirm that the customer has a billing address on file and that you have active Stripe Tax registrations for their jurisdiction.
+- **Incorrect tax amounts**: Review your Stripe Tax registrations and product tax code to ensure they match your product category and the customer's jurisdiction.
+
+<Support />

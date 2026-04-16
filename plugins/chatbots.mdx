@@ -1,0 +1,147 @@
+---
+title: 'Chatbots'
+sidebarTitle: 'Chatbots'
+description: 'Install and configure the Chatbots plugin to let your subscribers build and embed AI-powered chatbots on their own websites.'
+---
+
+import Support from '/snippets/support.mdx';
+
+<Warning>
+  The Chatbots plugin is currently **experimental**. It is fully functional, but
+  the API and admin configuration options may change in future releases.
+</Warning>
+
+The Chatbots plugin adds a chatbot builder to your Aikeedo platform. Once installed, your subscribers can create AI-powered chatbots from within their workspace, train them on custom knowledge base sources, and embed the widget on their own websites. All conversations and contacts from the embedded widget are tracked in the subscriber's workspace inbox.
+
+## Prerequisites
+
+- Aikeedo v4.0.0 or later
+- At least one AI provider configured (OpenAI, Anthropic, Cohere, xAI, Ollama, or a custom OpenAI-compatible provider)
+- Access to your Aikeedo admin panel
+
+## Installation
+
+The Chatbots plugin is available for purchase from the [Aikeedo Marketplace](https://aikeedo.com/marketplace/chatbots/).
+
+1. Purchase and download the plugin package.
+2. In your admin panel, navigate to **Plugins** and upload the package.
+3. Click **Install** and follow the on-screen instructions.
+
+<Check>
+  Once installed, the Chatbots, Sources, Inbox, and Contacts sections become
+  available in your subscribers' workspaces.
+</Check>
+
+## Admin settings
+
+### Platform-level settings
+
+Navigate to **Settings > Features > Chatbots** in your admin panel to configure platform-wide settings.
+
+**General**
+
+- **Status** — enable or disable the Chatbots feature across your entire platform.
+
+**Powered by**
+
+Controls the branding shown at the bottom of all embedded chatbot widgets:
+
+- **Icon** — upload your brand icon (PNG, SVG, or WEBP, recommended 64×64px).
+- **Brand name to display** — the name shown next to the "Powered by" label. Leave empty to hide the branding section entirely.
+- **Link to the brand** — the URL the branding label links to.
+
+**Instruction Templates**
+
+Predefined system prompts that subscribers can select when configuring their chatbot agent:
+
+- **Enable instruction templates** — when enabled, subscribers see a template selector when setting up their chatbot's agent instructions.
+- **Manage Instructions** — opens the instruction templates editor where you can create, edit, and import built-in prompt templates. A set of ready-to-use templates (e.g. "Base instructions", "Customer support agent") can be imported with one click.
+
+### Plan-level settings
+
+Per-plan chatbot controls are in the **Extensions** tab of each plan's configuration (**Plans > [plan name] > Extensions > Chatbots**):
+
+- **Allow Branding Removal** — when enabled, subscribers on this plan can hide the "Powered by" text from their chatbot widget.
+- **Chatbot Limit** — maximum number of chatbots a subscriber on this plan can create. Leave blank to allow unlimited chatbots.
+
+## Supported AI providers
+
+The Chatbots plugin works with all AI providers already configured on your platform:
+
+- OpenAI
+- Anthropic
+- Cohere
+- xAI (Grok)
+- Ollama
+- Any custom OpenAI-compatible provider
+
+Subscribers choose which model powers their chatbot from the models available on their plan.
+
+## Subscriber experience (overview)
+
+The chatbot builder is subscriber-operated, but understanding its structure helps you support your users.
+
+### Creating a chatbot
+
+Subscribers navigate to **Chatbots** in their workspace sidebar and click **+ Add new**. They enter a chatbot name (internal only — not visible to end users) to create it.
+
+### Chatbot editor
+
+Each chatbot has a left-sidebar editor with the following sections:
+
+**General**
+
+- **Name** — internal identifier, not shown to end users.
+- **Access** — either **Only me** (only the owner can configure it) or **Workspace** (all workspace members can configure it). Conversations, contacts, and inbox are always shared with all workspace members.
+- **Status** — toggle between Published and unpublished.
+
+**Agent**
+
+- Configure the AI model, instructions (system prompt), and select an instruction template if enabled.
+
+**Train**
+
+- Add knowledge base sources to ground the chatbot's responses. Sources can be added as:
+  - **Select sources** — pick from existing Sources in the workspace
+  - **Add files** — upload documents or PDFs directly
+  - **Add links** — add URLs to crawl
+
+**Widget > Content**
+
+- Configure the three widget spaces:
+  - **Home** — landing screen with welcome message, quick-action buttons, and links
+  - **Messages** — the main conversation interface
+  - **Help** — FAQ links and a help center button
+
+**Widget > Style**
+
+- **Color scheme** — Light or Dark
+- **Position** — Right or Left
+- **Chat icon** — custom launcher icon (PNG, SVG, WEBP up to 1MB)
+- **Colors** — primary color and text color overrides
+
+**Widget > Security**
+
+- **Domain restrictions** — restrict the widget to specific trusted domains. Supports wildcards (e.g. `*.example.com`). Note that `*.example.com` does not include the apex domain `example.com` — add it separately if needed. Leave the list empty to allow the widget on any domain.
+- **Identity verification** — generate a JWT secret key to verify logged-in end-users. Enables personalized, secure interactions.
+
+**Widget > Deploy**
+
+- Copy the JavaScript embed snippet and paste it into any website's HTML to install the widget.
+
+**Engagement > Conversations**
+
+- All conversations initiated through the embedded widget, with full message history and contact details.
+
+**Engagement > Contacts**
+
+- All contacts captured through the widget, including first seen date, location, IP, and conversation history.
+
+## Troubleshooting
+
+- **Chatbots section not appearing after installation**: Clear the admin cache via **Settings > Advanced > Clear Cache** and reload.
+- **Chatbot not responding**: Verify that at least one AI provider is configured and that the subscriber's plan grants access to at least one model.
+- **Widget not loading on a website**: Check that the website's domain is listed under trusted domains in the chatbot's Security settings, or that domain restriction is disabled.
+- **"Powered by" still visible after plan allows removal**: Confirm that **Allow Branding Removal** is enabled on the subscriber's plan, and that the subscriber has toggled it off in their widget settings.
+
+<Support />

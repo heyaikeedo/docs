@@ -1,0 +1,67 @@
+---
+title: 'Tax Engines'
+sidebarTitle: 'Overview'
+description: 'Configure tax calculation for your Aikeedo platform using tax engine plugins to collect the correct tax on subscription and one-time purchases.'
+---
+
+import Support from '/snippets/support.mdx';
+
+## Overview
+
+Aikeedo v4.0 introduces a core tax infrastructure layer that enables tax calculation on purchases made through your platform. A tax engine is a plugin that calculates the tax amount on each order based on the customer's billing address and the configured rules or connected tax service.
+
+You can install multiple tax engine plugins and switch between them at any time from your billing settings. Only one engine is active at a time, but all installed engines remain configured and ready to use.
+
+## Available tax engine plugins
+
+<CardGroup cols={2}>
+<Card title="Manual Tax Engine" icon="sliders" href="/integrations/tax-engines/manual-tax">
+  Define flat and percentage tax rates manually by country and subdivision. Full control, no external services required.
+</Card>
+
+<Card title="Stripe Tax" icon="stripe" href="/integrations/tax-engines/stripe-tax">
+  Automatic tax calculation via the Stripe Tax Calculations API. Requires Stripe to be configured as your payment gateway.
+</Card>
+</CardGroup>
+
+## Selecting the active tax engine
+
+Installing a tax engine plugin does not activate it automatically. You select the active engine from your billing configuration:
+
+1. Navigate to **Settings > Billing** in your admin panel.
+2. Under the **Tax** section, open the **Tax engine** dropdown.
+3. Select the engine you want to use, or choose **No tax** to disable tax calculation entirely.
+4. Click **Save changes**.
+
+The **Tax Engines** page (**Settings > Tax Engines**) is where you configure each individual engine's rules and settings independently of which one is currently active.
+
+## Tax base
+
+In **Settings > Billing > Tax**, you can also set the **Tax base** — the amount that tax is calculated against:
+
+| Option                   | Description                                                                                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Net after coupon**     | Tax is calculated on the discounted amount after any coupon is applied. If no coupon applies, the full plan list price is used as the base. |
+| **Full plan list price** | Tax is always calculated on the full plan price, regardless of any discounts.                                                               |
+
+## Stripe Automatic Tax Collection
+
+If you use Stripe as your payment gateway with the **Hosted Checkout** form type, there is an additional option that does not require a tax engine plugin: [Stripe Automatic Tax Collection](/integrations/payment-gateways/stripe#stripe-automatic-tax-collection).
+
+With this feature enabled, Stripe handles both tax calculation and collection end-to-end within its hosted checkout flow. This only applies to payments processed through Stripe — other payment gateways are unaffected. It is also distinct from the Stripe Tax Engine plugin, which calculates tax for non-hosted Stripe checkout flows.
+
+## How tax is applied
+
+1. A customer proceeds to checkout with a billing address on file.
+2. Aikeedo calls the active tax engine with the order amount and billing address.
+3. The tax engine returns one or more tax lines (name, rate, amount).
+4. The tax lines are displayed to the customer and included in the total.
+5. The payment gateway collects the full amount, including tax.
+
+<Note>
+  Tax is calculated based on the customer's **workspace billing address**.
+  Customers must have a billing address on file for tax to be applied. If no
+  address is present, no tax is charged.
+</Note>
+
+<Support />

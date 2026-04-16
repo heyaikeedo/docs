@@ -33,7 +33,8 @@ To connect Aikeedo with Stripe, you'll need to retrieve your API keys:
    - **Secret key**: Starts with `sk_`
 
 <Note>
-  Keep your secret key confidential! Never share it publicly or include it in client-side code.
+  Keep your secret key confidential! Never share it publicly or include it in
+  client-side code.
 </Note>
 
 ## Step 3: Set Up Stripe Webhooks
@@ -57,7 +58,8 @@ Webhooks are crucial for handling recurring payments and keeping your Aikeedo pl
 6. After creation, you'll see a "Signing secret" - copy this for later use
 
 <Tip>
-  If you're not sure which events to select, it's safe to choose "Select all events" for comprehensive coverage.
+  If you're not sure which events to select, it's safe to choose "Select all
+  events" for comprehensive coverage.
 </Tip>
 
 ## Step 4: Enable Stripe in Aikeedo
@@ -101,3 +103,45 @@ If you encounter any issues with your Stripe integration, try these steps:
 4. Check Aikeedo's error logs for any integration-related issues
 
 By following this guide, you've successfully integrated Stripe payments into your Aikeedo platform, providing your users with a secure and efficient payment experience.
+
+## Form types
+
+Aikeedo supports three form types for Stripe payments. You can select the form type in **Settings > Payments > Stripe** under the **Form type** dropdown:
+
+| Form type           | Description                                                                                                              |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **Simple**          | A minimal card-only input form.                                                                                          |
+| **Advanced**        | A full card form that includes all payment methods enabled in your Stripe account (e.g. wallets, local methods).         |
+| **Hosted Checkout** | Redirects customers to a Stripe-hosted checkout page to complete payment, rather than an embedded form on your platform. |
+
+## Stripe Automatic Tax Collection
+
+When **Hosted Checkout** is selected as the form type, an additional **Automatic Tax** option becomes available. When enabled, Stripe determines the correct tax rates and collects tax on your behalf — no manual rate configuration or tax engine plugin required.
+
+To enable Stripe Automatic Tax Collection:
+
+1. Navigate to **Settings > Payments > Stripe** in your admin panel.
+2. Set **Form type** to **Hosted Checkout**.
+3. Under the **Tax** section, toggle on **Automatic Tax**.
+4. Click **Save changes**.
+
+<Warning>
+  Stripe Tax must be activated in your [Stripe
+  Dashboard](https://dashboard.stripe.com/tax/registrations) before enabling
+  this option. You should also set a default product tax code in your Stripe Tax
+  settings as a fallback.
+</Warning>
+
+<Note>
+  Enable Automatic Tax only when no other tax engine plugin is active in your
+  billing settings. Running both simultaneously will result in double tax
+  calculation.
+</Note>
+
+<Note>
+  Stripe Automatic Tax Collection is a separate feature from the [Stripe Tax
+  Engine plugin](/integrations/tax-engines/stripe-tax). The plugin calculates
+  tax using the Stripe Tax Calculations API for use within Aikeedo's checkout
+  flow, while Automatic Tax Collection delegates tax handling entirely to
+  Stripe.
+</Note>

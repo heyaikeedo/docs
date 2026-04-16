@@ -165,7 +165,17 @@
                   "integrations/payment-gateways/paystack",
                   "integrations/payment-gateways/razorpay",
                   "integrations/payment-gateways/iyzico",
-                  "integrations/payment-gateways/cryptomus"
+                  "integrations/payment-gateways/cryptomus",
+                  "integrations/payment-gateways/mercadopago",
+                  "integrations/payment-gateways/xendit"
+                ]
+              },
+              {
+                "group": "Tax Engines",
+                "pages": [
+                  "integrations/tax-engines/overview",
+                  "integrations/tax-engines/manual-tax",
+                  "integrations/tax-engines/stripe-tax"
                 ]
               },
               {
@@ -219,6 +229,12 @@
                   "integrations/custom-scripts"
                 ]
               }
+            ]
+          },
+          {
+            "group": "Plugins",
+            "pages": [
+              "plugins/chatbots"
             ]
           },
           {

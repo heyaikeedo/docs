@@ -1,0 +1,90 @@
+---
+title: "Mercado Pago"
+sidebarTitle: "Mercado Pago"
+description: "Configure Mercado Pago as a payment gateway in Aikeedo to accept one-time and recurring payments across Latin America."
+---
+
+import Support from '/snippets/support.mdx';
+
+The Mercado Pago plugin adds payment acceptance for Latin America to your Aikeedo platform. It supports one-time purchases and recurring subscription billing across seven regional currencies, using Mercado Pago's hosted checkout and Preapproval subscription flows.
+
+<Note>
+  Mercado Pago is an additional plugin available for purchase from the [Aikeedo Marketplace](https://aikeedo.com/marketplace/mercadopago/). Install it from your admin panel before following this guide.
+</Note>
+
+## Prerequisites
+
+- A [Mercado Pago](https://www.mercadopago.com/) business account
+- The Mercado Pago plugin installed on your Aikeedo installation
+- Access to your Aikeedo admin panel
+
+## Supported currencies
+
+| Currency | Country |
+|----------|---------|
+| ARS | Argentina |
+| BRL | Brazil |
+| CLP | Chile |
+| COP | Colombia |
+| MXN | Mexico |
+| PEN | Peru |
+| UYU | Uruguay |
+
+## Step 1: Obtain your access tokens
+
+You need separate **Access Token** values for test and live modes. Refer to the [Mercado Pago credentials documentation](https://www.mercadopago.com.ar/developers/en/docs/subscriptions/additional-content/your-integrations/credentials) for instructions on how to find and activate your credentials.
+
+<Warning>
+  Keep your access tokens confidential. Never share them publicly or commit them to version control.
+</Warning>
+
+## Step 2: Set up the webhook and obtain the signing secret
+
+Aikeedo verifies incoming Mercado Pago webhooks using an HMAC-SHA256 signature. You need to register your webhook URL and obtain the signing secret Mercado Pago provides.
+
+1. In the Mercado Pago Developer Dashboard, navigate to **Notifications > Webhooks**.
+2. Click **Add webhook**.
+3. Set the notification URL to:
+   ```
+   https://your-aikeedo-domain.com/webhooks/mercadopago
+   ```
+4. Under **Events**, select all events, or at minimum **Subscription preapproval** (`subscription_preapproval`) to receive subscription lifecycle events.
+5. Save the webhook. Mercado Pago will display a **signing secret** — copy it.
+6. Repeat this for both your test and live webhook configurations to obtain separate signing secrets for each mode.
+
+## Step 3: Enable Mercado Pago in Aikeedo
+
+1. In your Aikeedo admin panel, navigate to **Settings > Payments > Mercado Pago**.
+2. Toggle the switch to enable Mercado Pago.
+3. Set the **Charge Currency** — select a specific currency or leave it as **Inherit** to use the platform's default currency.
+4. Select the **Mode**: **Test** for development, **Live** for production.
+5. Enter your credentials for each mode:
+   - **Live**: live access token and live webhook signing secret
+   - **Test**: test access token and test webhook signing secret
+6. Click **Save changes**.
+
+<Check>
+  Mercado Pago is now enabled on your platform.
+</Check>
+
+## Payment flows
+
+**One-time payments** — Aikeedo creates a Checkout Preference and redirects the customer to the Mercado Pago-hosted checkout page. After payment, the customer is redirected back to your platform and the payment is verified against the order.
+
+**Recurring subscriptions** — Aikeedo creates a Mercado Pago Preapproval and redirects the customer to authorize it. Subsequent billing cycles are charged automatically on a monthly or yearly cadence. When a subscription is cancelled in Aikeedo, it is cancelled in Mercado Pago via the API. If Mercado Pago sends a `cancelled` or `paused` status via webhook, Aikeedo cancels the subscription on its side as well.
+
+## Testing
+
+1. Set the mode to **Test** in **Settings > Payments > Mercado Pago**.
+2. Use [Mercado Pago test users and cards](https://www.mercadopago.com/developers/en/docs/checkout-pro/additional-content/your-integrations/test/cards) to simulate payment scenarios.
+3. Verify that one-time payments and subscriptions complete correctly and that webhook events are received and processed.
+
+Switch to **Live** mode when you are ready to accept real payments.
+
+## Troubleshooting
+
+- **Payments not completing**: Verify that the access token matches the selected mode (test/live) and that the application credentials are active.
+- **Webhooks not received**: Confirm that the webhook URL is publicly accessible and that the `subscription_preapproval` event type is selected in the Mercado Pago developer dashboard.
+- **Webhook signature verification failing**: Ensure the **Webhook Signing Secret** in Aikeedo matches the secret shown in the Mercado Pago dashboard for the registered webhook endpoint.
+
+<Support />

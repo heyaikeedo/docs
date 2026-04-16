@@ -1,0 +1,76 @@
+---
+title: 'Manual Tax Engine'
+sidebarTitle: 'Manual Tax'
+description: 'Configure flat and percentage tax rates manually in Aikeedo using the Manual Tax Engine plugin, with support for per-country rules and multiple stacked rates.'
+---
+
+import Support from '/snippets/support.mdx';
+
+The Manual Tax Engine plugin lets you define your own tax rates without relying on any external service. You configure a global default rate as a fallback, then add per-country rules with one or more named rates each. Rates can be a percentage of the order amount or a fixed currency amount.
+
+<Note>
+  Manual Tax Engine is an additional plugin available for purchase from the
+  [Aikeedo Marketplace](https://aikeedo.com/marketplace/manual-tax/). Install it
+  from your admin panel before following this guide.
+</Note>
+
+<Warning>
+  Tax law varies by jurisdiction. Consult a qualified tax professional to
+  determine the correct rates and rules for your situation. Aikeedo does not
+  provide tax advice.
+</Warning>
+
+## Opening the settings
+
+Navigate to **Settings > Tax Engines** in your admin panel, then click **Manual Tax**.
+
+## Default tax rate
+
+The **Default Tax Rate** section at the top of the page applies a fallback rate to any customer whose billing address does not match a country rule.
+
+- Use the toggle to enable or disable the default rate entirely.
+- Enter the rate value in the **Rate** field. The rate is a percentage by default — click the **%** button to switch to a fixed currency amount instead.
+
+## Country rules
+
+The **Rules** section lists per-country tax rules. Each rule overrides the default rate for customers billing from that country and can contain multiple named rates that are added together.
+
+### Adding a rule
+
+1. Click **+ Add rule**.
+2. Select a country from the dropdown.
+3. If the selected country has subdivisions (states or provinces), an additional **Subdivision** dropdown appears. Selecting a subdivision is optional — leave it blank to apply the rule to the entire country, or select a specific state/province to target that subdivision only.
+4. Click **Add rule** to confirm.
+
+The new rule appears in the rules list. Click on it to open the rule and add tax rates.
+
+### Adding rates to a rule
+
+Each country rule can have one or more named rates:
+
+1. Click on a country rule to open it.
+2. Click **+ Add rate**.
+3. Enter a **name** (shown to the customer, e.g. "VAT") and a **value** (percentage or fixed amount).
+4. Repeat for any additional rates.
+
+Multiple rates within a rule are added together. For example, a rule with 18% VAT and 14% Custom Handling Fee results in a combined 32% tax for customers in that country.
+
+### Zero-rating a country
+
+To explicitly exempt a country from tax, add a rule for that country and set the rate value to `0`. This ensures the default rate does not apply to customers from that country.
+
+<Note>
+  When a country-level rule (no subdivision selected) exists for a country,
+  subdivision-level rules for that same country are ignored. Subdivision rules
+  only apply when there is no country-level rule for that country.
+</Note>
+
+## Saving changes
+
+Click **Save changes** at the bottom of the page to apply your configuration.
+
+## Testing
+
+After configuring your rules, create a test purchase using a billing address that matches each of your configured countries. Verify that the correct tax rates appear in the checkout summary.
+
+<Support />
