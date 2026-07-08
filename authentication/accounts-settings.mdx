@@ -82,6 +82,24 @@ Limit the number of workspaces a user can own.
 - Leave blank or set to "Unlimited" for no limit
 - This helps control resource usage and prevents workspace spam
 
+### Account Deletion
+
+Allow users to permanently delete their own accounts.
+
+- **Enabled**: Users see a **Danger zone** section on their account page where they can delete their account
+- **Disabled**: Only admins can delete user accounts from the admin panel
+
+When a user deletes their account:
+
+- They must confirm the action and enter their password (if they have one)
+- Subscriptions for all owned workspaces are cancelled
+- All owned workspaces and their data are permanently deleted
+- All personal data associated with the account is permanently deleted
+
+<Warning>
+  Account deletion cannot be undone. Admin accounts cannot delete themselves through self-service.
+</Warning>
+
 ## Email Verification Policy
 
 The email verification policy determines how strictly your platform enforces email verification for new and existing users. You can choose from three levels of verification:

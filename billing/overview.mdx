@@ -65,6 +65,32 @@ Select a provider for currency exchange rates. Options include:
   Additional currency providers can be added through plugins, expanding your options for managing multi-currency transactions.
 </Note>
 
+### Detailed Pricing Page URL
+
+Configure where the **Detailed pricing table** button on the in-app Plans page links.
+
+- Use `/#pricing` to point to the built-in landing page pricing section
+- Use a full URL (for example, `https://yoursite.com/pricing`) when you use an external marketing site
+- Leave empty to hide the button on the Plans page
+
+<Tip>
+  If you disable the built-in landing page and host pricing on WordPress, Webflow, or another external site, set this URL so the Plans page button does not link to a broken anchor. See [Landing Page Customization](/website-basics/landing-page).
+</Tip>
+
+### Credits per Currency
+
+Set how many credits equal one unit of your default currency. This setting is shared across billing modes.
+
+- In **credit metering** mode: converts currency amounts to credits when users purchase add-on credits at checkout
+- In **session-based usage** mode: converts add-on credit balances to currency for display in the app
+
+- Enter the number of credits users receive per unit of your default currency
+- Example: 100 credits per $1.00 USD
+
+<Note>
+  In session-based usage mode, this field appears under **Usage mode**. In credit metering mode, it appears under **Custom Credit Purchases** when add-on purchases are enabled.
+</Note>
+
 ## Trial Configuration
 
 ### Trial Period Days
@@ -113,6 +139,55 @@ Define the plan users will be automatically moved to if their current subscripti
   Ensure you have created appropriate pricing plans before configuring the Sign-Up and Fallback plans to provide a smooth user experience.
 </Note>
 
+## Usage Mode
+
+Choose how usage limits are presented and enforced site-wide at **Settings > Billing > Usage mode**. Credits remain the internal billing unit in both modes.
+
+### Credit Metering (default)
+
+The default mode. Users see credit balances throughout the app.
+
+- Monthly plan credits are the only usage pool
+- No session windows or pacing
+- Usage logs remain visible
+
+### Session-Based Usage
+
+An alternative that hides credit balances and paces usage through configurable session windows for a smoother, "limitless" feel — this is not unlimited usage.
+
+- Users see session usage as a percentage and when the current session resets
+- Credit balances are hidden app-wide; add-on balances display as currency
+- A dedicated usage page is available at `/app/billing/usage`
+- Usage logs are hidden and redirect to the dashboard
+- When the session cap is reached, a limit banner appears in chat with a **Buy usage credits** call to action
+
+#### Session Duration
+
+Set how long each usage session lasts (1–24 hours). Each workspace session starts on first billable usage and resets after the configured duration.
+
+The session cap is calculated from the plan's monthly credits and session duration:
+
+```
+floor(monthly_credits × session_hours / (30 × 24))
+```
+
+Plans with unlimited monthly credits skip the session cap.
+
+#### How Limits Are Enforced
+
+1. Monthly plan credits are checked first
+2. If credits remain, usage is allowed and counts toward the session cap
+3. When the session cap is reached, add-on credits allow continued usage
+4. If no add-on credits are available, new operations are blocked until the session resets
+
+<Info>
+  For add-on credit behavior in session mode, see [Plans, Snapshots & Subscriptions](/billing/plans-snapshots-subscriptions#add-on-credits).
+</Info>
+
+#### BYOK in Session Mode
+
+Workspaces using BYOK (Bring Your Own Key) for OpenAI or Anthropic skip session gates when usage is zero-cost for those providers. Other models still consume credits and count toward the session cap. See [BYOK](/advanced/byok).
+
 ## Custom Credit Purchases
 
 ### Enable Custom Credit Purchases
@@ -122,12 +197,9 @@ Allow users to purchase additional credits beyond their subscription plan.
 - **Enabled**: Users can purchase additional credits with custom amounts
 - **Disabled**: Users can only use credits included in their subscription plan
 
-### Credits per USD
+### Credits per Currency
 
-Set the exchange rate for credit purchases.
-
-- Enter the number of credits users receive per USD spent
-- Example: 100 credits per $1.00 USD
+When custom credit purchases are enabled in **credit metering** mode, set the exchange rate here. See [Credits per Currency](#credits-per-currency) under General Settings for details.
 
 ### Minimum Purchase Amount
 
