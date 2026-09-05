@@ -426,6 +426,19 @@ The starter kit includes automatic translation extraction:
 - **Translation file watching** during development
 - **Uses PHP's Gettext** for translations
 
+You can also work on a theme's translations from an Aikeedo installation, which
+is the only way to fill them in automatically:
+
+```bash
+php bin/console app:locale:extract --path=../my-theme
+php bin/console app:locale:translate --path=../my-theme --lang=de-DE
+```
+
+<Tip>
+  Point `--path` at your theme's own repository rather than the built copy under
+  `extra/`. See [Localization](/advanced/localization#themes-and-plugins).
+</Tip>
+
 ### Available Commands
 
 | Command         | Purpose                          |
