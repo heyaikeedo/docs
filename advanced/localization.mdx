@@ -67,8 +67,9 @@ After changing any wording in your templates:
     ```
 
     You will be asked which targets to scan. Choose **Core application** for the
-    app and admin interface, or pick one of the plugins and themes found on your
-    installation.
+    app and admin interface, **Everything** for that plus every plugin and theme
+    on your installation, or name them individually — several at once, separated
+    by commas.
   </Step>
 
   <Step title="Translate what is missing">
@@ -76,8 +77,9 @@ After changing any wording in your templates:
     php bin/console app:locale:translate
     ```
 
-    You will be asked which languages to do, then shown how many strings and API
-    requests that means before anything is sent.
+    You will be asked which languages to do — **All languages**, or a few by
+    name — then shown how many strings and API requests that means before
+    anything is sent.
   </Step>
 
   <Step title="Check the result">
@@ -106,10 +108,14 @@ After editing a `.po` file by hand, rebuild the browser dictionaries:
 php bin/console app:locale:build
 ```
 
+<Tip>
+  No terminal? **Settings → Clear cache** in the admin area rebuilds them too.
+</Tip>
+
 <Warning>
   This is the one step that is easy to forget. If your changes show up on
   server-rendered pages but not in toasts, buttons or other interface text
-  produced by JavaScript, run the build command.
+  produced by JavaScript, the dictionaries are stale — rebuild them.
 </Warning>
 
 ## The AI translator
@@ -257,8 +263,14 @@ include:
 
 ```bash
 php bin/console app:locale:extract --target=heyaikeedo/chatbots
-php bin/console app:locale:extract --all
+php bin/console app:locale:extract --target=all
 ```
+
+<Note>
+  Installing, updating or removing a plugin rebuilds the browser dictionaries on
+  its own, so a plugin that ships its own translations works as soon as it is
+  installed.
+</Note>
 
 <Note>
   What ships inside `extra/` is a built copy of a theme, not its sources. If you
@@ -360,13 +372,18 @@ as a globe icon or the current language code in the top-right corner.
 
 <AccordionGroup>
   <Accordion title="Interface text produced by JavaScript is still English" icon="triangle-exclamation">
-    The browser dictionaries are out of date. Run:
+    The browser dictionaries are out of date. The quickest fix needs no
+    terminal: **Settings → Clear cache** in the admin area rebuilds them.
+
+    From the command line:
 
     ```bash
     php bin/console app:locale:build
     ```
 
-    If it reports that it cannot write, make `/{webroot}/locale` writable.
+    If neither changes anything, `/{webroot}/locale` is most likely not
+    writable — the rebuild is skipped rather than allowed to fail, and the
+    reason is written to the application log.
   </Accordion>
 
   <Accordion title="A language does not appear in the switcher" icon="globe">
