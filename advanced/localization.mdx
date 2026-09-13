@@ -1,6 +1,6 @@
 ---
 title: Localization
-description: 'Translate Aikeedo into any language with the built-in extract, translate and build commands, manage locale.json, and let users pick their language.'
+description: 'Translate Aikeedo into any language with the built-in extract, translate and build commands, manage available languages, and let users pick their language.'
 ---
 
 import Support from '/snippets/support.mdx';
@@ -204,7 +204,32 @@ php bin/console app:locale:translate \
 
 ## Managing available languages
 
-Open `/locale/locale.json` to control which languages your installation offers:
+Go to **Settings → Languages** in the admin area. The page lists every language
+that ships with Aikeedo, with:
+
+- **Enable toggle** — enabled languages appear in the language switcher and can
+  be chosen by your users.
+- **Default language** — what a visitor sees before they pick one themselves.
+  Only an enabled language can be the default.
+- **Completion** — how much of the app and admin interface is translated for
+  each language.
+
+Click **Save changes** to apply. The page won't let you disable every language
+or make a disabled language the default.
+
+<Tip>
+  Aikeedo ships configuration for 30 languages. Whether the translations
+  themselves are filled in depends on the release — run
+  `app:locale:translate --lang=<code>` to complete any that are not.
+</Tip>
+
+### The locale.json catalogue
+
+`/locale/locale.json` is the catalogue of languages the installation knows
+about. Your choices on the Languages page are stored in the database and layered
+on top of it, so you don't need to edit this file to enable or disable a
+language. Its `enabled` flags and `default` are only used as a fallback, for
+example before the database exists during installation:
 
 ```json
 {
@@ -220,26 +245,14 @@ Open `/locale/locale.json` to control which languages your installation offers:
 }
 ```
 
-- Set `"enabled"` to `true` or `false` to show or hide a language.
-- Set `"default"` to the code of the language new visitors get.
-
-<Note>
-  The default language code must match one of the enabled languages. To make
-  Spanish the default, first enable `es-ES`, then set `"default": "es-ES"`.
-</Note>
-
-<Tip>
-  Aikeedo ships configuration for 30+ languages. Whether the translations
-  themselves are filled in depends on the release — run
-  `app:locale:translate --lang=<code>` to complete any that are not.
-</Tip>
+Updates merge the shipped `locale.json` into yours, so a language added in a
+new release shows up on the Languages page of existing installations.
 
 ### Adding a language
 
 <Steps>
   <Step title="Add it to locale.json">
-    Add an entry with its code, label, text direction (`ltr` or `rtl`) and
-    `"enabled": true`.
+    Add an entry with its code, label and text direction (`ltr` or `rtl`).
   </Step>
 
   <Step title="Create the catalog">
@@ -253,9 +266,18 @@ Open `/locale/locale.json` to control which languages your installation offers:
     php bin/console app:locale:translate --lang=<code>
     ```
   </Step>
+
+  <Step title="Enable it">
+    Turn it on in **Settings → Languages**.
+  </Step>
 </Steps>
 
 ## Themes and plugins
+
+<Check>
+  All official plugins are translated. Update each installed plugin to receive
+  its translations.
+</Check>
 
 Themes and plugins keep their own catalogs next to their code. The extract
 command lists everything it finds on your installation and asks which to
@@ -300,11 +322,14 @@ same arguments everywhere.
 | `p__('button', 'Save')` | A string whose meaning depends on where it appears |
 | `n__(':count file', ':count files', n)` | Singular and plural |
 | `np__('label', ':count file', ':count files', n)` | Plural with a context |
-| `d__('theme', 'Save')` | A string belonging to a theme or plugin catalog |
+| `d__('theme', 'Save')` | A string belonging to a theme catalog |
 | `noop__('Save')` | Marks a string for extraction without translating it here |
 
 The context in `p__()` is never shown to anyone — it only tells the translator
 where the string appears.
+
+Plugins use the plain functions (`__()`, `p__()` and so on). Their catalogs are
+merged into the application's own dictionary when the plugin is loaded.
 
 ### Placeholders
 
@@ -338,11 +363,12 @@ whole catalog, so pages stay small.
 ### For signed-in users
 
 <Steps>
-  <Step title="Open your profile">
-    Click your name in the account menu at the bottom-left of the app dashboard.
+  <Step title="Open Settings">
+    Open the account menu at the bottom-left of the app and go to **Settings →
+    General**.
   </Step>
   <Step title="Choose a language">
-    Pick your preferred language from the language selector.
+    Under **Preferences**, pick a language from the **Language** selector.
   </Step>
 </Steps>
 
@@ -387,8 +413,8 @@ as a globe icon or the current language code in the top-right corner.
   </Accordion>
 
   <Accordion title="A language does not appear in the switcher" icon="globe">
-    Check that it is set to `"enabled": true` in `/locale/locale.json`, then
-    clear the application cache.
+    Check that it is enabled in **Settings → Languages**, then clear the
+    application cache.
   </Accordion>
 
   <Accordion title="The translator says a string was left untranslated" icon="circle-xmark">

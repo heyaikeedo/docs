@@ -472,7 +472,7 @@ Features and models are not enabled globally, or plan configuration is incomplet
 <Steps>
 <Step title="Enable Features Globally">
   1. Navigate to **Settings > Features** in the admin panel
-  2. Enable the features you want to offer (Chat, Writer, Coder, etc.)
+  2. Enable the features you want to offer (Chat, Writer, Imagine, etc.)
   3. Click "Save changes"
   
   <Note>
@@ -763,37 +763,26 @@ If you're on shared hosting and don't have access to `my.cnf`, contact your host
 - Title language doesn't match the generated content language
 
 **Cause:**
-AI models sometimes generate titles in their default language despite instructions.
+Before v5.0, the title generator trimmed the content it read too aggressively and nudged some models toward English, so short or non-English content often got a title in the wrong language. v5.0 fixes both: titles are written in the language of the content, and fall back to the user's language only when the content is too short to tell.
 
 **Solution:**
 
-<Tabs>
-<Tab title="Option 1: Modify Prompts">
-  Customize the title generation prompts in these files:
-  
-  ```
-  /src/Ai/Infrastructure/Services/OpenAi/TitleGeneratorService.php
-  /src/Ai/Infrastructure/Services/Anthropic/TitleGeneratorService.php
-  /src/Ai/Infrastructure/Services/Cohere/TitleGeneratorService.php
-  ```
-  
-  Strengthen the language instruction in the prompt to emphasize matching the content language.
-  
-  <Warning>
-  Custom code modifications will need to be reapplied after app updates.
-  </Warning>
-</Tab>
+<Steps>
+<Step title="Update to v5.0 or later">
+  See [How to Update](/versioning/how-to-update).
+</Step>
+<Step title="Choose a capable title model">
+  Some models follow language instructions better than others, which matters most for non-English content.
 
-<Tab title="Option 2: Configure Plan Models">
-  Some AI models are better at following language instructions than others:
-  
-  1. Navigate to **Plans** in your admin panel
-  2. Edit the plan that's experiencing title language issues
-  3. In the plan configuration, change the title generation model
-  4. **Important:** Check the "Update snapshot" checkbox before saving
-  5. Save the plan changes and test title generation
-</Tab>
-</Tabs>
+  1. Navigate to **Settings > Features > Utilities** in the admin panel
+  2. Under **Title generator**, choose a different **Model**
+  3. Click "Save changes" and test title generation again
+
+  <Note>
+  Since v5.0 the title generator model is one setting for the whole installation. Plans no longer override it.
+  </Note>
+</Step>
+</Steps>
 
 ---
 

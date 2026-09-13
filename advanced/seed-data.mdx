@@ -1,0 +1,62 @@
+---
+title: Starter Content
+description: 'Import the Writer, image and video templates that ship with Aikeedo, during installation, from the admin area or from the command line.'
+---
+
+Aikeedo ships with ready-made templates and the categories they are filed under. You can bring them in while installing, and import or refresh them at any time afterwards.
+
+## What ships with Aikeedo
+
+| Set | Key | Contents |
+| --- | --- | --- |
+| Categories | `categories` | Groups the Writer templates are filed under |
+| Writer templates | `writer-templates` | 137 prompt templates for the Writer tool |
+| Image templates | `image-templates` | 39 starting points for Imagine, with preview artwork |
+| Video templates | `video-templates` | 24 starting points for Video, with preview artwork |
+
+Writer templates reference their categories, so categories are always imported first when you import both.
+
+<Note>
+  The shipped image and video templates are unlocked and have no recommended
+  model, so they work with whichever providers you run. Lock them and pin a
+  model from **Templates** once you know which providers you use. See [Image and
+  video templates](/advanced/prompt-templates#image-and-video-templates).
+</Note>
+
+## During installation
+
+The installer has a **Starter content** step after the admin account is created. Every set is selected by default. Clear any you don't want, then click **Finish installation**.
+
+If you are migrating an existing database, nothing is selected, because that database already has its own templates.
+
+## From the admin area
+
+Go to **Settings → Starter content**. Each set shows how many entries it has and how many are already imported.
+
+- Click **Import** (or **Re-import**) on a set to import just that set.
+- Click **Import everything** to import every set in turn.
+
+Importing is safe to repeat. Every shipped entry has a fixed ID, so entries you already have are updated in place instead of duplicated, and entries you have reordered keep their position.
+
+<Tip>
+  Image and video templates upload their preview artwork to your storage
+  provider as they are imported, so these sets take a little longer.
+</Tip>
+
+## From the command line
+
+```bash
+php bin/console app:import:seeds
+```
+
+Without options, every set is imported. Use `--set` (repeatable) to import specific sets:
+
+```bash
+php bin/console app:import:seeds --set=image-templates --set=video-templates
+```
+
+`app:import:presets` still works as an alias, so existing deployment scripts keep running.
+
+## Upgrading from v4.x
+
+Before v5.0, the built-in Writer templates were imported with random IDs. If your installation already has them and you import **Writer templates** again, you get a second copy once. Delete the older copies from **Templates** afterwards. New installations are not affected.

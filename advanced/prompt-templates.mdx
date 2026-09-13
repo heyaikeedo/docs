@@ -1,19 +1,37 @@
 ---
 title: Prompt Templates
-description: 'Create dynamic AI prompts using Aikeedo template syntax with input tags, modifiers, conditionals, and loops for customizable user experiences.'
+description: 'Create Writer templates with input tags and attributes, and image and video templates with preview artwork, pinned settings and locking.'
 ---
 
-Prompt templating enables dynamic prompts with customizable user inputs. This guide covers template syntax, tags, modifiers, conditionals, and best practices for creating interactive AI experiences.
+Templates give your users a ready-made starting point. Aikeedo has three kinds, all managed from **Templates** in the admin area:
 
-## Understanding Prompt Templates
+- **Writer templates** turn a prompt with placeholders into a short, step-by-step form. The answers start a chat conversation.
+- **Image templates** and **video templates** appear as cards in the Imagine and Video tools, with preview artwork and their own settings.
 
-Prompt templates are pre-designed structures that include placeholders for user inputs. These templates allow you to create consistent and customizable prompts for various AI-powered tasks, such as content generation, language translation, or data analysis.
+<Tip>
+  Aikeedo ships 137 Writer templates, 39 image templates and 24 video templates.
+  Import them from **Settings → Starter content**. See [Starter
+  Content](/advanced/seed-data).
+</Tip>
 
-## Key Components
+## Writer templates
+
+### How users experience them
+
+When a user opens a Writer template, a wizard asks each of the template's inputs on its own screen and lets them pick a model. When they finish, Aikeedo starts a chat conversation. The conversation shows the template's name and the user's answers, and streams the reply like any other chat turn, so tools, Canvas and follow-up questions all work.
+
+<Note>
+  Users never see the filled-in prompt. It is sent to the model but is left out
+  of the page and every API response.
+</Note>
+
+### Recommended model
+
+Set **Recommended model** on a Writer template to prefill the wizard's model picker with a model suited to the template. Users can still change it. If the recommended model is disabled, or the workspace's plan doesn't include it, the wizard falls back to the user's usual model.
 
 ### Tags
 
-Tags are the building blocks of prompt templates. They represent input elements that users can customize and are enclosed in curly braces.
+Tags are the building blocks of Writer templates. They represent input elements that users can customize and are enclosed in curly braces.
 
 ```scss
 { input_name }
@@ -27,7 +45,7 @@ Attributes modify the behavior of tags, allowing you to fine-tune how inputs are
 { input_name | attribute1 | attribute2 }
 ```
 
-## Creating Your First Prompt Template
+### Creating your first Writer template
 
 Let's create a simple prompt template for an "Article Generator":
 
@@ -44,11 +62,9 @@ Additional instructions:
 - Write it in { language } using a { tone } voice tone.
 ```
 
-This template generates a form with inputs for the topic, draft content, language, and tone, allowing users to customize their article generation request.
+This template asks the user for the topic, draft content, language, and tone, one step at a time.
 
-## Available Attributes
-
-Enhance your prompt templates with these powerful attributes:
+### Available attributes
 
 <ResponseField name="label" type="">
 Sets a custom label for the input
@@ -93,7 +109,7 @@ Provides additional information about the input
 Example:`{ input_name | info:Custom info text }`
 </ResponseField>
 
-## Built-in Inputs
+### Built-in inputs
 
 Aikeedo provides two convenient built-in inputs to streamline your prompt templates:
 
@@ -107,7 +123,7 @@ Use these built-in inputs in your templates like this:
 { tone }
 ```
 
-## Advanced Template Example
+### Advanced example
 
 Let's create a more sophisticated prompt template for a "Comprehensive Article Generator":
 
@@ -140,16 +156,61 @@ Extra notes:
 { extra_notes | multiline | optional | placeholder: Any additional instructions or context }
 ```
 
-This advanced template demonstrates how to combine various attributes and input types to create a comprehensive and flexible prompt for generating high-quality articles.
+This template combines several attributes and input types into a flexible article brief.
 
-## Best Practices
+## Image and video templates
+
+Image and video templates appear to users as cards in the Imagine and Video tools. When there are enough of them, a row of templates is also shown above the composer.
+
+To create one, go to **Templates** in the admin area, create a template and set **Type** to **Image template** or **Video template**.
+
+### Card
+
+- **Preview image** — shown on the template card. Use a portrait, 3:4 image.
+- **Hover preview** — optional. Plays while the pointer is over the card. GIF, animated WebP, MP4 or WebM.
+
+### Prompt
+
+Write the prompt out in full. Image and video templates don't use `{ }` placeholders.
+
+### Recommended model
+
+Choosing a model prefills it when someone picks the template, and decides which settings can be pinned.
+
+### Pinned settings
+
+Pin any setting the model exposes, such as aspect ratio, resolution or duration. A pinned setting is applied on the server. Anything left on **Let the user choose** stays editable in the composer.
+
+### Input images
+
+Turn on **Require input images** and set a minimum and maximum. The user can't generate until they have attached enough images. Use this for templates that transform a photo, such as a sticker pack or a portrait style.
+
+### Allow extra instructions
+
+Let the user add a note of their own, which is appended to your prompt.
+
+### Locking a template
+
+The **Lock this template** toggle decides how much the user sees:
+
+- **Unlocked** — the template fills the composer as a starting point, and the user can rewrite all of it.
+- **Locked** — the user gets the card, the input slots and any setting you left free, and never sees the prompt or the model. The prompt is never sent to the browser and never appears on generations made from the template, including generations shared to the community feed.
+
+<Warning>
+  A locked template runs on its recommended model and no other, so the
+  workspace's plan must include that model. Otherwise the card shows as an
+  upgrade.
+</Warning>
+
+## Making templates available on plans
+
+Each plan can limit which templates its workspaces can use. The template list in the plan editor is grouped by type. Locked image and video templates need both the template and its model enabled on the plan.
+
+## Best practices
 
 1. **Be specific**: Clearly define what you want the AI to do in your template.
 2. **Use appropriate input types**: Choose the right input type (text, multiline, enum) for each piece of information you need.
 3. **Provide context**: Use the `info` attribute to give users helpful information about each input.
-4. **Balance flexibility and structure**: Offer enough customization options while maintaining a clear overall structure.
-5. **Test your templates**: Experiment with different combinations of inputs to ensure your template produces the desired results.
-
-## Conclusion
-
-Prompt templates are a powerful tool for creating dynamic, customizable AI experiences. By mastering the use of tags, attributes, and built-in inputs, you can design sophisticated prompts that cater to a wide range of use cases and user needs.
+4. **Show the result**: Give image and video templates preview artwork that shows what the template produces.
+5. **Lock only what you need to**: Lock a template when the prompt is the value you are selling; leave it unlocked when users benefit from editing it.
+6. **Test your templates**: Try each template with different inputs and models before making it active.
