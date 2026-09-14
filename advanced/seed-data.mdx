@@ -1,20 +1,22 @@
 ---
 title: Starter Content
-description: 'Import the Writer, image and video templates that ship with Aikeedo, during installation, from the admin area or from the command line.'
+description: 'Import the AI models, LLM servers, Writer templates and image and video templates that ship with Aikeedo, during installation, from the admin area or from the command line.'
 ---
 
-Aikeedo ships with ready-made templates and the categories they are filed under. You can bring them in while installing, and import or refresh them at any time afterwards.
+Aikeedo ships with a catalog of AI models, ready-made OpenAI-compatible LLM servers, templates and the categories they are filed under. You can bring them in while installing, and import or refresh them at any time afterwards.
 
 ## What ships with Aikeedo
 
 | Set | Key | Contents |
 | --- | --- | --- |
+| LLM servers | `llm-servers` | OpenAI-compatible providers such as Groq, OpenRouter and Together AI, ready for your API key |
+| Models | `models` | Models for the built-in integrations, and for the LLM servers and Ollama |
 | Categories | `categories` | Groups the Writer templates are filed under |
 | Writer templates | `writer-templates` | 137 prompt templates for the Writer tool |
 | Image templates | `image-templates` | 39 starting points for Imagine, with preview artwork |
 | Video templates | `video-templates` | 24 starting points for Video, with preview artwork |
 
-Writer templates reference their categories, so categories are always imported first when you import both.
+Sets are always imported in this order. LLM servers come before models because a server's models can only be imported once the server exists, and categories come before Writer templates because templates reference them.
 
 <Note>
   The shipped image and video templates are unlocked and have no recommended
@@ -25,23 +27,52 @@ Writer templates reference their categories, so categories are always imported f
 
 ## During installation
 
-The installer has a **Starter content** step after the admin account is created. Every set is selected by default. Clear any you don't want, then click **Finish installation**.
+The installer has a **Starter content** step after the admin account is created. Every set is selected by default, and **Models** is marked as recommended. Clear any you don't want, then click **Finish installation**.
 
-If you are migrating an existing database, nothing is selected, because that database already has its own templates.
+If you are migrating an existing database, only the recommended sets are selected, because that database already has its own templates.
+
+If a set fails to import, the installation still finishes and the success screen lists the sets that didn't import. Import them later from the admin area.
 
 ## From the admin area
 
-Go to **Settings → Starter content**. Each set shows how many entries it has and how many are already imported.
+Go to **Settings → Starter content**. Each set shows how many of its entries are already imported.
 
-- Click **Import** (or **Re-import**) on a set to import just that set.
+- Click **Import** (or **Re-import**) on a set to import the whole set.
 - Click **Import everything** to import every set in turn.
+- Click **Browse** to see what a set contains and import only the entries you choose.
 
-Importing is safe to repeat. Every shipped entry has a fixed ID, so entries you already have are updated in place instead of duplicated, and entries you have reordered keep their position.
+The result of each import appears as a notification.
+
+Importing is safe to repeat. Every shipped entry has a fixed ID:
+
+- Templates and categories you already have are updated in place instead of duplicated, and entries you have reordered keep their position and artwork.
+- Models and LLM servers you already have are left as they are. Only missing ones are added.
 
 <Tip>
   Image and video templates upload their preview artwork to your storage
   provider as they are imported, so these sets take a little longer.
 </Tip>
+
+### Browsing a set
+
+The **Browse** page lists every entry in the set, with the same search and filters as the other admin lists. Filter by status (**Imported**, **Not imported** or **Not available**) and, for models and Writer templates, by provider or category.
+
+Entries that aren't imported yet are selected when the page opens. Select or clear entries, then click **Import selected**. The status dot on each entry turns green once it is imported.
+
+## LLM servers and their models
+
+The **LLM servers** set contains OpenAI-compatible providers with their server addresses already filled in: OpenRouter, Together AI, Groq, DeepSeek, Google AI Studio, Perplexity, Hugging Face, Nebius, DeepInfra, AI/ML API, Mistral AI, Cerebras and Moonshot AI.
+
+1. Import the servers you want from **Settings → Starter content → LLM servers**. Each server is created without an API key and without models.
+2. Import their models from **Settings → Starter content → Models**. A server's models can be selected only after the server is imported. Until then, they are shown faded with a note naming the server they need.
+3. Add your API key to each server in **Settings → Integrations → Custom LLM Servers**.
+4. Enable the models you want to offer in **Settings → Models**. Imported server models start disabled, so they don't appear to users before the server has a key.
+
+If you already added a server by hand at the same address, it counts as imported. Its models are added to your server and its API key is kept.
+
+Models for [Ollama](/integrations/ollama) work the same way, but they become available once the Ollama integration is set up instead of after an import.
+
+The catalog doesn't include models that the built-in integrations already offer, such as OpenAI, Anthropic, Cohere and xAI models. See [OpenAI API-Compatible Servers](/integrations/openai-api-compatibility) for adding other providers by hand.
 
 ## From the command line
 
@@ -53,6 +84,12 @@ Without options, every set is imported. Use `--set` (repeatable) to import speci
 
 ```bash
 php bin/console app:import:seeds --set=image-templates --set=video-templates
+```
+
+To add the LLM servers and their models:
+
+```bash
+php bin/console app:import:seeds --set=llm-servers --set=models
 ```
 
 `app:import:presets` still works as an alias, so existing deployment scripts keep running.
