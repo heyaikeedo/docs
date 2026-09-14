@@ -13,7 +13,7 @@ description: Learn about the latest changes, breaking updates, and migration ins
 
 ## v5.0
 
-v5.0 is a major release. Chat gains Canvas, clarifying questions and media generation. The Writer becomes a guided wizard that continues in chat. Imagine and Video get templates, a community feed and a new composer. The interface is rebuilt around a Recents sidebar and a new Settings area. The whole platform, plugins included, is now translated.
+v5.0 is a major release. Chat gains Canvas, clarifying questions and media generation. The Writer becomes a guided wizard that continues in chat. Imagine and Video get templates, a community feed and a new composer. The interface is rebuilt around a Recents sidebar and a new Settings area. Every official plugin is now translated, and languages can be managed from the admin panel and completed with new translation tooling.
 
 <Warning>
   v5.0 removes tools and changes plugin interfaces. **Back up your files and
@@ -29,8 +29,7 @@ v5.0 is a major release. Chat gains Canvas, clarifying questions and media gener
 - **Canvas** — the assistant writes documents, code, HTML and SVG to a side panel instead of reprinting them in the thread. Revisions are patches, every version is kept and can be restored, and users can comment on a selected passage. All documents are collected in the Library under **Artifacts**.
 - **Inline documents** — short standalone writing (emails, messages, posts, letters) renders as a card in the conversation. Emails can be opened in Gmail, Outlook or the default mail app.
 - **Clarifying questions** — the model can pause to ask multiple-choice questions before answering an ambiguous request. The question turn and the answer turn are billed separately.
-- **Media generation in chat** — the chat capability now generates images, video, voice-overs and transcripts, can edit an earlier image by reference, and shows results inline, including async generations.
-- **Voice picker** — users can hear a voice before choosing it for a voice-over in chat.
+- **Media generation in chat** — the chat capability now generates images, video, voice-overs and transcripts, can edit an earlier image by reference, and shows results inline, including async generations. For voice-overs, users pick a voice right in the conversation and can listen to it first.
 - **Personalization** — users can add their own chat instructions and tell the AI what to call them.
 
 #### Writer
@@ -121,10 +120,11 @@ Writer templates now ship with fixed IDs. If you imported the built-in templates
     with v5.0 and ship their translations.
   </Step>
   <Step title="Review settings">
-    - Enable your languages in **Settings → Languages**.
-    - Set the title generator and prompt tools model in **Settings → Features → Utilities**.
-    - Turn on Canvas, Clarifying questions and Media generation in **Settings → Features → Chat**, and enable them on your plans.
-    - Optionally enable **Community** and import templates from **Settings → Starter content**.
+    - Enable your languages in **Settings → Languages**. - Set the title
+    generator and prompt tools model in **Settings → Features → Utilities**. -
+    Turn on Canvas, Clarifying questions and Media generation in **Settings →
+    Features → Chat**, and enable them on your plans. - Optionally enable
+    **Community** and import templates from **Settings → Starter content**.
   </Step>
   <Step title="Check file permissions">
     Make sure `/{webroot}/locale` (for example `public/locale`) is writable, so
