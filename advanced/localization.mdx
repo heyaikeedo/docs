@@ -275,8 +275,8 @@ new release shows up on the Languages page of existing installations.
 ## Themes and plugins
 
 <Check>
-  All official plugins are translated. Update each installed plugin to receive
-  its translations.
+  All official plugins and themes are translated. Update each installed plugin
+  and theme to receive its translations.
 </Check>
 
 Themes and plugins keep their own catalogs next to their code. The extract
@@ -288,6 +288,10 @@ php bin/console app:locale:extract --target=heyaikeedo/chatbots
 php bin/console app:locale:extract --target=all
 ```
 
+A plugin's catalog is `locale/{language}/LC_MESSAGES/messages.po`. A theme's is
+`locale/{language}/LC_MESSAGES/theme.po`, because theme strings belong to their
+own `theme` domain.
+
 <Note>
   Installing, updating or removing a plugin rebuilds the browser dictionaries on
   its own, so a plugin that ships its own translations works as soon as it is
@@ -295,14 +299,19 @@ php bin/console app:locale:extract --target=all
 </Note>
 
 <Note>
-  What ships inside `extra/` is a built copy of a theme, not its sources. If you
-  are developing a theme from its own repository, point the commands at that
-  directory instead:
+  What ships inside `extra/` is a built copy of a theme, and building or
+  updating the theme replaces it — along with any catalog changes made there. If
+  you are developing a theme from its own repository, point the commands at
+  that directory instead:
 
   ```bash
   php bin/console app:locale:extract --path=../my-theme
   php bin/console app:locale:translate --path=../my-theme --lang=de-DE
   ```
+
+  Pass the repository root. The package inside it — the `static/` directory in
+  a repository made from the theme starter kit — is found on its own, and its
+  catalogs are written to `static/locale`.
 </Note>
 
 <Tip>
@@ -323,6 +332,7 @@ same arguments everywhere.
 | `n__(':count file', ':count files', n)` | Singular and plural |
 | `np__('label', ':count file', ':count files', n)` | Plural with a context |
 | `d__('theme', 'Save')` | A string belonging to a theme catalog |
+| `dp__('theme', 'button', 'Save')` | A theme string with a context |
 | `noop__('Save')` | Marks a string for extraction without translating it here |
 
 The context in `p__()` is never shown to anyone — it only tells the translator
@@ -330,6 +340,11 @@ where the string appears.
 
 Plugins use the plain functions (`__()`, `p__()` and so on). Their catalogs are
 merged into the application's own dictionary when the plugin is loaded.
+
+Themes name their domain instead — `d__('theme', …)`, `dp__('theme', …)`,
+`dn__('theme', …)` or `dnp__('theme', …)`. A plain `__()` in a theme template is
+looked up in the application's dictionary, not the theme's, so it is left out
+when the theme's strings are extracted.
 
 ### Placeholders
 
