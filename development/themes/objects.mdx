@@ -438,21 +438,6 @@ The `plan-config` object is available as a property of the `plan` object. It can
         <ResponseField name="is_enabled" type="boolean">
           Indicates whether the writer feature is enabled for this plan.
         </ResponseField>
-        <ResponseField name="model" type="string">
-          Specifies the AI model used for the writer feature (e.g., "gpt-4o").
-        </ResponseField>
-      </Expandable>
-    </ResponseField>
-
-    <ResponseField name="coder" type="object">
-      Coder feature configuration.
-      <Expandable title="Coder properties">
-        <ResponseField name="is_enabled" type="boolean">
-          Indicates whether the coder feature is enabled for this plan.
-        </ResponseField>
-        <ResponseField name="model" type="string">
-          Specifies the AI model used for the coder feature (e.g., "gpt-4o").
-        </ResponseField>
       </Expandable>
     </ResponseField>
 
@@ -478,6 +463,12 @@ The `plan-config` object is available as a property of the `plan` object. It can
       <ResponseField name="is_enabled" type="boolean">
         Indicates whether the chat feature is enabled for this plan.
       </ResponseField>
+      <ResponseField name="custom_assistants_cap" type="integer|null">
+        Maximum number of custom assistants a workspace can create. `null` means no limit.
+      </ResponseField>
+      <ResponseField name="temporary_chat" type="boolean">
+        Indicates whether users can start temporary chats.
+      </ResponseField>
     </ResponseField>
 
     <ResponseField name="voice_isolator" type="object">
@@ -492,42 +483,31 @@ The `plan-config` object is available as a property of the `plan` object. It can
       </ResponseField>
     </ResponseField>
 
-    <ResponseField name="composer" type="object">
+    <ResponseField name="video" type="object">
       <ResponseField name="is_enabled" type="boolean">
-        Indicates whether the composer feature is enabled for this plan.
-      </ResponseField>
-    </ResponseField>
-
-    <ResponseField name="titler" type="object">
-      <ResponseField name="model" type="string">
-        Specifies the AI model used for the titler feature (e.g., "gpt-4o-mini").
+        Indicates whether the video feature is enabled for this plan.
       </ResponseField>
     </ResponseField>
 
     <ResponseField name="models" type="object">
-      An object containing boolean flags for various AI models, indicating which ones are available in this plan. Examples include:
-      - `o1-preview`, `o1-mini`, `gpt-4o`, `gpt-4o-mini`, `gpt-4-turbo`, `gpt-4`, `gpt-3.5-turbo`
-      - `claude-3-5-sonnet-20240620`, `claude-3-haiku-20240307`, `claude-3-sonnet-20240229`, `claude-3-opus-20240229`
-      - `command-r-plus`, `command-r`, `command`, `command-light`
-      - `dall-e-3`, `dall-e-2`, `flux/dev`, `flux/schnell`, `flux-pro`, `flux-realism`
-      - `sd-ultra`, `sd-core`, `sd3-large`, `sd3-large-turbo`, `sd3-medium`
-      - `stable-diffusion-xl-1024-v1-0`, `stable-diffusion-v1-6`, `clipdrop`
-      - `tts-1`, `eleven_multilingual_v2`, `eleven_turbo_v2_5`, `eleven_multilingual_v1`, `eleven_monolingual_v1`
-      - `google-tts-standard`, `google-tts-premium`, `google-tts-studio`, `azure-tts`
-      - `chirp-v3-5`, `chirp-v3-0`
+      An object containing boolean flags keyed by model, indicating which models are available in this plan. If set to `null`, all enabled models are available. Examples include:
+      - `gpt-5.6-sol`, `gpt-5.5`, `gpt-4o-mini`
+      - `claude-opus-5`, `claude-sonnet-5`, `claude-haiku-4-5`
+      - `grok-4.6`, `command-a-plus-05-2026`
+      - `gpt-image-2`, `fal-ai/nano-banana-2`, `bytedance/seedance-2.5`
+      - `tts-1`, `eleven_multilingual_v2`, `whisper-1`
     </ResponseField>
 
     <ResponseField name="tools" type="object">
       An object specifying which tools are available in this plan:
-      - `embedding_search`: Boolean indicating if embedding search is enabled
+      - `embedding_search`: Boolean indicating if file analysis is enabled
       - `google_search`: Boolean indicating if Google search is enabled
-      - `cohere_web_search`: Boolean indicating if Cohere web search is enabled
-      - `web_scrap`: Boolean indicating if web scraping is enabled
-      - `generate_image`: Boolean indicating if image generation is enabled
-    </ResponseField>
-
-    <ResponseField name="embedding_model" type="string">
-      Specifies the embedding model used for this plan (e.g., "text-embedding-3-small").
+      - `youtube`: Boolean indicating if YouTube metadata lookup is enabled
+      - `web_scrap`: Boolean indicating if web browsing is enabled
+      - `generate_media`: Boolean indicating if image, video, voice-over and transcript generation from chat is enabled
+      - `memory`: Boolean indicating if memory is enabled
+      - `canvas`: Boolean indicating if Canvas is enabled
+      - `ask_questions`: Boolean indicating if clarifying questions are enabled
     </ResponseField>
 
     <ResponseField name="assistants" type="array<string>|null">
@@ -535,7 +515,11 @@ The `plan-config` object is available as a property of the `plan` object. It can
     </ResponseField>
 
     <ResponseField name="presets" type="array<string>|null">
-      An array of preset IDs that are available in this plan. If set to null, all presets are available.
+      An array of template (preset) IDs that are available in this plan, covering Writer, image and video templates. If set to null, all templates are available.
+    </ResponseField>
+
+    <ResponseField name="extensions" type="object">
+      Plan settings contributed by installed plugins, keyed by plugin.
     </ResponseField>
   </Expandable>
 </ResponseField>

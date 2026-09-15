@@ -33,6 +33,12 @@ While you can use any OpenAI-compatible provider, here are some popular options:
 - Self-hosted models (via compatible servers)
 - Custom LLM implementations
 
+<Tip>
+  Most of the providers below ship as ready-made servers with their current
+  models. Import them from **Settings → Starter content → LLM servers**, then add
+  your API key. See [Starter content](/advanced/seed-data#llm-servers-and-their-models).
+</Tip>
+
 ## Adding a New Provider
 
 1. Go to Settings → Integrations
@@ -55,17 +61,17 @@ While you can use any OpenAI-compatible provider, here are some popular options:
 You can use the following variable in your server address:
 - `{model}`: Will be dynamically replaced with the current model name
 
-**Example for Hugging Face**:
+**Example for Azure OpenAI Service**:
 ```text
-https://api-inference.huggingface.co/models/{model}
+https://my-instance.openai.azure.com/openai/deployments/{model}
 ```
-When using model "mistralai/Mistral-7B-Instruct-v0.1", the actual request will go to:
+When using model "gpt-4o-mini", the actual request will go to:
 ```text
-https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1
+https://my-instance.openai.azure.com/openai/deployments/gpt-4o-mini
 ```
 
 <Tip>
-  Dynamic variables are particularly useful for services like Hugging Face where the model name is part of the API endpoint.
+  Dynamic variables are useful for services where the model name is part of the API endpoint. Most providers take the model name in the request body instead and don't need them.
 </Tip>
 
 #### Headers
@@ -139,14 +145,16 @@ For each model you want to use:
 
   <Accordion title="Hugging Face">
     ```text Server
-    https://api-inference.huggingface.co/models/{model}/v1/
+    https://router.huggingface.co/v1
     ```
 
     Get your API key from [Hugging Face Settings](https://huggingface.co/settings/tokens)
 
-    <Note>
-      The {model} variable in the server address will be automatically replaced with your chosen model name.
-    </Note>
+    Use the model's Hugging Face ID as the model key, for example `deepseek-ai/DeepSeek-V4-Pro-0813`. Hugging Face routes the request to one of its inference providers.
+
+    <Warning>
+      The old `https://api-inference.huggingface.co/models/{model}/v1/` address no longer works. If you added Hugging Face with it, change the server address to the one above.
+    </Warning>
   </Accordion>
 
   <Accordion title="Groq">
@@ -189,10 +197,14 @@ For each model you want to use:
 
   <Accordion title="Nebius">
     ```text Server
-    https://api.studio.nebius.ai/v1/
+    https://api.tokenfactory.nebius.com/v1
     ```
 
-    Get your API key from [Nebius Studio](https://studio.nebius.com/settings/api-keys)
+    Get your API key from [Nebius Token Factory](https://tokenfactory.nebius.com/)
+
+    <Note>
+      Nebius AI Studio is now Nebius Token Factory. Servers added with the old `https://api.studio.nebius.ai/v1/` address still respond, but switch to the address above.
+    </Note>
   </Accordion>
 
   <Accordion title="DeepInfra">
@@ -259,9 +271,9 @@ For each model you want to use:
 When configuring models for your custom LLM server, you can enable them for:
 
 1. **Chat**: Interactive conversations and assistance
-2. **Writer**: Content generation and writing tasks
-3. **Coder**: Programming help and code generation
-4. **Title Generation**: Automatic title creation for content
+2. **Writer**: Template-driven writing that continues in chat
+3. **Title Generation**: Automatic title creation for content
+4. **Prompt Enhancement**: Rewriting and generating prompts in the Imagine and Video composers
 
 <Note>
   Make sure to enable only the capabilities that your chosen model actually supports. Enabling unsupported features may result in unexpected behavior.

@@ -1,17 +1,17 @@
 ---
 title: Theme Development Guide
 sidebarTitle: Theme Development
-description: Learn how to create and customize themes for your Aikeedo v3.x platform using the modern themes-starter kit with Vite.js, Alpine.js, and Tailwind CSS.
+description: Learn how to create and customize themes for your Aikeedo platform using the modern themes-starter kit with Vite.js, Alpine.js, and Tailwind CSS.
 ---
 
 import Support from '/snippets/support.mdx';
 
-# Building Themes for Aikeedo v3.x
+# Building Themes for Aikeedo v5.x
 
 Creating a custom theme for Aikeedo allows you to personalize the look and feel of your platform. This guide covers the modern approach using the **Aikeedo Theme Starter Kit** - a comprehensive development environment that streamlines theme creation.
 
 <Note>
-This guide is for Aikeedo v3.x. We strongly recommend using the [themes-starter kit](https://github.com/heyaikeedo/themes-starter) for new theme development as it provides a modern build system and best practices.
+This guide is for Aikeedo v5.x. We strongly recommend using the [themes-starter kit](https://github.com/heyaikeedo/themes-starter) for new theme development as it provides a modern build system and best practices.
 </Note>
 
 ## Modern Theme Development with Starter Kit
@@ -197,7 +197,6 @@ This will:
 - Start Vite dev server on port 5174
 - Watch for file changes
 - Copy static files to `BUILD_DIR`
-- Extract translations automatically
 
 ### Register Theme with Aikeedo
 
@@ -370,8 +369,7 @@ theme-starter/
 │
 └── scripts/              # Build and utility scripts
     ├── pack.mjs        # Theme packaging
-    ├── release.mjs    # Release creation
-    └── locale-extract.mjs # Translation extraction
+    └── release.mjs    # Release creation
 ```
 
 ## Development Features
@@ -419,12 +417,35 @@ Use the modern Twig templating system:
 
 ### Internationalization
 
-The starter kit includes automatic translation extraction:
+Theme strings belong to the `theme` gettext domain, so wrap them with the
+domain-aware functions:
 
-- **Automatic string extraction** to PO files
-- **Multiple language support** with Gettext
-- **Translation file watching** during development
-- **Uses PHP's Gettext** for translations
+```twig
+{{ d__('theme', 'Get started') }}
+{{ dp__('theme', 'heading', 'Pricing') }}
+```
+
+A plain `__()` in a theme template is looked up in Aikeedo's own catalog, not
+the theme's, and is left out when the theme's strings are extracted.
+
+Catalogs live in `static/locale/{language}/LC_MESSAGES/theme.po`, and the dev
+server reloads the page when one changes. The starter kit has no extraction
+script of its own: strings are extracted and translated with Aikeedo's locale
+commands, run from your Aikeedo installation and pointed at the theme's
+repository:
+
+```bash
+php bin/console app:locale:extract --path=../my-theme
+php bin/console app:locale:translate --path=../my-theme --all
+```
+
+Run the extract command again whenever you add or change wording.
+
+<Tip>
+  Point `--path` at your theme's repository root, not the built copy under
+  `extra/`: the next build or update replaces that copy. See
+  [Localization](/advanced/localization#themes-and-plugins).
+</Tip>
 
 ### Available Commands
 
@@ -433,7 +454,6 @@ The starter kit includes automatic translation extraction:
 | `npm run dev`   | Start Vite development server    |
 | `npm run build` | Build production assets          |
 | `npm run serve` | Preview production build         |
-| `npm run locale`| Extract translatable strings     |
 | `npm run pack`  | Create installable theme package |
 | `npm run release`| Create distribution package      |
 

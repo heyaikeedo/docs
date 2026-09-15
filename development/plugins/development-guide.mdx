@@ -1,15 +1,15 @@
 ---
 title: Plugin Development Guide
 sidebarTitle: Plugin Development
-description: Learn how to create custom plugins to extend Aikeedo v3.x functionality with proper directory structure and integration patterns.
+description: Learn how to create custom plugins to extend Aikeedo functionality with proper directory structure and integration patterns.
 ---
 
 import Support from '/snippets/support.mdx';
 
-Plugins are powerful tools that allow you to enhance and customize your Aikeedo platform. This guide will walk you through the process of building a plugin for v3.x, using a simple Currency Beacon integration as an example.
+Plugins are powerful tools that allow you to enhance and customize your Aikeedo platform. This guide will walk you through the process of building a plugin for v5.x, using a simple Currency Beacon integration as an example.
 
 <Note>
-This guide is for Aikeedo v3.x. The plugin structure has been updated from v2.x. Plugins are now located in `/extra/extensions/` directory.
+This guide is for Aikeedo v5.x. Plugins are located in the `/extra/extensions/` directory, as they have been since v3.0. If you maintain a plugin built for v4.x, read [Updating plugins for v5.0](#updating-plugins-for-v5-0).
 </Note>
 
 ## What are Aikeedo Plugins?
@@ -41,7 +41,7 @@ Let's create a plugin that integrates [CurrencyBeacon](https://currencybeacon.co
 
 ### Step 1: Create the Plugin Directory
 
-In Aikeedo v3.x, plugins are located in the `/extra/extensions/` directory. Create a new directory for your plugin:
+Plugins are located in the `/extra/extensions/` directory. Create a new directory for your plugin:
 
 ```bash
 mkdir -p extra/extensions/heyaikeedo/currency-beacon
@@ -260,6 +260,37 @@ public function boot(Context $context): void
 }
 ```
 
+### Localizing Your Plugin
+
+Wrap every user-facing string in your plugin's templates and PHP code with the translation functions, such as `__()` and `p__()`:
+
+```twig
+<h1>{{ p__('heading', 'Currency Beacon') }}</h1>
+<p>{{ __('Exchange rates are refreshed every hour.') }}</p>
+```
+
+Plugin translations live in a `locale/` directory inside the plugin, one catalog per language (`locale/de-DE/LC_MESSAGES/messages.po`). Aikeedo merges them into its own dictionary when the plugin loads, and rebuilds the browser dictionaries when a plugin is installed, updated or removed.
+
+Create and fill in the catalogs with the locale commands:
+
+```bash
+php bin/console app:locale:extract --target=yourorganization/plugin-name
+php bin/console app:locale:translate --target=yourorganization/plugin-name --all
+```
+
+Ship the `locale/` directory with your plugin package. See [Localization](/advanced/localization) for every option.
+
+### Updating Plugins for v5.0
+
+v5.0 changes a few interfaces plugins may depend on:
+
+- **`TitleServiceInterface` is removed.** `Ai\Domain\Title\TitleServiceInterface` and the provider `TitleGeneratorService` classes are gone. For a one-shot text completion, resolve `Ai\Domain\Completion\TextCompletionServiceInterface` through `AiServiceFactory`. To generate a title, use the `Ai\Application\Services\Titler` service.
+- **The per-plan titler model is removed.** `PlanConfig::$titler` no longer exists. The title model is a global setting, and the `Titler` service reads it for you.
+- **Coder, Composer and the Writer's completions API are removed.** Remove any integration with the Coder or Composer tools, or with `POST /api/ai/completions`.
+- **The `generate_image` plan tool is now `generate_media`.**
+
+Release a new version of your plugin once it runs on v5.0, and set its minimum Aikeedo version accordingly.
+
 ## Troubleshooting
 
 ### Plugin Not Appearing in Admin Panel
@@ -289,7 +320,7 @@ public function boot(Context $context): void
 For a complete, working example of an Aikeedo plugin, check out the [Currency Beacon Plugin Repository](https://github.com/heyaikeedo/plugins-currency-beacon) on GitHub.
 
 This example demonstrates:
-- Proper v3.x directory structure
+- Proper plugin directory structure
 - Service integration
 - API communication
 - Error handling

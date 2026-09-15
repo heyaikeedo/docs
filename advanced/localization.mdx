@@ -1,123 +1,451 @@
 ---
 title: Localization
-description: 'Translate Aikeedo into multiple languages using .po files, manage locale.json settings, and enable language selection for global audiences.'
+description: 'Translate Aikeedo into any language with the built-in extract, translate and build commands, manage available languages, and let users pick their language.'
 ---
 
 import Support from '/snippets/support.mdx';
 
 ## Introduction
 
-Localization enables multilingual support for your Aikeedo platform. This guide covers translation file management, language configuration, and user language selection.
+Aikeedo's interface is translated with GNU gettext. English source text lives in
+the code, and translations live in `.po` catalog files you can edit by hand or
+fill in automatically.
 
-## Translation File Locations
+Three console commands keep everything in step:
 
-Aikeedo uses separate translation files for different parts of the application:
+| Command | What it does |
+| --- | --- |
+| `app:locale:extract` | Scans your code and writes every translatable string into the catalogs |
+| `app:locale:translate` | Fills in the empty entries using an AI model |
+| `app:locale:build` | Writes the dictionaries the browser loads |
 
-1. **App and Admin Interface**: `/locale` directory
-2. **Landing Page (Home Page)**: `/public/content/plugins/heyaikeedo/default/locale` directory
+Run them from your installation root:
 
-    This is the default location for the landing page translations. The full path structure follows this pattern:
-
-    `/{webroot}/content/plugins/{organization}/{theme}/locale`
-
-    Where:
-    - `{webroot}` is typically `public`, but may be `public_html` in some installations (e.g., cPanel)
-    - `{organization}` is usually `heyaikeedo`, but can be customized to your organization name if you're using a custom theme
-    - `{theme}` is `default` for the standard theme, but could be different if you're using a custom theme
-
-    <Note>
-    Always check your specific installation setup to confirm the exact path.
-    </Note>
-
-    <Tip>
-    For more information on creating custom themes and managing their translations, refer to our [Theme Development](/development/introduction) guide.
-    </Tip>
-
-## Translation Process
-
-To translate Aikeedo into a new language or modify existing translations, follow these steps:
-
-1. Navigate to the appropriate directory based on the section you want to translate.
-2. Locate the `.po` file for your target language.
-3. Open the file in a text editor or a specialized PO file editor.
-4. Find the `msgid` entries, which contain the original English text.
-5. Enter your translations in the corresponding `msgstr` fields.
+```bash
+php bin/console app:locale:extract
+```
 
 <Note>
-  Always keep the `msgid` values unchanged. Only modify the `msgstr` entries.
+  Extract and translate both run the build step for you, so most of the time you
+  only need the first two.
 </Note>
 
-### Example Translation
+## Where translations live
 
-Here's a simple example of how a translation might look in a `.po` file:
+| What | Location |
+| --- | --- |
+| App and admin interface | `/locale` |
+| Active theme (landing page) | `/extra/extensions/{organization}/{theme}/locale` |
+| Plugins | `/extra/extensions/{organization}/{plugin}/locale` |
+| Browser dictionaries (generated) | `/{webroot}/locale` |
+
+Where `{organization}` is usually `heyaikeedo`, `{theme}` is `default` for the
+standard theme, and `{webroot}` is `public` — or `public_html` on some
+installations, such as cPanel.
+
+Inside each of those, catalogs follow the gettext convention:
+
+```
+locale/de-DE/LC_MESSAGES/messages.po
+```
+
+<Note>
+  The `/{webroot}/locale` directory is generated output, not something you edit.
+  It has to be writable for `app:locale:build` to work.
+</Note>
+
+## Translating
+
+### The usual workflow
+
+After changing any wording in your templates:
+
+<Steps>
+  <Step title="Extract the strings">
+    ```bash
+    php bin/console app:locale:extract
+    ```
+
+    You will be asked which targets to scan. Choose **Core application** for the
+    app and admin interface, **Everything** for that plus every plugin and theme
+    on your installation, or name them individually — several at once, separated
+    by commas.
+  </Step>
+
+  <Step title="Translate what is missing">
+    ```bash
+    php bin/console app:locale:translate
+    ```
+
+    You will be asked which languages to do — **All languages**, or a few by
+    name — then shown how many strings and API requests that means before
+    anything is sent.
+  </Step>
+
+  <Step title="Check the result">
+    Open the app in the language you translated. The browser dictionaries are
+    rebuilt automatically at the end of the previous step.
+  </Step>
+</Steps>
+
+### Translating by hand
+
+You never have to use the AI translator. Open the `.po` file for your language,
+find the `msgid` entries and fill in the `msgstr` fields:
 
 ```
 msgid "Welcome to Aikeedo"
 msgstr "Bienvenue sur Aikeedo"
 ```
 
-## Managing Available Languages
+<Note>
+  Always leave the `msgid` values unchanged. Only edit `msgstr`.
+</Note>
 
-To enable or disable languages for your Aikeedo instance:
+After editing a `.po` file by hand, rebuild the browser dictionaries:
 
-1. Open the `/locale/locale.json` file.
-2. Enable or disable languages by setting their `"enabled"` field to `true` or `false`.
-3. Set the default language by updating the `"default"` field at the top of the file:
-   ```json
-   {
-       "default": "en-US",
-       "locales": [
-           // ... language entries ...
-       ]
-   }
-   ```
+```bash
+php bin/console app:locale:build
+```
+
+<Tip>
+  No terminal? **Settings → Clear cache** in the admin area rebuilds them too.
+</Tip>
+
+<Warning>
+  This is the one step that is easy to forget. If your changes show up on
+  server-rendered pages but not in toasts, buttons or other interface text
+  produced by JavaScript, the dictionaries are stale — rebuild them.
+</Warning>
+
+## The AI translator
+
+`app:locale:translate` sends the untranslated entries to a language model and
+writes the answers back into the catalogs.
+
+```bash
+php bin/console app:locale:translate --lang=de-DE --lang=fr-FR
+```
+
+| Option | |
+| --- | --- |
+| `--lang`, `-l` | Language to translate; repeatable. Omit to pick from a list |
+| `--all`, `-a` | Every language that has a catalog |
+| `--force`, `-f` | Retranslate entries that already have a translation |
+| `--dry-run` | Show what would be translated and stop |
+| `--model`, `-m` | Model to use |
+| `--base-url` | An OpenAI-compatible endpoint other than OpenAI's |
+| `--batch-size`, `-b` | Strings per request (default 20) |
+| `--concurrency`, `-c` | Requests in flight at once (default 4) |
+| `--target`, `-t` | Which target to translate; see [Themes and plugins](#themes-and-plugins) |
+| `--path`, `-p` | Translate the catalogs of any directory |
+
+The catalog is saved after every group of requests, so stopping the command with
+`Ctrl-C` loses at most one group — running it again carries on from where it
+stopped.
+
+### Your API key
+
+The translator needs an API key, and it is **your** key for this one task. It has
+nothing to do with the AI providers you configured in the admin area, and it is
+never saved anywhere.
+
+The key is read from, in order:
+
+1. The `--api-key` option
+2. The `AIKEEDO_TRANSLATOR_API_KEY` environment variable
+3. The `OPENAI_API_KEY` environment variable
+4. A hidden prompt, if none of the above are set
+
+<Warning>
+  The key is used for the run and then forgotten. It is never written to `.env`,
+  to your settings, or to the log — so you will be asked for it again next time
+  unless you set an environment variable.
+</Warning>
+
+### Using another provider
+
+Anything that speaks the OpenAI chat completions API works, including
+OpenRouter, Groq, Together and a local Ollama server:
+
+```bash
+php bin/console app:locale:translate \
+  --base-url=https://openrouter.ai/api/v1 \
+  --model=<model>
+```
+
+### What the translator protects
+
+<AccordionGroup>
+  <Accordion title="Placeholders stay intact" icon="brackets-curly">
+    Strings such as `Hello :name` and `Version %s` contain placeholders that are
+    replaced at runtime. A translation may move a placeholder to wherever the
+    target language needs it, but never renames or drops one.
+
+    Every answer is checked, and any that gets this wrong is sent back once with
+    an explanation. If it still comes back wrong, the entry is left untranslated
+    and listed at the end of the run rather than being written out broken.
+  </Accordion>
+
+  <Accordion title="Context is passed along" icon="quote-left">
+    Many strings carry a context that says where they appear — `button`,
+    `heading`, `label`, `country` and so on. This is what stops "Post" the
+    button and "Post" the noun becoming the same word. The context is sent with
+    each string so the model can pick the right wording.
+  </Accordion>
+
+  <Accordion title="Plural forms are complete" icon="list-ol">
+    Languages need different numbers of plural forms — one for Japanese, two for
+    German, four for Russian, six for Arabic. The translator asks for exactly the
+    number your language needs, explains which numbers each form covers, and
+    rejects an answer with the wrong number of forms.
+  </Accordion>
+</AccordionGroup>
+
+## Managing available languages
+
+Go to **Settings → Languages** in the admin area. The page lists every language
+that ships with Aikeedo, with:
+
+- **Enable toggle** — enabled languages appear in the language switcher and can
+  be chosen by your users.
+- **Default language** — what a visitor sees before they pick one themselves.
+  Only an enabled language can be the default.
+- **Completion** — how much of the app and admin interface is translated for
+  each language.
+
+Click **Save changes** to apply. The page won't let you disable every language
+or make a disabled language the default.
+
+<Tip>
+  Aikeedo ships configuration for 30 languages. Whether the translations
+  themselves are filled in depends on the release — run
+  `app:locale:translate --lang=<code>` to complete any that are not.
+</Tip>
+
+### The locale.json catalogue
+
+`/locale/locale.json` is the catalogue of languages the installation knows
+about. Your choices on the Languages page are stored in the database and layered
+on top of it, so you don't need to edit this file to enable or disable a
+language. Its `enabled` flags and `default` are only used as a fallback, for
+example before the database exists during installation:
+
+```json
+{
+    "default": "en-US",
+    "locales": [
+        {
+            "code": "de-DE",
+            "label": "German",
+            "enabled": true,
+            "dir": "ltr"
+        }
+    ]
+}
+```
+
+Updates merge the shipped `locale.json` into yours, so a language added in a
+new release shows up on the Languages page of existing installations.
+
+### Adding a language
+
+<Steps>
+  <Step title="Add it to locale.json">
+    Add an entry with its code, label and text direction (`ltr` or `rtl`).
+  </Step>
+
+  <Step title="Create the catalog">
+    ```bash
+    php bin/console app:locale:extract
+    ```
+  </Step>
+
+  <Step title="Fill it in">
+    ```bash
+    php bin/console app:locale:translate --lang=<code>
+    ```
+  </Step>
+
+  <Step title="Enable it">
+    Turn it on in **Settings → Languages**.
+  </Step>
+</Steps>
+
+## Themes and plugins
+
+<Check>
+  All official plugins and themes are translated. Update each installed plugin
+  and theme to receive its translations.
+</Check>
+
+Themes and plugins keep their own catalogs next to their code. The extract
+command lists everything it finds on your installation and asks which to
+include:
+
+```bash
+php bin/console app:locale:extract --target=heyaikeedo/chatbots
+php bin/console app:locale:extract --target=all
+```
+
+A plugin's catalog is `locale/{language}/LC_MESSAGES/messages.po`. A theme's is
+`locale/{language}/LC_MESSAGES/theme.po`, because theme strings belong to their
+own `theme` domain.
 
 <Note>
-  The default language code must match one of the enabled languages in the `locales` array. For example, if you want to set Spanish as the default, first ensure `es-ES` is enabled, then update the default value to `"es-ES"`.
+  Installing, updating or removing a plugin rebuilds the browser dictionaries on
+  its own, so a plugin that ships its own translations works as soon as it is
+  installed.
+</Note>
+
+<Note>
+  What ships inside `extra/` is a built copy of a theme, and building or
+  updating the theme replaces it — along with any catalog changes made there. If
+  you are developing a theme from its own repository, point the commands at
+  that directory instead:
+
+  ```bash
+  php bin/console app:locale:extract --path=../my-theme
+  php bin/console app:locale:translate --path=../my-theme --lang=de-DE
+  ```
+
+  Pass the repository root. The package inside it — the `static/` directory in
+  a repository made from the theme starter kit — is found on its own, and its
+  catalogs are written to `static/locale`.
 </Note>
 
 <Tip>
-  While Aikeedo includes configuration for 30+ languages, please note that the actual translation strings are not included by default. You'll need to provide your own translations for languages other than English.
+  See the [Theme Development](/development/themes/development-guide) guide for
+  how theme packages are laid out.
 </Tip>
 
-## User Language Selection
+## Marking text for translation
 
-Aikeedo provides two ways for users to change their preferred language:
+If you edit templates, wrap any text a person will read so it can be extracted.
+The same functions are available in Twig, PHP and JavaScript, and they take the
+same arguments everywhere.
 
-### For Logged-in Users
+| Function | Use it for |
+| --- | --- |
+| `__('Save')` | A plain string |
+| `p__('button', 'Save')` | A string whose meaning depends on where it appears |
+| `n__(':count file', ':count files', n)` | Singular and plural |
+| `np__('label', ':count file', ':count files', n)` | Plural with a context |
+| `d__('theme', 'Save')` | A string belonging to a theme catalog |
+| `dp__('theme', 'button', 'Save')` | A theme string with a context |
+| `noop__('Save')` | Marks a string for extraction without translating it here |
 
-1. Log into the Aikeedo app.
-2. Click on your name in the account menu (bottom-left of the app dashboard).
-3. Navigate to your profile page.
-4. Look for the language selection option and choose your preferred language.
+The context in `p__()` is never shown to anyone — it only tells the translator
+where the string appears.
 
-### For Website Visitors
+Plugins use the plain functions (`__()`, `p__()` and so on). Their catalogs are
+merged into the application's own dictionary when the plugin is loaded.
 
-The language selection process for website visitors may vary depending on the theme used. In the default theme:
+Themes name their domain instead — `d__('theme', …)`, `dp__('theme', …)`,
+`dn__('theme', …)` or `dnp__('theme', …)`. A plain `__()` in a theme template is
+looked up in the application's dictionary, not the theme's, so it is left out
+when the theme's strings are extracted.
 
-1. Look for the language switcher in the website header (often in the top-right corner).
-2. Click on the switcher (typically represented by a globe icon or current language code).
-3. Select your preferred language from the dropdown menu.
+### Placeholders
+
+Two styles work, and both are passed as the argument after the string:
+
+```twig
+{{ __('Version %s', version) }}
+{{ __('Hello :name', { ':name': user.first_name }) }}
+```
+
+```js
+import { __, n__ } from '../base/translate';
+
+__('Version %s', version);
+__('Hello :name', { ':name': user.firstName });
+n__(':count credit', ':count credits', count, { ':count': count });
+```
+
+### JavaScript
+
+Only plain text can be extracted, so `__(someVariable)` is skipped. That is
+deliberate — it is how messages coming back from the server get translated. Such
+messages have no text to find anywhere in the JavaScript, so they are listed in
+`resources/assets/js/base/server-messages.js` instead.
+
+The browser only receives the strings your JavaScript actually asks for, not the
+whole catalog, so pages stay small.
+
+## User language selection
+
+### For signed-in users
+
+<Steps>
+  <Step title="Open Settings">
+    Open the account menu at the bottom-left of the app and go to **Settings →
+    General**.
+  </Step>
+  <Step title="Choose a language">
+    Under **Preferences**, pick a language from the **Language** selector.
+  </Step>
+</Steps>
+
+### For website visitors
+
+The default theme puts a language switcher in the website header, usually shown
+as a globe icon or the current language code in the top-right corner.
 
 <Note>
-  The exact location and appearance of the language selector may differ based on your chosen theme. Some themes might place it in a different part of the header, footer, or even in a side menu.
+  The exact position depends on your theme. Some themes place it in the footer or
+  a side menu instead.
 </Note>
 
-## Best Practices for Localization
+## Best practices
 
-1. **Consistency**: Maintain consistent terminology across all translations.
-2. **Context**: Consider the context in which the text appears to ensure accurate translations.
-3. **Testing**: After translating, thoroughly test the interface in each language to catch any layout or functionality issues.
-4. **Regular Updates**: Keep translations up-to-date with each new release of Aikeedo.
+1. **Consistency** — keep terminology the same across all your translations.
+2. **Extract before you translate** — a translation run only fills in what the
+   catalogs already contain, so extract after changing any wording.
+3. **Review machine translations** — the AI translator is a strong starting
+   point, not a substitute for a native speaker on customer-facing copy.
+4. **Test each language** — longer translations can change how a layout fits,
+   and right-to-left languages need a look of their own.
+5. **Keep up with releases** — run extract and translate after each update to
+   catch newly added strings.
 
 ## Troubleshooting
 
-If you encounter issues with localization:
+<AccordionGroup>
+  <Accordion title="Interface text produced by JavaScript is still English" icon="triangle-exclamation">
+    The browser dictionaries are out of date. The quickest fix needs no
+    terminal: **Settings → Clear cache** in the admin area rebuilds them.
 
-- Ensure all `.po` files are properly formatted.
-- Check that the `locale.json` file is correctly configured.
-- Clear your browser cache and application cache after making changes.
-- Verify that the correct language files are being loaded in the application settings.
+    From the command line:
+
+    ```bash
+    php bin/console app:locale:build
+    ```
+
+    If neither changes anything, `/{webroot}/locale` is most likely not
+    writable — the rebuild is skipped rather than allowed to fail, and the
+    reason is written to the application log.
+  </Accordion>
+
+  <Accordion title="A language does not appear in the switcher" icon="globe">
+    Check that it is enabled in **Settings → Languages**, then clear the
+    application cache.
+  </Accordion>
+
+  <Accordion title="The translator says a string was left untranslated" icon="circle-xmark">
+    The answer changed or dropped a placeholder, so it was rejected rather than
+    written out broken. Run the command again to retry those entries, or fill
+    them in by hand.
+  </Accordion>
+
+  <Accordion title="New wording is missing from the catalogs" icon="magnifying-glass">
+    Run `app:locale:extract` first — translation only fills in entries that are
+    already in the catalogs.
+  </Accordion>
+</AccordionGroup>
+
+If you still have trouble, check that your `.po` files are correctly formatted,
+that `locale.json` is valid JSON, and clear both your browser cache and the
+application cache after making changes.
 
 <Support />
-

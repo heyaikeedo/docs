@@ -191,7 +191,6 @@
                   "integrations/falai",
                   "integrations/stabilityai",
                   "integrations/clipdrop",
-                  "integrations/aimlapi",
                   "integrations/serper"
                 ]
               },
@@ -251,6 +250,7 @@
               "advanced/localization",
               "advanced/email-templates",
               "advanced/prompt-templates",
+              "advanced/seed-data",
               "advanced/users-workspaces",
               "advanced/text-streaming",
               "advanced/secure-urls",

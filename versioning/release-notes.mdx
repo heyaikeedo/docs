@@ -11,6 +11,129 @@ description: Learn about the latest changes, breaking updates, and migration ins
   releases.
 </Note>
 
+## v5.0
+
+v5.0 is a major release. Chat gains Canvas, clarifying questions and media generation. The Writer becomes a guided wizard that continues in chat. Imagine and Video get templates, a community feed and a new composer. The interface is rebuilt around a Recents sidebar and a new Settings area. Every official plugin is now translated, and languages can be managed from the admin panel and completed with new translation tooling.
+
+<Warning>
+  v5.0 removes tools and changes plugin interfaces. **Back up your files and
+  database before updating**, read the breaking changes below, and **update
+  every installed plugin** after the core update. The standard update process
+  works, and database migrations run automatically, with no manual SQL.
+</Warning>
+
+### What's new in v5.0
+
+#### Chat
+
+- **Canvas** — the assistant writes documents, code, HTML and SVG to a side panel instead of reprinting them in the thread. Revisions are patches, every version is kept and can be restored, and users can comment on a selected passage. All documents are collected in the Library under **Artifacts**.
+- **Inline documents** — short standalone writing (emails, messages, posts, letters) renders as a card in the conversation. Emails can be opened in Gmail, Outlook or the default mail app.
+- **Clarifying questions** — the model can pause to ask multiple-choice questions before answering an ambiguous request. The question turn and the answer turn are billed separately.
+- **Media generation in chat** — the chat capability now generates images, video, voice-overs and transcripts, can edit an earlier image by reference, and shows results inline, including async generations. For voice-overs, users pick a voice right in the conversation and can listen to it first.
+- **Personalization** — users can add their own chat instructions and tell the AI what to call them.
+
+#### Writer
+
+- **Preset wizard** — opening a Writer template asks its questions one screen at a time, then continues as a normal chat conversation with tools, Canvas and follow-ups. The filled prompt is never shown to the user.
+- **Recommended model** — admins can set a recommended model on a template. See [Prompt Templates](/advanced/prompt-templates).
+
+#### Imagine & Video
+
+- **Templates** — admin-authored image and video templates with preview artwork, pinned settings, required input images and optional locking that hides the prompt and model. See [Prompt Templates](/advanced/prompt-templates#image-and-video-templates).
+- **Community** — users can share generations to a feed visible to everyone on the installation (**Settings → Features → Community**).
+- **New composer** — quick settings chips, `@image` reference tags, **Enhance** to rewrite a prompt and **Surprise me** to write one (**Settings → Features → Utilities**).
+- **Inputs are kept** — reference images and frames are saved with each generation and shown in the details panel, and **Remix** restores them.
+
+#### Interface
+
+- **Recents** — each tool's history moves into the left sidebar, with rename, share, delete and read/unread status.
+- **Head bar and Details panel** — every tool shows the open item's title, actions and a details panel with credits spent, the model used and other insights.
+- **Settings area** — account, security, capabilities, API keys (now revocable), affiliates and workspace pages live under one Settings section with its own navigation.
+- **Contextual "New" button**, a merged workspace and account menu, and redesigned dialogs that work properly on phones.
+
+#### Localization and administration
+
+- **Languages page** — enable languages, choose the default and see how complete each translation is from **Settings → Languages**. See [Localization](/advanced/localization).
+- **Translation tooling** — `app:locale:extract`, `app:locale:translate` (AI translator) and `app:locale:build`. Updates now keep your own translation edits.
+- **Starter content** — import Writer, image and video templates at any time from **Settings → Starter content** or during installation. See [Starter Content](/advanced/seed-data).
+- **Model catalog refresh** — adds GPT 6 Astra, GPT 5.6 Sol/Terra/Luna, Opus 5, Fable 5.1, Command A+, Grok 4.6 and 4.5, GPT Image 2.5, Grok Image 2.0 and Video 1.5, Seedance 2.5, Nano Banana 2, Seedream 5.0 Pro, Kling 3.0 Turbo, Wan 3.0, Hailuo H3, Veo 3.1 Lite, Gemini Omni Flash and FLUX 3.
+
+### Plugins
+
+**All plugins are now translated.** Update each installed plugin to get its translations and v5.0 compatibility.
+
+### Breaking changes in v5.0
+
+#### Coder removed
+
+The Coder tool is removed. Existing code documents are converted into chat conversations during the update, together with Writer documents.
+
+#### Composer removed
+
+The Composer (music) tool and its AI/ML API integration are removed. **Existing compositions and their files are deleted** during the update. Download anything you want to keep before updating.
+
+#### Writer documents become conversations
+
+The standalone Writer editor is replaced by the preset wizard. Existing Writer documents are converted into chat conversations during the update. The `writer.model` plan setting is no longer used; users pick the model in the wizard.
+
+#### `POST /api/ai/completions` removed
+
+The legacy completions endpoint is removed from the User API. Use the conversations API instead.
+
+#### `TitleServiceInterface` removed
+
+`Ai\Domain\Title\TitleServiceInterface` and the provider `TitleGeneratorService` classes are removed. Plugins that resolved them must use `TextCompletionServiceInterface` or the `Titler` service instead. This is why every plugin needs updating.
+
+#### Image generation capability renamed
+
+The `generate_image` plan tool is replaced by `generate_media`, which covers images, video, voice-over and transcription. Review the chat capabilities on each plan after updating.
+
+#### Title generator model is global
+
+The title generator model is no longer set per plan. Set it once in **Settings → Features → Utilities**.
+
+#### Reference image uploads narrowed
+
+Reference images for Imagine and Video accept JPEG, PNG, WebP and GIF only.
+
+#### Retired models removed
+
+o1, o3, o3-mini, o3-pro, o4-mini, GPT-4, GPT-4 Turbo, GPT-4.1 nano, GPT-3.5 Turbo, Sora 2, Sora 2 Pro, GPT Image 1, 1 mini and 1.5, Claude Sonnet 4.0, Imagen 3 and 4, Veo 2 and 3, FLUX.1 Pro and Lucy are removed. Reassign any plans, assistants or defaults that used them.
+
+#### Starter content re-import
+
+Writer templates now ship with fixed IDs. If you imported the built-in templates before v5.0 and import them again from **Settings → Starter content**, you get one set of duplicates to delete. New installations are unaffected.
+
+### Upgrading to v5.0
+
+<Steps>
+  <Step title="Back up">
+    Back up your files and database. If you use Composer, download the
+    compositions you want to keep.
+  </Step>
+  <Step title="Update the core">
+    Follow the standard [How to Update](/versioning/how-to-update) process.
+    Database migrations run automatically.
+  </Step>
+  <Step title="Update every plugin">
+    Update all installed plugins from the marketplace so they are compatible
+    with v5.0 and ship their translations.
+  </Step>
+  <Step title="Review settings">
+    - Enable your languages in **Settings → Languages**. - Set the title
+    generator and prompt tools model in **Settings → Features → Utilities**. -
+    Turn on Canvas, Clarifying questions and Media generation in **Settings →
+    Features → Chat**, and enable them on your plans. - Optionally enable
+    **Community** and import templates from **Settings → Starter content**.
+  </Step>
+  <Step title="Check file permissions">
+    Make sure `/{webroot}/locale` (for example `public/locale`) is writable, so
+    the browser translation dictionaries can be rebuilt.
+  </Step>
+</Steps>
+
+---
+
 ## v4.1
 
 v4.1 adds operator-facing billing and chat controls, plus self-service account management.
