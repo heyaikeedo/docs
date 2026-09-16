@@ -1,0 +1,77 @@
+---
+title: "Storage and files"
+sidebarTitle: "Storage and files"
+description: "How Aikeedo stores generated media and uploads, selects a storage backend, and builds URLs."
+---
+
+Two filesystem services sit side by side: one for files users see, one for the installation's own working files.
+
+| Service | Backed by | For |
+| --- | --- | --- |
+| `Shared\Infrastructure\FileSystem\CdnInterface` | The selected storage adapter | Generated media, uploads, anything served to users |
+| `Shared\Infrastructure\FileSystem\FileSystemInterface` | The local installation directory | Imports, temporary files, anything under `var/` |
+
+Both are Flysystem instances, so the usual read, write, delete and listing methods apply.
+
+## Selecting a backend
+
+Adapters are registered in a collection during boot, and the administrator picks one under **Settings → File storage**. The key is stored in `option.cdn.adapter`, and the local adapter is the default and the fallback when a configured adapter can't be resolved.
+
+The local adapter writes into the web root's `uploads` directory, so files are served directly. Other adapters are added by plugins. See [Storage adapters](/development/plugins/guides/storage-adapter).
+
+## Writing a file
+
+```php
+$key = $cdn->generatePath('png', $workspace, $user);
+
+$cdn->write($key, $contents, ['visibility' => Visibility::PUBLIC]);
+
+$url = $cdn->getUrl($key);
+```
+
+| Method | Purpose |
+| --- | --- |
+| `generatePath($ext, ?$workspace, ?$user)` | Builds a unique object key, applying the configured grouping |
+| `write($path, $contents, $config)` | Stores the object |
+| `getUrl($path)` | A public or signed URL, depending on configuration |
+| `getAdapterLookupKey()` | The active adapter's key, stored with file records |
+| `setVisibility($path, $visibility)` | Changes visibility after the fact |
+
+### Grouping
+
+`option.cdn.group_by` decides how object keys are namespaced: by workspace, by user, or by both. It keeps one tenant's objects together, which matters for auditing and bulk operations.
+
+### Signed URLs
+
+`option.cdn.sign_urls` asks adapters to return time-limited URLs instead of public ones.
+
+<Warning>
+  Never store the result of `getUrl()`. Records keep the object key and the adapter key; the URL is derived when it's needed, because a signed one expires.
+</Warning>
+
+## File records
+
+`File\Domain\Entities\FileEntity` records where a file lives: the storage adapter key, the object key, a URL and a size. `ImageFileEntity` extends it with width, height and a blurhash placeholder, which is what lets the interface show something before the image loads.
+
+Because the adapter key is stored per file, switching backends doesn't break existing records, but it also doesn't move them: old files stay where they were written.
+
+## Local working files
+
+```php
+$fs->write('var/imports/' . $id . '.zip', $contents);
+$stream = $fs->readStream('var/imports/' . $id . '.zip');
+$fs->delete('var/imports/' . $id . '.zip');
+```
+
+Paths are relative to the installation root. `var/` isn't web-accessible, which is what makes it the right place for uploads being processed, exports being built and anything else that shouldn't be served.
+
+## Permissions
+
+The web server user must be able to write to `var/`, and to the uploads directory when the local adapter is used. A cron job running as a different user is the usual cause of files the web server can't later replace.
+
+## Related
+
+- [Files and storage in plugins](/development/plugins/files-and-storage)
+- [Storage adapters guide](/development/plugins/guides/storage-adapter)
+- [Cloud storage setup](/integrations/cloud-storage/overview)
+- [Secure URLs](/advanced/secure-urls)

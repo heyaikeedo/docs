@@ -1,0 +1,92 @@
+---
+title: "Background jobs and cron"
+sidebarTitle: "Cron and jobs"
+description: "How Aikeedo runs scheduled and deferred work without a queue: the cron event, batched listeners and provider webhooks."
+---
+
+Aikeedo has no queue worker. Work that can't finish inside a request happens in one of three places: the cron tick, a provider webhook, or a batched job driven by cron.
+
+## The cron tick
+
+`cron.php` boots the application, dispatches a single event, and flushes:
+
+```php
+$dispatcher->dispatch(new CronEvent());
+```
+
+Scheduling it is part of installing Aikeedo:
+
+```bash
+* * * * * /usr/bin/php /path/to/aikeedo/cron.php
+```
+
+<Warning>
+  Run it as the same user as the web server. A cron job running as root creates cache and upload files the web server can't overwrite, which shows up later as a cache that won't clear.
+</Warning>
+
+See [Initial setup](/setup/initial-setup) for the production configuration.
+
+## What runs on each tick
+
+| Listener | Work |
+| --- | --- |
+| Renew subscriptions | Resets usage for subscriptions that are due |
+| End cancelled subscriptions | Ends expired ones and applies the fallback plan |
+| Calculate MRR | Updates revenue statistics |
+| End failed generations | Closes generations that never completed |
+| Prune cache | Removes expired cache entries |
+| Purge expired library items | Deletes items past their retention |
+| Backfill message parts | Migrates older message data |
+| Process import jobs | Advances conversation imports |
+| Save last run | Records the timestamp, at low priority so it runs last |
+
+Plugins subscribe to the same event. See [Events and cron](/development/plugins/events-and-cron).
+
+## Batching and cursors
+
+A tick may arrive every minute, so listeners process a bounded batch and remember where they stopped. Renewal, for example, handles a limited number of workspaces per run and stores its position in an option such as `option.cron.renew_subscriptions.cursor_id`.
+
+That pattern is worth copying:
+
+<Check>Process a fixed number of records per run.</Check>
+<Check>Persist a cursor, so the next run continues.</Check>
+<Check>Keep a status, so an administrator can start, pause and stop the work.</Check>
+<Check>Return early when there's nothing to do, so an idle installation costs nothing.</Check>
+
+## Import jobs
+
+Imports are the closest thing to a queue: an upload creates a job record, and each tick advances it through the adapter in batches, tracking progress and skipping duplicates. The job carries its own status and counters, so the interface can show progress. See [Import adapters](/development/plugins/guides/import-adapter).
+
+## Provider webhooks
+
+Some work isn't scheduled at all: it finishes when a third party says so. Video and image generation at several providers is asynchronous, and the provider calls a dedicated endpoint when the result is ready. Payment providers do the same for cancellations and asynchronous settlements.
+
+| Endpoint | Purpose |
+| --- | --- |
+| `POST /webhooks/{gateway}` | Payment gateway events |
+| Provider-specific media endpoints | Completed generations |
+
+See [Payment webhooks](/development/plugins/guides/payments/webhooks).
+
+## Timing and reliability
+
+- **Entity changes are flushed** after the cron event finishes, the same as in a web request.
+- **There's no retry.** A listener that throws stops that listener; the next tick starts fresh. Catch your own exceptions and record failures.
+- **Ticks can overlap** if one run takes longer than the interval. Keep batches small enough to finish well inside a minute.
+- **Nothing is guaranteed to run on time.** Some hosts limit cron to every 15 minutes, which delays renewals accordingly.
+
+## Checking it works
+
+```bash
+php cron.php
+tail -n 50 var/log/app-$(date +%F).log
+```
+
+The admin panel's status page shows the last recorded run, which is the quickest way to tell whether the schedule is firing at all.
+
+## Related
+
+- [Events](/development/core/events)
+- [Plugin events and cron](/development/plugins/events-and-cron)
+- [Billing subsystem](/development/core/billing-subsystem)
+- [Initial setup](/setup/initial-setup)

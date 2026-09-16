@@ -1,0 +1,88 @@
+---
+title: "Localization internals"
+sidebarTitle: "Localization"
+description: "How Aikeedo resolves a language per request, loads gettext catalogs for the core, themes and plugins, and builds browser dictionaries."
+---
+
+Translation uses gettext. The application, the active theme and every installed plugin each contribute a catalog, loaded per request for the resolved language.
+
+## Resolving the language
+
+`LocaleMiddleware` picks one, in this order:
+
+<Steps>
+  <Step title="URL prefix">
+    A path such as `/de-DE/pricing`, when that language is enabled. A prefix for a disabled language redirects to the unprefixed path.
+  </Step>
+  <Step title="The signed-in user's preference">
+    Their account language.
+  </Step>
+  <Step title="The locale cookie">
+    Set by a language switcher.
+  </Step>
+  <Step title="Accept-Language">
+    The browser's preference.
+  </Step>
+  <Step title="The default language">
+    From the language configuration.
+  </Step>
+</Steps>
+
+Languages themselves come from `locale/locale.json`, which lists each code, its English label, whether it's enabled, and its writing direction. Administrators enable languages and pick the default under **Settings → Languages**.
+
+## Domains
+
+| Source | Path | Domain |
+| --- | --- | --- |
+| The application | `locale/{code}/LC_MESSAGES/messages.po` | `messages`, the default |
+| The active theme | `extra/extensions/{theme}/locale/{code}/LC_MESSAGES/theme.po` | `theme` |
+| Each plugin | `extra/extensions/{vendor}/{name}/locale/{code}/LC_MESSAGES/messages.po` | From the catalog's `X-Domain` header, falling back to `plugin` |
+
+Plugins normally set `X-Domain: messages`, so their strings merge into the default domain and a plain `__()` resolves. Themes keep their own domain, which is why theme templates call `d__('theme', …)`.
+
+## Translation functions
+
+Registered globally, and as Twig functions and filters:
+
+| Function | Purpose |
+| --- | --- |
+| `__(text)` | Default domain |
+| `p__(context, text)` | With a context |
+| `n__(singular, plural, count)` | Plural |
+| `np__(context, singular, plural, count)` | Plural with a context |
+| `d__(domain, text)` | Explicit domain |
+| `dp__(domain, context, text)` | Domain and context |
+| `dn__`, `dnp__` | Domain plurals |
+| `noop__(text)` | Marks a string for extraction only |
+
+Contexts matter more than they look: they let one English word be translated differently as a button and as a label.
+
+## Browser catalogs
+
+Strings used from JavaScript are compiled into per-language files under `public/locale`, with a content hash in the name. Templates reference the right one through a Twig function, and the catalog is regenerated when translations change or the cache is cleared.
+
+## Commands
+
+| Command | Purpose |
+| --- | --- |
+| `app:locale:extract` | Scan sources and update `.po` catalogs |
+| `app:locale:translate` | Fill in missing entries with an AI model |
+| `app:locale:build` | Rebuild the browser catalogs |
+
+```bash
+php bin/console app:locale:extract --all
+php bin/console app:locale:translate --target=acme/hello --all
+php bin/console app:locale:build --enabled
+```
+
+Targets can be `core`, a package name, or an arbitrary path, which is what lets a theme be translated from its own repository. These three commands work even without a database configured.
+
+## Updates preserve translations
+
+An update backs up the locale directory, extracts the new release's strings, and merges the previous translations back in, so local edits aren't lost when the catalogs change.
+
+## Related
+
+- [Localization settings](/advanced/localization)
+- [Plugin localization](/development/plugins/localization)
+- [Theme localization](/development/themes/localization)

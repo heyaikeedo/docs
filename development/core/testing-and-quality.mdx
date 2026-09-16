@@ -1,0 +1,108 @@
+---
+title: "Testing and code quality"
+sidebarTitle: "Testing and quality"
+description: "The static analysis, coding standard and test tooling bundled with Aikeedo, and how to apply it to your own code."
+---
+
+The installation ships its own quality tooling, configured at the root. You can point all of it at plugin or theme code too.
+
+## Composer scripts
+
+| Command | Tool | Checks |
+| --- | --- | --- |
+| `composer phpstan` | PHPStan | Static analysis of `src`, at level 5, excluding `src/Presentation` |
+| `composer phpcs` | PHP_CodeSniffer | PSR-1, PSR-12 and PHP 8.2 compatibility |
+| `composer phpcbf`, `composer fix` | PHP_CodeSniffer | Fixes what it can automatically |
+| `composer phpmd` | PHPMD | Common code smells |
+| `composer unit-test` | PHPUnit | The suite in `tests/` |
+| `composer code-coverage` | PHPUnit | HTML coverage report in `coverage/` |
+| `composer analyse` | All of the above | Static analysis, style, mess detection and tests, in order |
+
+Configuration lives in `phpstan.neon.dist`, `phpcs.xml.dist`, `phpmd.xml` and `phpunit.xml`.
+
+## Checking your own code
+
+```bash
+vendor/bin/phpcs --standard=phpcs.xml.dist extra/extensions/acme/hello/src
+vendor/bin/phpcbf --standard=phpcs.xml.dist extra/extensions/acme/hello/src
+vendor/bin/phpstan analyse --level=5 extra/extensions/acme/hello/src
+```
+
+Static analysis is particularly valuable for plugins: it catches a renamed core method or a changed signature before your users do, which is the most common way a plugin breaks on a new release.
+
+## Writing tests
+
+The PHPUnit configuration bootstraps the application's autoloader and runs the suite in `tests/`, with coverage measured over `src/`.
+
+For a plugin, test what you can isolate:
+
+| Test | How |
+| --- | --- |
+| Value objects and mappers | Plain unit tests, no container needed |
+| API clients | A PSR-18 client double returning canned responses |
+| Services | Construct with test doubles for the core services they inject |
+| Command handlers | Doubles for repositories and the event dispatcher |
+
+Keep tests in your own package, with their own `composer.json` scripts, so they run without an Aikeedo installation.
+
+```php tests/Unit/ContactMapperTest.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Crm\Tests\Unit;
+
+use Acme\Crm\ContactMapper;
+use PHPUnit\Framework\TestCase;
+
+class ContactMapperTest extends TestCase
+{
+    public function testMapsEmailAndName(): void
+    {
+        $contact = (new ContactMapper())->toContact($this->makeUser());
+
+        $this->assertSame('dev@acme.test', $contact['email']);
+    }
+}
+```
+
+## What automated tests won't cover
+
+Routes, settings pages, webhooks and payment flows need a running installation. Check them manually against a local install with `DEBUG=true`:
+
+<Check>Install the extension into an installation that never had it.</Check>
+<Check>Exercise every page and endpoint it adds.</Check>
+<Check>Behave as a fresh installation would: no settings saved yet.</Check>
+<Check>Deactivate and uninstall, and confirm nothing is left behind.</Check>
+<Check>Read `var/log` afterwards.</Check>
+
+## Continuous integration
+
+A minimal pipeline for a plugin repository:
+
+```yaml .github/workflows/ci.yml
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      - run: composer install --no-interaction
+      - run: vendor/bin/phpcs --standard=PSR12 src
+      - run: vendor/bin/phpstan analyse --level=5 src
+      - run: vendor/bin/phpunit
+```
+
+Pin the PHP version to the one Aikeedo requires, so incompatibilities surface in CI rather than on a customer's server.
+
+## Related
+
+- [Coding standards](/development/coding-standards)
+- [Debugging plugins](/development/plugins/debugging)
+- [Local development](/development/local-development)

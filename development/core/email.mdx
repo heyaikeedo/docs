@@ -1,0 +1,97 @@
+---
+title: "Email"
+sidebarTitle: "Email"
+description: "How Aikeedo sends transactional email: transports, templates and the events that trigger messages."
+---
+
+Email is sent through Symfony Mailer, with templates rendered by Twig. Which transport is used depends on what an administrator configured.
+
+## Transports
+
+| `option.mail.transport` | Behavior |
+| --- | --- |
+| `smtp` | Sends over SMTP, using `option.smtp.host`, `port`, `username` and `password` |
+| Anything else | A null transport that logs instead of sending |
+
+The null transport is the default, which means a fresh installation silently drops mail until SMTP is configured. That's deliberate: it keeps a half-configured installation from emailing real users.
+
+See [Mailer settings](/email/mailer) and [SMTP](/email/smtp) for the administrator side.
+
+## Sending
+
+```php
+use Shared\Infrastructure\Email\EmailService;
+
+public function __construct(
+    private EmailService $email,
+) {}
+
+$this->email->sendTemplate(
+    $user->getEmail()->value,
+    'welcome',
+    ['name' => $user->getFirstName()->value],
+);
+```
+
+`sendTemplate()` takes one address or several, a template name, optional data and optional attachments. Every option is merged into the template data automatically, so templates can read `option.site.name`, brand settings and policy links without the caller passing them.
+
+The sender comes from `option.mail.from.address` and `option.mail.from.name`.
+
+## Templates
+
+Templates live in `resources/emails` and are registered as the `@emails` Twig namespace.
+
+| Template | Sent when |
+| --- | --- |
+| `layout.twig` | The shared shell the others extend |
+| `welcome.twig` | A user registers, or verifies their address |
+| `verify-email.twig` | A verification is requested, including after an address change |
+| `password-reset.twig` | A recovery request is created |
+| `workspace-invitation.twig` | Someone is invited to a workspace |
+| `export.twig` | A data export is ready |
+
+Administrators can edit the contents of these messages from the admin panel. See [Email templates](/advanced/email-templates).
+
+## What triggers mail
+
+Transactional mail is sent by event listeners rather than by request handlers:
+
+| Event | Message |
+| --- | --- |
+| `UserCreatedEvent` | Welcome, and verification |
+| `EmailVerifiedEvent` | Welcome |
+| `UserEmailUpdatedEvent` | Verification for the new address |
+| `PasswordRecoveryCreatedEvent` | Password reset |
+| `InvitationCreatedEvent` | Workspace invitation |
+
+Because listeners run inside the request that dispatched the event, a slow or unreachable SMTP server slows that request down. Keep timeouts short, and prefer a nearby relay.
+
+## Sending from a plugin
+
+Inject the service and render your own template through your namespace:
+
+```php
+$this->email->sendTemplate(
+    $user->getEmail()->value,
+    '@acme-notes/emails/digest.twig',
+    ['notes' => $notes],
+);
+```
+
+Extend the shared layout so your message matches the rest of the installation's mail, and check how the template resolves in your installation before relying on a namespaced path.
+
+<Warning>
+  Don't send bulk mail through this path. It's for transactional messages, sent one at a time, inside a request. Marketing sends belong in a dedicated platform; see [Event-driven integrations](/development/plugins/guides/event-driven-integration).
+</Warning>
+
+## Testing
+
+- Point SMTP at a local catcher, such as Mailpit or MailHog, while developing.
+- With the null transport, messages are logged rather than sent: check `var/log/app-*.log`.
+- Verify the "from" address is one your provider allows, or messages will be rejected or filtered.
+
+## Related
+
+- [Events](/development/core/events)
+- [Mailer settings](/email/mailer)
+- [Email templates](/advanced/email-templates)

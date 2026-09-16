@@ -1,0 +1,128 @@
+---
+title: "Database and migrations"
+sidebarTitle: "Database"
+description: "How Aikeedo maps entities with Doctrine, identifies rows, paginates, and applies schema and data migrations."
+---
+
+Persistence is Doctrine ORM over MySQL. Mapping is done with attributes on entity classes in `src/`, and the schema is versioned with Doctrine Migrations.
+
+## Mapping
+
+```php
+#[ORM\Entity]
+#[ORM\Table(name: 'category')]
+#[ORM\HasLifecycleCallbacks]
+class CategoryEntity
+{
+    #[ORM\Embedded(class: Id::class, columnPrefix: false)]
+    private Id $id;
+
+    #[ORM\Embedded(class: Title::class, columnPrefix: false)]
+    private Title $title;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, name: 'created_at')]
+    private DateTimeInterface $createdAt;
+}
+```
+
+Value objects are embeddables, so validation lives in the value object and the column stays flat.
+
+<Warning>
+  Only `src/` is scanned for mappings. Plugins can't add entities. See [Data and persistence](/development/plugins/data-and-persistence).
+</Warning>
+
+## Identifiers
+
+IDs are UUIDv7 values stored as binary. They're unique without a round trip, and they sort by creation time, which is what makes cursor pagination possible.
+
+```php
+$id = $entity->getId();          // Shared\Domain\ValueObjects\Id
+$string = (string) $id->getValue();
+```
+
+## Inheritance
+
+Several tables use single-table inheritance with a discriminator column, so related kinds share one table:
+
+| Table | Holds |
+| --- | --- |
+| `library_item` | Conversations, images, videos, speeches, transcriptions, isolated voices, classifications, memories and canvas artifacts |
+| `file` | Generic files and images |
+| `data_unit` | Knowledge base sources of different kinds |
+| `stat` | Usage, signup and subscription statistics |
+
+## Repositories
+
+Domain code depends on repository interfaces; Doctrine implementations are bound during boot. The shared base class is immutable, so filters return a narrowed clone rather than mutating shared state:
+
+```php
+$orders = $repo
+    ->filterByWorkspace($workspace)
+    ->filterByStatus(OrderStatus::COMPLETED)
+    ->slice(0, 20);
+```
+
+Two behaviors come from the base:
+
+- **Soft deletes.** Entities with a `deletedAt` field are excluded automatically.
+- **Cursor pagination.** Results can start after, or end before, a known ID, which is what the API's `starting_after` and `ending_before` parameters use.
+
+## When writes happen
+
+Handlers call `add()` and entity methods; the entity manager is flushed once, after the response is emitted. Console commands and the cron entry point flush too.
+
+Flush explicitly only when you must, such as when streaming a response that has to persist state before it finishes.
+
+## Schema migrations
+
+Migrations live in `migrations/mysql`, are namespaced `Migrations\MySql`, and are tracked in a `migration` table.
+
+```bash
+php bin/console migrations:status
+php bin/console migrations:migrate
+php bin/console migrations:diff        # generate from mapping changes
+php bin/console migrations:execute --up 'Migrations\MySql\Version50000'
+```
+
+Files are named by the version they belong to, such as `Version50000` for 5.0.0, alongside timestamped ones for changes within a release.
+
+<Warning>
+  `migrations:diff` compares the database against the entity mappings. Always read the generated SQL before running it: it will happily drop a column that an extension added outside the mapping.
+</Warning>
+
+## Data migrations
+
+Schema changes aren't always enough: an update may need to reshape existing rows. Those live in `migrations/update` as classes implementing the migration interface, and are run in order by the migration manager, which records what it has run in the `migrated` option so each one runs once.
+
+The update flow triggers them after the schema migration.
+
+## Working with the schema
+
+```bash
+php bin/console orm:validate-schema        # mappings versus the database
+php bin/console orm:info                   # list mapped entities
+php bin/console orm:schema-tool:update --dump-sql
+php bin/console dbal:run-sql "SELECT COUNT(*) FROM workspace"
+```
+
+<Warning>
+  `orm:schema-tool:update --force` bypasses migrations and leaves the migration table out of step with reality. Use migrations on anything but a scratch database.
+</Warning>
+
+## Tables
+
+Core tables include `user`, `workspace`, `workspace_invitation`, `plan`, `plan_snapshot`, `subscription`, `order`, `coupon`, `option`, `category`, `preset`, `assistant`, `voice`, `file`, `library_item`, `message`, `artifact_version`, `data_unit`, `chatbot`, `chatbot_message`, `chatbot_conversation`, `contact`, `company`, `affiliate`, `payout`, `import_job`, `stat` and `migration`.
+
+<Warning>
+  Adding columns to core tables is a fork: the next update's migrations don't know about them, and `migrations:diff` will propose dropping them. If you need extra data, see [Data and persistence](/development/plugins/data-and-persistence).
+</Warning>
+
+## Backups
+
+Anything that changes the schema, including an update, should be preceded by a database dump. The update flow migrates in place, and there's no automatic rollback.
+
+## Related
+
+- [Modules and layers](/development/core/modules-and-layers)
+- [Console commands](/development/core/console-commands)
+- [How to update](/versioning/how-to-update)

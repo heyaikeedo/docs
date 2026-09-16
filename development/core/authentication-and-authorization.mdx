@@ -1,0 +1,117 @@
+---
+title: "Authentication and authorization"
+sidebarTitle: "Auth"
+description: "How Aikeedo identifies users with tokens, cookies and API keys, resolves workspaces, and decides what each caller may do."
+---
+
+Authentication happens in middleware, before a request handler runs. Authorization is split: coarse checks in middleware, fine-grained checks in access control classes.
+
+## Identifying the caller
+
+`UserMiddleware` tries three sources, in order:
+
+<Steps>
+  <Step title="Authorization: Bearer <jwt>">
+    The session token the web app holds. It's verified, and the user it names is loaded.
+  </Step>
+  <Step title="The session cookie">
+    A cookie named `user`, holding the same kind of token. It's used **only outside** `/api/` and `/admin/api/`, so browser credentials can't authenticate an API call.
+  </Step>
+  <Step title="X-Api-Key">
+    An API key replaces the user above, on `/api/*` when the User API is enabled, and on `/admin/api/*` when the Admin API is enabled.
+  </Step>
+</Steps>
+
+If none match, the request continues unauthenticated, and a later middleware decides whether that's allowed.
+
+## Session tokens
+
+| Property | Value |
+| --- | --- |
+| Algorithm | HS256, signed with the `JWT_TOKEN` secret |
+| Claims | `sub`, `iat`, `jti`, `exp`, plus `is_admin`, `email`, `first_name`, `last_name` and `avatar` |
+| Default lifetime | 24 hours |
+| Remembered lifetime | 30 days |
+
+Signing in returns the token in the response body and sets the cookie. The cookie is `httpOnly`, `SameSite=lax`, and marked secure when the site is configured for HTTPS. `COOKIE_PREFIX` and `COOKIE_DOMAIN` adjust its name and scope for installations that share a domain with other applications.
+
+<Warning>
+  Changing `JWT_TOKEN` invalidates every session and API token immediately. Treat it as a secret with no rotation story: rotate it only when you intend to sign everyone out.
+</Warning>
+
+## API keys
+
+Each user has one key, managed under **Settings → API keys** in the app. It carries the owner's permissions, which means a key belonging to an administrator can call the Admin API when that API is enabled.
+
+The two APIs are switched on separately under **Settings → Features → REST API**. When an API is off, its key authentication is skipped entirely, and requests fail as unauthenticated.
+
+## Workspaces
+
+Almost everything belongs to a workspace rather than a user. After identifying the caller, the middleware resolves one:
+
+1. The `X-Workspace-Id` header, when present.
+2. Otherwise the user's current workspace.
+
+The workspace is attached to the request **only if the user is a member**, so a handler that reads it can trust it:
+
+```php
+$user = $request->getAttribute(UserEntity::class);
+$workspace = $request->getAttribute(WorkspaceEntity::class);
+```
+
+## Authorization
+
+| Layer | Enforces |
+| --- | --- |
+| `AuthorizationMiddleware` | An active user must exist; under `/admin`, the user must have the admin role |
+| `EmailVerificationMiddleware` | A verified email, when the policy is strict |
+| `LicenseMiddleware` | A valid license, for admin views |
+| `DemoEnvironmentMiddleware` | Blocks writes in demo mode |
+| Access control classes | Per-resource rules |
+
+Roles are deliberately coarse: `user` and `admin`. Anything finer is a per-resource decision.
+
+### Access control classes
+
+`Presentation\AccessControls\*` holds the resource rules, with a `Permission` enum covering the actions the application distinguishes, such as reading, editing and deleting, plus resource-specific ones.
+
+Two conventions are worth copying into your own code:
+
+- **A resource the caller may not see is a `404`**, not a `403`, so IDs can't be probed.
+- **A resource that exists but is withheld by the caller's plan is a `403`**, because telling them it exists is the point.
+
+```php
+if ($preset->getStatus() !== Status::ACTIVE) {
+    throw new NotFoundException(param: 'preset');
+}
+
+if (!self::grants($preset, $workspace)) {
+    throw new HttpException(statusCode: StatusCode::FORBIDDEN);
+}
+```
+
+## Signing in
+
+| Endpoint | Purpose |
+| --- | --- |
+| `POST /api/auth/basic` | Email and password sign-in |
+| `POST /api/auth/signup` | Registration |
+| `POST /api/auth/recovery/...` | Password recovery |
+| `GET /auth/{provider}` | Single sign-on callback |
+
+Single sign-on ships with Google, GitHub, Facebook and LinkedIn providers, each configured in the admin panel. Captcha validation can be required on the public forms.
+
+## Bring your own keys
+
+`ByokMiddleware` applies a workspace's own provider credentials when the installation allows it. The billing service then skips credit deduction for calls made with those keys, which is why AI services always receive the model alongside the workspace.
+
+## Extending
+
+- To protect your own endpoints, extend the base class that already carries the middleware you need. See [Routes and request handlers](/development/plugins/routes-and-request-handlers).
+- To authenticate someone who isn't an Aikeedo user, such as a widget visitor, issue your own scoped token and verify it in your own middleware. See [Public endpoints and embeds](/development/plugins/public-endpoints-and-embeds).
+
+## Related
+
+- [Routing and middleware](/development/core/routing-and-middleware)
+- [REST API overview](/development/api/overview)
+- [Users and workspaces](/advanced/users-workspaces)
