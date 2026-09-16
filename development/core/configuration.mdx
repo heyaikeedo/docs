@@ -1,0 +1,165 @@
+---
+title: "Configuration"
+sidebarTitle: "Configuration"
+description: "Aikeedo's three layers of configuration: environment variables, computed config values, and database-backed options."
+---
+
+Configuration comes from three places, with different lifetimes and audiences.
+
+| Layer | Set by | Where it lives | Read as |
+| --- | --- | --- | --- |
+| Environment | The person installing | `.env` | `env('NAME')` |
+| Config | Computed at bootstrap | Memory | `config.*` container IDs |
+| Options | Administrators in the panel | The `option` table | `option.*` container IDs |
+
+## Environment variables
+
+`.env` is loaded at bootstrap, falling back to `.env.example` for keys it doesn't define. These settings belong to the installation, not the business.
+
+### Application
+
+| Variable | Purpose |
+| --- | --- |
+| `ENVIRONMENT` | `prod`, `dev`, `demo` or `install`. `install` routes everything to the installer; `demo` blocks write requests. |
+| `DEBUG` | Shows errors, disables caches, makes Twig strict, and rethrows plugin boot failures. |
+| `CACHE` | Enables template, route, listener and metadata caching, when debug is off. |
+| `JWT_TOKEN` | Secret used to sign session tokens. |
+| `PUBLIC_DIR` | Web root directory name, such as `public` or `public_html`. |
+
+### Database
+
+| Variable | Purpose |
+| --- | --- |
+| `DB_DRIVER` | `mysql`. Leaving it empty means no database, which is how the installer boots. |
+| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Connection details. |
+| `DB_CHARSET` | Character set, normally `utf8mb4`. |
+| `DB_UNIX_SOCKET` | Socket path, as an alternative to host and port. |
+| `SQLITE_PATH` | SQLite database path, where that driver is used. |
+
+### Frontend and assets
+
+| Variable | Purpose |
+| --- | --- |
+| `HMR` | Load application assets from the Vite dev server instead of the build. |
+| `ASSETS_SERVER` | That dev server's URL, defaulting to `http://localhost:5173`. |
+| `THEME_ASSETS_SERVER` | The theme dev server's URL, normally port 5174. Overrides theme asset resolution whenever it's set. |
+
+### Sessions, logs and tooling
+
+| Variable | Purpose |
+| --- | --- |
+| `COOKIE_DOMAIN`, `COOKIE_PREFIX` | Cookie scope and naming, for multi-app domains. Misconfiguring these breaks sign-in. |
+| `LOG_MAX_FILES`, `LOG_ERROR_MAX_FILES` | How many rotated log files to keep. |
+| `COMPOSER_HOME` | Composer's home directory, used when installing plugins. |
+| `DEMO_SUPERADMIN_EMAIL`, `DEMO_ACCOUNT_EMAIL`, `DEMO_ACCOUNT_PASSWORD` | Demo-mode accounts. |
+
+Read them with the global helper, which takes a default:
+
+```php
+$environment = env('ENVIRONMENT', 'prod');
+```
+
+<Warning>
+  Environment variables are exposed to Twig as the `env` global. Read a specific key when a template genuinely needs one, and never dump or serialize the object.
+</Warning>
+
+## Config values
+
+Computed at bootstrap and injected by ID:
+
+```php
+use Easy\Container\Attributes\Inject;
+
+public function __construct(
+    #[Inject('config.dirs.uploads')]
+    private string $uploads,
+
+    #[Inject('config.enable_debugging')]
+    private bool $debug = false,
+) {}
+```
+
+| ID | Value |
+| --- | --- |
+| `config.dirs.root` | Installation root |
+| `config.dirs.webroot` | Web root, honoring `PUBLIC_DIR` |
+| `config.dirs.cache`, `.log` | `var/cache`, `var/log` |
+| `config.dirs.src`, `.views` | `src`, `resources/views` |
+| `config.dirs.uploads` | `{webroot}/uploads` |
+| `config.dirs.locale` | `locale` |
+| `config.dirs.extensions` | `extra/extensions` |
+| `config.dirs.artifacts` | `extra/artifacts` |
+| `config.enable_debugging` | `DEBUG`, as a boolean |
+| `config.enable_caching` | `CACHE`, as a boolean |
+| `config.locale` | The language catalogue from `locale/locale.json` |
+
+Two more IDs are set alongside them: `version`, read from the `VERSION` file, and `license`.
+
+## Options
+
+Options are rows of JSON, edited by administrators. They're loaded once per request and exposed as dot paths:
+
+```php
+#[Inject('option.billing.currency')]
+private ?string $currency = 'USD',
+
+#[Inject('option.features.chat.is_enabled')]
+private ?bool $chatEnabled = false,
+```
+
+In Twig they're all under `option`:
+
+```twig
+{{ option.site.name ?? '' }}
+{% if option.features.chat.is_enabled|default(false) %}…{% endif %}
+```
+
+### Common option groups
+
+| Prefix | Controls |
+| --- | --- |
+| `option.site.*` | Name, domain, HTTPS, landing page, verification policy |
+| `option.brand.*` | Logos and favicon |
+| `option.color_scheme.*` | Light and dark modes, accent colors |
+| `option.features.*` | Feature switches, including the REST APIs |
+| `option.billing.*` | Currency, usage mode, tax engine, fallback plan, trials |
+| `option.credit_rate` | Per-rate credit pricing |
+| `option.mail.*`, `option.smtp.*` | Mail transport |
+| `option.cdn.*` | Storage adapter, URL signing, grouping |
+| `option.embeddings.*` | Vector store adapter and embedding model |
+| `option.policies.*` | Legal page contents |
+| `option.script_tags.*` | Analytics and support widgets |
+| `option.theme` | The active theme |
+
+### Writing options
+
+```php
+use Option\Application\Commands\SaveOptionCommand;
+
+$this->dispatcher->dispatch(new SaveOptionCommand(
+    'acme',
+    json_encode(['api_key' => $key])
+));
+```
+
+Writes merge into the existing JSON: nested objects are merged recursively, and lists are replaced. `DeleteOptionCommand` removes a key, including a nested one.
+
+Administrator-facing forms post to the options API rather than calling this directly. See [Admin settings pages](/development/plugins/admin-settings-pages).
+
+## Which layer to use
+
+| Setting | Layer |
+| --- | --- |
+| Credentials for the installation itself, such as the database | Environment |
+| Anything an administrator should change without editing files | Options |
+| Paths and derived flags | Config |
+
+<Note>
+  Options require a database, so anything needed before the database exists, such as the debug flag, has to be an environment variable.
+</Note>
+
+## Related
+
+- [Dependency injection](/development/core/dependency-injection)
+- [Bootstrap and lifecycle](/development/core/bootstrap-and-lifecycle)
+- [Local development](/development/local-development)

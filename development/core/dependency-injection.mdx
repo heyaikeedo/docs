@@ -1,0 +1,146 @@
+---
+title: "Dependency injection"
+sidebarTitle: "Dependency injection"
+description: "How Aikeedo's container autowires services, resolves configuration by ID, and lets modules and plugins bind their own implementations."
+---
+
+Aikeedo uses a small autowiring container. Most classes never register anything: they declare what they need in the constructor and the container builds it.
+
+## Autowiring
+
+```php
+class NoteService
+{
+    public function __construct(
+        private NoteRepositoryInterface $repo,
+        private Dispatcher $dispatcher,
+        private LoggerInterface $logger,
+    ) {}
+}
+```
+
+Concrete classes are constructed recursively. Interfaces resolve when something has bound them, which module bootstrappers do during boot:
+
+```php
+$app->set(CategoryRepositoryInterface::class, CategoryRepository::class);
+```
+
+## Injecting values by ID
+
+Scalars and configuration come from the container by ID, using an attribute:
+
+```php
+use Easy\Container\Attributes\Inject;
+
+public function __construct(
+    #[Inject('option.billing.currency')]
+    private ?string $currency = 'USD',
+
+    #[Inject('config.dirs.uploads')]
+    private ?string $uploadsDir = null,
+
+    #[Inject('version')]
+    private string $version = 'dev',
+) {}
+```
+
+<Warning>
+  Always pair `#[Inject('option.…')]` with a nullable type and a default. Options that were never saved don't resolve, and a non-nullable parameter then fails to construct the class.
+</Warning>
+
+## Resolvers
+
+Two resolvers extend the container with dynamic IDs.
+
+### Configuration
+
+Anything starting with `config.` comes from the configuration object built at bootstrap:
+
+| ID | Value |
+| --- | --- |
+| `config.dirs.root` | Installation root |
+| `config.dirs.webroot` | Web root, honoring `PUBLIC_DIR` |
+| `config.dirs.cache`, `.log`, `.uploads`, `.locale` | Runtime directories |
+| `config.dirs.src`, `.views` | Source and template directories |
+| `config.dirs.extensions`, `.artifacts` | Plugin directories |
+| `config.enable_debugging` | Effective debug flag |
+| `config.enable_caching` | Effective cache flag |
+| `config.locale` | Default locale configuration |
+
+### Options
+
+Anything starting with `option.` comes from the options table. Values are stored as JSON, flattened into a dot map, and cast on the way out:
+
+```php
+#[Inject('option.features.chat.is_enabled')]
+private ?bool $chatEnabled = false,
+```
+
+| Stored | Resolved as |
+| --- | --- |
+| `"1"`, `"0"` | `int` |
+| `"1.5"` | `float` |
+| `"true"`, `"false"` | `bool` |
+| A JSON object or array | `array` |
+| Anything else | `string` |
+
+Options are read once per request. If the database isn't configured, resolution quietly returns nothing, which keeps the installer working.
+
+## Resolving imperatively
+
+Where constructor injection isn't possible, such as inside a plugin's `boot()`:
+
+```php
+use Application;
+
+$isEnabled = Application::make('option.features.notes.is_enabled', false);
+$dispatcher = Application::make(Dispatcher::class);
+```
+
+`Application::make($id, $default)` returns the default when the ID can't be resolved, instead of throwing.
+
+<Tip>
+  Prefer constructor injection. Static resolution hides dependencies and makes classes harder to test; use it only for bootstrap-time decisions.
+</Tip>
+
+## Binding your own services
+
+Bind an interface when callers should depend on the contract:
+
+```php
+$app->set(NotifierInterface::class, EmailNotifier::class);
+```
+
+Bind an instance when construction is expensive or must happen once:
+
+```php
+$collection = new ToolCollection($container);
+$collection->add(WeatherTool::LOOKUP_KEY, WeatherTool::class);
+
+$app->set(ToolCollection::class, $collection);
+```
+
+## Keyed registries
+
+For extension points with many implementations, Aikeedo uses registries rather than container bindings, so implementations can be listed as well as resolved:
+
+| Registry | Holds |
+| --- | --- |
+| `Shared\Infrastructure\Collections\ServiceCollectionInterface` | Any keyed implementation of a given interface |
+| `Billing\Infrastructure\Payments\PaymentGatewayFactoryInterface` | Payment gateways |
+| `Shared\Infrastructure\FileSystem\CdnAdapterCollectionInterface` | Storage adapters |
+| `Billing\Infrastructure\Currency\RateProviderCollectionInterface` | Exchange rate providers |
+| `Ai\Infrastructure\Services\AiServiceFactory` | AI services |
+| `Ai\Infrastructure\Services\Tools\ToolCollection` | Chat tools |
+
+Entries are stored as class names and resolved from the container on first use, so registering is cheap.
+
+## Lifetimes
+
+Services resolved from the container are shared for the request. There's no request-scoped or transient lifetime to configure: a fresh process handles each request, and everything is discarded at the end.
+
+## Related
+
+- [Bootstrap and lifecycle](/development/core/bootstrap-and-lifecycle)
+- [Configuration](/development/core/configuration)
+- [Plugin dependency injection](/development/plugins/dependency-injection-and-services)

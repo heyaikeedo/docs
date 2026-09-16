@@ -1,0 +1,159 @@
+---
+title: "Modules and layers"
+sidebarTitle: "Modules and layers"
+description: "How Aikeedo organizes code into bounded contexts, and what belongs in the domain, application and infrastructure layers."
+---
+
+`src/` is divided by domain, not by technical role. Each module owns its data, its rules and the plumbing that persists them, which keeps billing logic out of the AI code and vice versa.
+
+## A module
+
+```text
+src/Billing/
+├── Domain/
+│   ├── Entities/          # OrderEntity, PlanEntity, SubscriptionEntity…
+│   ├── ValueObjects/      # Price, BillingCycle, ExternalId…
+│   ├── Repositories/      # OrderRepositoryInterface…
+│   ├── Events/            # OrderCreatedEvent, SubscriptionCreatedEvent…
+│   ├── Exceptions/        # AlreadyPaidException…
+│   └── Services/          # BillingService, OrderFulfillmentService
+├── Application/
+│   ├── Commands/          # CreateOrderCommand, PayOrderCommand…
+│   ├── CommandHandlers/   # one per command
+│   └── Listeners/
+└── Infrastructure/
+    ├── BillingModuleBootstrapper.php
+    ├── Repositories/DoctrineOrm/
+    ├── Payments/          # gateway contracts and built-in gateways
+    ├── Tax/
+    └── Currency/
+```
+
+`Presentation` is a module of its own rather than a layer inside each one, so every HTTP concern lives in one place.
+
+## The domain layer
+
+**Entities** are Doctrine-mapped classes that expose behavior rather than setters for every field:
+
+```php
+#[ORM\Entity]
+#[ORM\Table(name: 'category')]
+class CategoryEntity
+{
+    #[ORM\Embedded(class: Id::class, columnPrefix: false)]
+    private Id $id;
+
+    #[ORM\Embedded(class: Title::class, columnPrefix: false)]
+    private Title $title;
+
+    public function __construct(Title $title)
+    {
+        $this->id = new Id();
+        $this->title = $title;
+        $this->createdAt = new DateTimeImmutable();
+    }
+}
+```
+
+Identifiers are UUIDv7 values stored as binary, which keeps them sortable by creation time while staying opaque.
+
+**Value objects** validate in the constructor and are immutable, so an invalid value can't reach an entity:
+
+```php
+$title = new Title('Marketing');   // throws InvalidValueException when empty
+```
+
+**Repository interfaces** live in the domain and are implemented in infrastructure, so handlers depend on the contract rather than Doctrine.
+
+**Domain events** are plain objects carrying the entity they describe, dispatched after the change. See [Events](/development/core/events).
+
+## The application layer
+
+**Commands** are data holders that convert scalars into value objects and name their handler:
+
+```php
+#[Handler(CreateCategoryCommandHandler::class)]
+class CreateCategoryCommand
+{
+    public Title $title;
+
+    public function __construct(string $title)
+    {
+        $this->title = new Title($title);
+    }
+}
+```
+
+**Handlers** do the work and dispatch the event:
+
+```php
+class CreateCategoryCommandHandler
+{
+    public function __construct(
+        private CategoryRepositoryInterface $repo,
+        private EventDispatcherInterface $dispatcher,
+    ) {}
+
+    public function handle(CreateCategoryCommand $cmd): CategoryEntity
+    {
+        $category = new CategoryEntity(title: $cmd->title);
+
+        $this->repo->add($category);
+        $this->dispatcher->dispatch(new CategoryCreatedEvent($category));
+
+        return $category;
+    }
+}
+```
+
+Queries use the same pattern: `ReadPlanCommand`, `ListPlansCommand` and `CountPlansCommand` are commands whose handlers return data.
+
+## The infrastructure layer
+
+**Module bootstrappers** wire the module during boot: binding repository interfaces to implementations, registering navigation entries, and adding listeners.
+
+**Doctrine repositories** extend a shared base that is deliberately immutable: each filter returns a clone with a narrowed query, so a repository can be passed around without one caller's filter leaking into another's.
+
+```php
+$plans = $repo
+    ->filterByStatus($status)
+    ->orderBy('price', 'ASC')
+    ->slice(0, 20);
+```
+
+Two behaviors come from the base class:
+
+- **Soft deletes.** Entities with a `deletedAt` field are filtered out automatically.
+- **Cursor pagination.** Results can be sliced relative to a known ID rather than an offset, which is what the API's `starting_after` and `ending_before` parameters use.
+
+## Layering rules
+
+| Layer | May depend on |
+| --- | --- |
+| Domain | Nothing outside its own module's domain |
+| Application | Its own domain, and other modules' commands |
+| Infrastructure | Everything, including third-party libraries |
+| Presentation | Application commands and resources |
+
+<Note>
+  Treat this as the intended direction rather than an enforced rule: parts of the codebase reach across it. New code, including plugin code, is easier to maintain when it follows the direction.
+</Note>
+
+## Generating a module
+
+```bash
+php bin/console app:make:module
+```
+
+The generator scaffolds a module with the layout above: entity, value objects, repository interface and implementation, CRUD commands and handlers, and a bootstrapper. It's the fastest way to see the conventions applied consistently.
+
+<Warning>
+  A generated module lives in `src/`, which an update replaces. Use it to learn the structure, or when you maintain a fork; plugins can't add modules. See [Data and persistence](/development/plugins/data-and-persistence).
+</Warning>
+
+## Related
+
+- [Command bus](/development/core/command-bus)
+- [Database and migrations](/development/core/database-and-migrations)
+- [Events](/development/core/events)
+- [Coding standards](/development/coding-standards)

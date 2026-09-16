@@ -1,0 +1,136 @@
+---
+title: "Directory structure"
+sidebarTitle: "Directory structure"
+description: "What every directory in an Aikeedo installation contains, and which ones you can safely change."
+---
+
+```text
+aikeedo/
+├── bin/console          # Symfony Console entry point
+├── bootstrap/           # autoloader, container and application bootstrap
+├── config/              # providers, bootstrappers, commands, migrations, model registry
+├── cron.php             # scheduled work entry point
+├── data/                # seed content shipped with the release
+├── docs/                # OpenAPI specifications and the API docs viewer
+├── extra/               # plugins and themes
+├── helpers/             # global helper functions
+├── locale/              # translation catalogs and the language catalogue
+├── migrations/          # database and data migrations
+├── public/              # web root
+├── resources/           # templates, email templates, frontend sources, static files
+├── src/                 # application code
+├── tests/               # test suites
+├── var/                 # runtime files: cache, logs, temporary data
+├── vendor/              # Composer dependencies
+├── .env                 # environment configuration
+└── composer.json
+```
+
+## Application code
+
+| Path | Contents |
+| --- | --- |
+| `src/{Module}/Domain` | Entities, value objects, repository interfaces, domain events and exceptions |
+| `src/{Module}/Application` | Commands, command handlers, listeners and application services |
+| `src/{Module}/Infrastructure` | Doctrine repositories, adapters, module bootstrappers |
+| `src/Presentation` | Request handlers, middleware, responses, resources, validation, console commands |
+| `src/Shared` | Command bus, container glue, filesystem, i18n, navigation, registries, caching |
+| `src/Application.php` | The application object that boots providers and bootstrappers |
+
+See [Modules and layers](/development/core/modules-and-layers).
+
+## Bootstrap and configuration
+
+| Path | Purpose |
+| --- | --- |
+| `bootstrap/autoload.php` | Registers Composer's autoloader and maps the application's namespaces to `src/` |
+| `bootstrap/container.php` | Loads the environment, builds configuration, registers resolvers |
+| `bootstrap/app.php` | Creates the application, adds providers and bootstrappers, boots |
+| `config/providers.php` | Service providers, in order |
+| `config/bootstrappers.php` | Module bootstrappers, in order |
+| `config/commands.php` | The console command map |
+| `config/migrations.php` | Doctrine Migrations configuration |
+| `config/registry/base.json` | The AI model catalog shipped with the release |
+| `config/registry/registry.json` | Per-installation model customizations. Not shipped, so updates preserve it. |
+| `config/registry/import.json`, `servers.json` | Importable models and OpenAI-compatible servers |
+
+## Views and frontend
+
+| Path | Contents |
+| --- | --- |
+| `resources/views/layouts` | Base layouts: `base`, `main`, `minimal` |
+| `resources/views/templates` | Pages, grouped as `admin`, `app`, `auth` and `install` |
+| `resources/views/sections`, `snippets` | Shared blocks and partials |
+| `resources/views/overrides` | Optional. Templates here take precedence over the originals. |
+| `resources/emails` | Email templates, in the `@emails` namespace |
+| `resources/assets` | JavaScript and CSS sources built by Vite |
+| `resources/static` | Files copied to the web root as-is |
+
+## Web root
+
+| Path | Contents |
+| --- | --- |
+| `public/index.php` | Front controller |
+| `public/assets`, `public/.vite` | Built frontend bundles and their manifest |
+| `public/e/{vendor}/{package}` | Assets published by plugins and themes |
+| `public/uploads` | Local file storage, when the local storage adapter is used |
+| `public/locale` | Browser translation catalogs |
+
+The web root's name comes from the `PUBLIC_DIR` environment variable, so hosts that serve from `public_html` work without changes.
+
+## Plugins and themes
+
+| Path | Contents |
+| --- | --- |
+| `extra/extensions/{vendor}/{package}` | Installed plugins and themes |
+| `extra/artifacts` | Uploaded archives, used as a Composer artifact repository |
+
+Both are referenced as Composer path repositories, which is how a locally placed package installs by name.
+
+## Data and runtime
+
+| Path | Contents |
+| --- | --- |
+| `data/seeds` | Starter content imported by `app:import:seeds` |
+| `locale/{code}/LC_MESSAGES/messages.po` | The application's own translations |
+| `locale/locale.json` | The list of languages and the default |
+| `migrations/mysql` | Doctrine schema migrations |
+| `migrations/update` | Data migrations run during an update |
+| `var/cache` | Twig, route, metadata and PSR-6 caches |
+| `var/log` | `app-*.log` and `error-*.log`, rotated daily |
+| `var/imports`, `var/tmp` | Working files |
+| `var/plugin-backup` | Backups taken before a plugin reinstall |
+| `var/plugin-health.json` | Recorded plugin boot failures |
+
+<Warning>
+  `var/` must be writable by the web server user, and so must the storage directory when the local adapter is used. A cron job running as a different user is a common cause of permission problems.
+</Warning>
+
+## What survives an update
+
+| Path | On update |
+| --- | --- |
+| `src/`, `resources/` (except `overrides/`), `bootstrap/`, `config/*.php`, `migrations/`, `public/assets/` | Replaced |
+| `vendor/` | Replaced, then plugin dependencies reinstalled |
+| `config/registry/base.json` | Replaced. Customizations live in `registry.json`. |
+| `extra/extensions/heyaikeedo/*` | Replaced with the bundled versions |
+| `extra/extensions/{your-vendor}/*` | Kept and reinstalled |
+| `resources/views/overrides/`, `locale/`, `.env`, `public/uploads/`, `var/` | Kept |
+
+See [Extending Aikeedo](/development/extending-aikeedo) for what that means in practice.
+
+## Quality tooling
+
+| File | Tool |
+| --- | --- |
+| `phpstan.neon.dist` | Static analysis |
+| `phpcs.xml.dist` | Coding standard |
+| `phpmd.xml` | Mess detection |
+| `phpunit.xml` | Tests |
+| `vite.config.mjs`, `package.json` | Frontend build |
+
+## Related
+
+- [Bootstrap and lifecycle](/development/core/bootstrap-and-lifecycle)
+- [Configuration](/development/core/configuration)
+- [Views and frontend](/development/core/views-and-frontend)

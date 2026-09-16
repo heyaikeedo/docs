@@ -1,0 +1,157 @@
+---
+title: "Command bus"
+sidebarTitle: "Command bus"
+description: "How Aikeedo dispatches commands and queries to their handlers, and how to define your own."
+---
+
+Behavior in Aikeedo is expressed as a command and a handler. A request handler builds a command, dispatches it, and turns the result into a response. The same mechanism serves reads and writes.
+
+## Dispatching
+
+```php
+use Shared\Infrastructure\CommandBus\Dispatcher;
+
+public function __construct(
+    private Dispatcher $dispatcher,
+) {}
+
+$category = $this->dispatcher->dispatch(new CreateCategoryCommand('Marketing'));
+```
+
+`Dispatcher::dispatch(object $cmd): mixed` reads the `#[Handler]` attribute from the command's class, walking up to parent classes if needed, resolves that handler from the container, and calls `handle()`. A command with no handler throws `Shared\Infrastructure\CommandBus\Exception\NoHandlerFoundException`.
+
+There is no queue and no middleware: the handler runs synchronously, in the current request.
+
+## A command
+
+```php src/Category/Application/Commands/CreateCategoryCommand.php
+<?php
+
+declare(strict_types=1);
+
+namespace Category\Application\Commands;
+
+use Category\Application\CommandHandlers\CreateCategoryCommandHandler;
+use Category\Domain\ValueObjects\Title;
+use Shared\Infrastructure\CommandBus\Attributes\Handler;
+
+#[Handler(CreateCategoryCommandHandler::class)]
+class CreateCategoryCommand
+{
+    public Title $title;
+
+    public function __construct(string $title)
+    {
+        $this->title = new Title($title);
+    }
+}
+```
+
+The command accepts scalars, because callers work with raw input, and converts them into value objects, so validation happens once and early.
+
+## A handler
+
+```php src/Category/Application/CommandHandlers/CreateCategoryCommandHandler.php
+class CreateCategoryCommandHandler
+{
+    public function __construct(
+        private CategoryRepositoryInterface $repo,
+        private EventDispatcherInterface $dispatcher,
+    ) {}
+
+    public function handle(CreateCategoryCommand $cmd): CategoryEntity
+    {
+        $category = new CategoryEntity(title: $cmd->title);
+
+        $this->repo->add($category);
+        $this->dispatcher->dispatch(new CategoryCreatedEvent($category));
+
+        return $category;
+    }
+}
+```
+
+Handlers are resolved from the container, so their dependencies are autowired. They persist through a repository and let the end-of-request flush write the change.
+
+## Commands and queries
+
+Both use the bus. The naming convention makes the intent clear:
+
+| Prefix | Returns |
+| --- | --- |
+| `Create*`, `Update*`, `Delete*` | The affected entity, or nothing |
+| `Read*` | One entity, or throws a not-found exception |
+| `List*` | An iterator of entities |
+| `Count*` | An integer |
+
+```php
+$plan = $this->dispatcher->dispatch(new ReadPlanCommand($id));
+
+$cmd = new ListPlansCommand();
+$cmd->setStatus(1);
+$cmd->setOrderBy('price', 'ASC');
+
+foreach ($this->dispatcher->dispatch($cmd) as $plan) {
+    // …
+}
+```
+
+List commands usually expose setters for filters, sorting, limits and cursors, rather than a long constructor.
+
+## Named constructors
+
+Some commands offer alternative constructors for lookups by something other than an ID:
+
+```php
+$subscription = $this->dispatcher->dispatch(
+    ReadSubscriptionCommand::createByExternalId('demo-pay', $providerId)
+);
+```
+
+## Generators
+
+A handler may return a `Generator`, which is how streamed AI responses work: the handler yields parts as the provider produces them, and the request handler streams them to the client. See [Streaming responses](/development/plugins/streaming-responses).
+
+## Errors
+
+Handlers throw domain exceptions rather than returning error values:
+
+```php
+try {
+    $this->dispatcher->dispatch(new PayOrderCommand($id, $gateway, $reference));
+} catch (AlreadyPaidException) {
+    // Someone else completed it first.
+}
+```
+
+Presentation-layer exceptions are turned into HTTP responses by the exception middleware. See [Routing and middleware](/development/core/routing-and-middleware).
+
+## Using the bus from a plugin
+
+Plugins dispatch core commands, and define their own:
+
+```php
+#[Handler(SendGreetingCommandHandler::class)]
+class SendGreetingCommand
+{
+    public function __construct(
+        public readonly string $email,
+    ) {}
+}
+```
+
+Both sides are autowired, so a plugin's handler can depend on core services and on its own. See [Dependency injection](/development/plugins/dependency-injection-and-services).
+
+## Conventions
+
+<Check>One command, one handler, one responsibility.</Check>
+<Check>Commands hold data and convert it into value objects; they contain no logic.</Check>
+<Check>Handlers dispatch a domain event after a change, so other code can react.</Check>
+<Check>Handlers return entities or iterators, not formatted output. Formatting belongs in a resource.</Check>
+<Check>Nothing is flushed inside a handler unless it genuinely must be.</Check>
+
+## Related
+
+- [Modules and layers](/development/core/modules-and-layers)
+- [Events](/development/core/events)
+- [Dependency injection](/development/core/dependency-injection)
