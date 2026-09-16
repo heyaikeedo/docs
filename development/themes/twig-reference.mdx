@@ -1,0 +1,128 @@
+---
+title: "Twig reference"
+sidebarTitle: "Twig reference"
+description: "Every Twig function, filter, test and global available in an Aikeedo theme template."
+---
+
+Theme templates run in the application's Twig environment, so they get its extensions on top of standard Twig.
+
+## Theme assets
+
+<ResponseField name="asset_url" type="filter">
+  Resolves a theme asset to a URL: a full URL is returned unchanged, then the dev server is used when `THEME_ASSETS_SERVER` is set, then the Vite manifest, then `/e/{theme}/assets/...`.
+
+  ```twig
+  <link rel="stylesheet" href="{{ '/src/css/index.css'|asset_url }}">
+  <img src="{{ '/assets/logo.svg'|asset_url }}" alt="">
+  ```
+</ResponseField>
+
+<ResponseField name="asset" type="filter">
+  Resolves an **application** asset through the app's own build manifest. Themes rarely need it; use `asset_url` for your own files.
+</ResponseField>
+
+## Translation
+
+All nine gettext helpers are available as both functions and filters. Themes use the `theme` domain, so reach for the `d`-prefixed variants.
+
+| Helper | Signature | Use |
+| --- | --- | --- |
+| `d__` | `d__(domain, text)` | A theme string |
+| `dp__` | `dp__(domain, context, text)` | A theme string with a context |
+| `dn__` | `dn__(domain, singular, plural, count)` | A theme plural |
+| `dnp__` | `dnp__(domain, context, singular, plural, count)` | A theme plural with a context |
+| `__` | `__(text)` | A string from the application's own catalog |
+| `p__` | `p__(context, text)` | An application string with a context |
+| `n__` | `n__(singular, plural, count)` | An application plural |
+| `np__` | `np__(context, singular, plural, count)` | An application plural with a context |
+| `noop__` | `noop__(text)` | Marks a string for extraction without translating it here |
+
+```twig
+{{ d__('theme', 'Get started') }}
+{{ dp__('theme', 'heading', 'Pricing') }}
+{{ dn__('theme', '%d seat', '%d seats', count)|format(count) }}
+```
+
+<Warning>
+  A plain `__()` in a theme looks up the application's catalog, not yours, so your translation won't be found and the string won't be extracted into your catalogs.
+</Warning>
+
+## Other functions
+
+<ResponseField name="hash_hmac" type="function">
+  `hash_hmac(algo, data, key)`. Used for identity verification in support widgets. It runs server-side, so the secret stays out of the page.
+</ResponseField>
+
+<ResponseField name="locale_script" type="function">
+  `locale_script(code)` returns the URL of the browser translation catalog for a language, or null. Include it when your JavaScript needs translated strings.
+</ResponseField>
+
+<ResponseField name="template" type="function">
+  `template(string, name = null, strict = false)` compiles a string into a template. It's how administrator-supplied markup is rendered; strict variables are disabled, and unparsable input falls back to being printed verbatim.
+
+  ```twig
+  {{ include(template(option.script_tags.custom.head))|raw }}
+  ```
+</ResponseField>
+
+## Tests
+
+<ResponseField name="builtin" type="test">
+  True when an object's class is marked as built into the application, which the admin templates use to distinguish bundled integrations from plugin-provided ones.
+</ResponseField>
+
+## Extensions inherited from Twig
+
+| Source | Examples |
+| --- | --- |
+| `twig/intl-extra` | `format_currency`, `format_number`, `format_date`, `format_datetime`, `country_name`, `currency_symbol` |
+| `twig/markdown-extra` | `markdown_to_html`, `html_to_markdown` |
+| Twig core | `escape`, `raw`, `json_encode`, `date`, `filter`, `map`, `merge`, `default`, and the rest |
+
+```twig
+{{ plan.price / 100|format_currency(currency.code) }}
+{{ option.site.description|default('')|markdown_to_html }}
+```
+
+## Globals
+
+| Variable | Contents |
+| --- | --- |
+| `option` | Every setting, as a nested object |
+| `config` | Application configuration, including the model registry |
+| `version` | The application version |
+| `license` | The license string, or null |
+| `theme` | The active theme's package name |
+| `environment` | `prod`, `dev`, `demo` or `install` |
+| `nav` | The navigation registry |
+| `currency` | Code, name, symbol and fraction digits |
+| `locales` | Every configured language |
+| `locale` | The language resolved for this request, or null |
+| `theme_locale` | Deprecated. The language code as a string. Use `locale.code`. |
+| `env` | The raw environment |
+| `user`, `workspace` | Only when a visitor is signed in |
+| `plans` | Only on the landing page |
+
+See [Template objects](/development/themes/template-objects) for the full shape of each object.
+
+<Warning>
+  `env` exposes the application's environment variables, including database credentials and secret keys. Read one specific key when you must, such as `env.THEME_ASSETS_SERVER`, and never print or serialize the whole object.
+</Warning>
+
+## Namespaces
+
+| Prefix | Points at |
+| --- | --- |
+| `@theme/...` | The active theme's directory. Use it for every include and extend in your theme. |
+| `/templates/...`, `/layouts/...` | Application templates. Themes shouldn't depend on these. |
+| `@emails/...` | Email templates |
+
+## Strict variables
+
+With `DEBUG=true`, Twig raises an error for undefined variables. Guard optional values with `is defined` or `|default(...)`, and test your theme in debug mode before release.
+
+## Related
+
+- [Template objects](/development/themes/template-objects)
+- [Templates and layouts](/development/themes/templates-and-layouts)
+- [Theme localization](/development/themes/localization)

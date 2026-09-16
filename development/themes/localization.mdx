@@ -1,0 +1,126 @@
+---
+title: "Theme localization"
+sidebarTitle: "Localization"
+description: "Translate an Aikeedo theme: use the theme gettext domain, build catalogs with the console commands, and ship them with your package."
+---
+
+Themes have their own translation domain, separate from the application's. Getting the domain right is the difference between a translated theme and one that silently falls back to English.
+
+## Use the theme domain
+
+```twig
+{{ d__('theme', 'Get started') }}
+{{ dp__('theme', 'heading', 'Pricing') }}
+{{ dn__('theme', '%d seat', '%d seats', count)|format(count) }}
+```
+
+| Helper | Use |
+| --- | --- |
+| `d__('theme', text)` | A plain string |
+| `dp__('theme', context, text)` | A string with a context, such as `button` or `heading` |
+| `dn__('theme', singular, plural, count)` | A plural |
+| `dnp__('theme', context, singular, plural, count)` | A plural with a context |
+
+<Warning>
+  A plain `__()` in a theme template looks up the **application's** catalog. Your translation won't be found, and the extractor won't add the string to your catalogs.
+</Warning>
+
+## Catalog layout
+
+```text
+static/locale/
+├── de-DE/LC_MESSAGES/theme.po
+├── es-ES/LC_MESSAGES/theme.po
+└── fr-FR/LC_MESSAGES/theme.po
+```
+
+- One directory per language, named with the `xx-XX` code.
+- The file is always `theme.po`.
+- The header sets `X-Domain: theme`.
+
+```po static/locale/de-DE/LC_MESSAGES/theme.po
+msgid ""
+msgstr ""
+"Language: de-DE\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Domain: theme\n"
+
+msgctxt "button"
+msgid "Get started"
+msgstr "Loslegen"
+```
+
+The application loads the active theme's catalog for the resolved language on every request.
+
+## Extract strings
+
+Run the console commands from the Aikeedo installation, pointing at your theme's repository:
+
+```bash
+php bin/console app:locale:extract --path=../aurora
+```
+
+The command finds your package inside the repository, scans the templates, and writes catalogs next to the manifest, using the `theme` domain.
+
+| Option | Purpose |
+| --- | --- |
+| `--path`, `-p` | The theme repository, or any directory to scan |
+| `--target`, `-t` | An installed package name instead of a path |
+| `--locale-dir` | Where to write catalogs, defaulting to `<path>/locale` |
+| `--domain` | Override the domain, which is normally read from the manifest |
+| `--language`, `-l` | Restrict to specific languages |
+| `--no-prune` | Keep entries no longer found in the source |
+
+<Note>
+  The starter kit used to ship its own extraction script. It was removed: use these console commands, which share the application's parser and won't mangle quoting.
+</Note>
+
+## Translate
+
+```bash
+php bin/console app:locale:translate --path=../aurora --all
+```
+
+This fills in missing entries with an AI model. Add `--force` to redo existing translations, and `--dry-run` to preview. Review the output before release: marketing copy is where machine translation is weakest.
+
+## Working on the installed copy
+
+Point `--path` at your **repository**, not at `extra/extensions/...`. The installed copy is overwritten by the next build, so edits there are lost.
+
+## When a language shows English
+
+The theme's language is resolved from the URL prefix, then the user's preference, then the `locale` cookie, then the browser's `Accept-Language`, then the default. Three things must line up:
+
+<Check>The language is enabled in **Settings → Languages**.</Check>
+<Check>Your theme has a `theme.po` for it.</Check>
+<Check>The string uses the `theme` domain.</Check>
+
+If the theme has no catalog for the resolved language, the `locale` global is `null`, which is why every template should use `locale.code|default('en-US')`.
+
+## Translating JavaScript strings
+
+Strings that only exist in the browser go through the theme's own small helper, which reads a catalog exposed as `window.locale`. Prefer translating in Twig and passing the result into your component, and keep the JavaScript path for strings built at runtime.
+
+## RTL languages
+
+Each locale carries a `dir`. Set it on the document and use logical CSS properties so layouts mirror correctly:
+
+```twig
+<html lang="{{ locale.code|default('en-US') }}" dir="{{ locale.dir|default('ltr') }}">
+```
+
+## Checklist
+
+<Check>Every visible string uses a `d`-prefixed helper with the `theme` domain.</Check>
+<Check>Contexts are used for short strings such as buttons and headings.</Check>
+<Check>Catalogs exist for the languages you support, with `X-Domain: theme`.</Check>
+<Check>Extraction was re-run after the last copy change.</Check>
+<Check>`static/locale/` is included in your release archive.</Check>
+<Check>The layout handles `dir` and a `null` locale.</Check>
+
+## Related
+
+- [Twig reference](/development/themes/twig-reference)
+- [Localization settings](/advanced/localization)
+- [Plugin localization](/development/plugins/localization)

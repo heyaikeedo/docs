@@ -1,0 +1,147 @@
+---
+title: "Dark mode and colors"
+sidebarTitle: "Dark mode and colors"
+description: "Implement light and dark modes in an Aikeedo theme, and respect the color scheme administrators configure."
+---
+
+Aikeedo lets administrators decide which color modes a site offers and which one is the default. A theme reads that setting, applies the right mode before the page paints, and styles both.
+
+## The setting
+
+`option.color_scheme` holds:
+
+| Key | Meaning |
+| --- | --- |
+| `modes` | Which modes are available, for example `['light', 'dark']`, `['light']` or `['dark']` |
+| `default` | `system`, `light` or `dark` |
+| `accent`, `accent_content` | Accent colors, exposed as `{ hex, r, g, b, rgb }` |
+
+## Apply the mode before paint
+
+Resolve the mode in the document head, so there's no flash of the wrong theme:
+
+```twig snippets/js.twig
+<script>
+	let scheme = {
+		...{ modes: ['light', 'dark'], default: 'system' },
+		...JSON.parse(`{{ (option.color_scheme is defined ? option.color_scheme|json_encode : '{}')|raw }}`),
+	};
+
+	if (scheme.modes.length > 1) {
+		if (!('mode' in localStorage) || scheme.modes.indexOf(localStorage.mode) === -1) {
+			localStorage.mode = scheme.default === 'system'
+				? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+				: scheme.default;
+		}
+	} else if (scheme.modes.length === 1) {
+		localStorage.mode = scheme.modes[0];
+	}
+
+	document.documentElement.dataset.mode = localStorage.mode;
+</script>
+```
+
+The result is `<html data-mode="dark">`, which is what your CSS keys off.
+
+## Define the palette
+
+Declare colors as space-separated RGB channels, so Tailwind can apply opacity to them:
+
+```twig snippets/css.twig
+<style>
+	:root {
+		--color-main: 255 255 255;
+		--color-content: 63 66 70;
+		--color-content-dimmed: 172 174 175;
+		--color-line: 227 228 228;
+		--color-accent: {{ option.color_scheme.accent.rgb|default('99 102 241') }};
+	}
+
+	:root[data-mode="dark"] {
+		--color-main: 17 18 20;
+		--color-content: 237 238 240;
+		--color-content-dimmed: 140 142 148;
+		--color-line: 42 44 48;
+	}
+</style>
+```
+
+```javascript tailwind.config.js
+export default {
+  content: ['!./node_modules/**/*', './**/*.twig', './src/**/*.{js,css}'],
+  darkMode: ['class', '[data-mode="dark"]'],
+  theme: {
+    extend: {
+      colors: {
+        main: 'rgb(var(--color-main) / <alpha-value>)',
+        content: 'rgb(var(--color-content) / <alpha-value>)',
+        'content-dimmed': 'rgb(var(--color-content-dimmed) / <alpha-value>)',
+        line: 'rgb(var(--color-line) / <alpha-value>)',
+        accent: 'rgb(var(--color-accent) / <alpha-value>)',
+      },
+    },
+  },
+};
+```
+
+With `darkMode` bound to the attribute, `dark:` variants work as usual:
+
+```html
+<div class="bg-main text-content">
+	<span class="text-content-dimmed dark:text-content">…</span>
+</div>
+```
+
+<Tip>
+  Because every color is a variable, one block of overrides under `[data-mode="dark"]` themes the whole site. Avoid hardcoding hex values in templates.
+</Tip>
+
+## The switcher
+
+Show a toggle only when more than one mode is available:
+
+```twig
+{% if option.color_scheme.modes is not defined or option.color_scheme.modes|length > 1 %}
+	<mode-switcher>
+		<button class="text-2xl" aria-label="{{ d__('theme', 'Toggle dark mode') }}">
+			<i class="ti ti-moon-stars dark:hidden"></i>
+			<i class="hidden ti ti-sun-filled dark:block"></i>
+		</button>
+	</mode-switcher>
+{% endif %}
+```
+
+The starter's `mode-switcher` element flips `localStorage.mode` and updates `document.documentElement.dataset.mode`, so the choice survives navigation.
+
+## Using the configured accent
+
+The accent color is exposed ready to drop into a variable:
+
+```twig
+--color-accent: {{ option.color_scheme.accent.rgb|default('99 102 241') }};
+--color-accent-content: {{ option.color_scheme.accent_content.rgb|default('255 255 255') }};
+```
+
+| Property | Example |
+| --- | --- |
+| `hex` | `#6366f1` |
+| `r`, `g`, `b` | `99`, `102`, `241` |
+| `rgb` | `99 102 241`, formatted for CSS variables |
+
+<Note>
+  The bundled themes ship fixed palettes and ignore the accent setting. Reading it makes your theme adjustable from the admin panel without a rebuild, which is usually what customers expect.
+</Note>
+
+## Checklist
+
+<Check>The mode is applied in the head, before the body renders.</Check>
+<Check>Only the configured modes are reachable, and the switcher hides when there's one.</Check>
+<Check>Both modes are checked for contrast, including borders and dimmed text.</Check>
+<Check>Images and logos have dark variants where they need them, for example `option.brand.logo_dark`.</Check>
+<Check>The choice persists across page loads.</Check>
+
+## Related
+
+- [Templates and layouts](/development/themes/templates-and-layouts)
+- [JavaScript components](/development/themes/javascript-components)
+- [Branding settings](/website-basics/branding)

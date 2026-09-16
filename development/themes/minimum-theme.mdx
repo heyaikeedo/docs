@@ -1,0 +1,92 @@
+---
+title: "The minimum theme"
+sidebarTitle: "Minimum theme"
+description: "Build the smallest working Aikeedo theme: one manifest and one template, with no build step."
+---
+
+You don't need Vite, Tailwind or PHP to ship a theme. Aikeedo needs a valid package and a landing template. Start here when you want a hand-written page, or when you're learning how themes are discovered.
+
+## Two files
+
+```text
+extra/extensions/acme/minimal/
+├── composer.json
+└── templates/
+    └── index.twig
+```
+
+```json extra/extensions/acme/minimal/composer.json
+{
+  "name": "acme/minimal",
+  "description": "A minimal Aikeedo theme",
+  "version": "1.0.0",
+  "type": "aikeedo-theme",
+  "require": {
+    "heyaikeedo/composer": "^1.0.0"
+  },
+  "extra": {
+    "title": "Minimal"
+  }
+}
+```
+
+```twig extra/extensions/acme/minimal/templates/index.twig
+<!DOCTYPE html>
+<html lang="{{ locale.code|default('en-US') }}">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="{{ option.site.description ?? '' }}">
+		<title>{{ option.site.name ?? 'Aikeedo' }}</title>
+	</head>
+	<body>
+		<h1>{{ option.site.name ?? 'Aikeedo' }}</h1>
+
+		{% if user is defined %}
+			<a href="/app">{{ d__('theme', 'Open the app') }}</a>
+		{% else %}
+			<a href="/login">{{ d__('theme', 'Sign in') }}</a>
+			<a href="/signup">{{ d__('theme', 'Get started') }}</a>
+		{% endif %}
+	</body>
+</html>
+```
+
+That's a working theme. Publish it in **Admin → Themes**.
+
+## Why it works
+
+| Requirement | Satisfied by |
+| --- | --- |
+| Discoverable | A directory under `extra/extensions/` whose path matches the package `name` |
+| Valid | `type: aikeedo-theme`, a `name`, and `heyaikeedo/composer` in `require` |
+| Renderable | `templates/index.twig`, which the landing route renders through the `@theme` namespace |
+
+An entry class is optional for themes, so no PHP and no `autoload` block are needed. `extra.status` is ignored: a theme is active when it's the one published in the admin panel.
+
+<Note>
+  Set `version` even here. Installing a theme from an archive runs Composer with that version, and a missing or stale one makes installs unpredictable.
+</Note>
+
+## Adding pieces as you need them
+
+| Add | When |
+| --- | --- |
+| `layouts/`, `sections/`, `snippets/` | The page grows past one file. Include them with `@theme/...` paths. |
+| `assets/` plus `extra.public` | You have CSS, JavaScript or images to serve |
+| `.vite/manifest.json` | You build with Vite and want hashed filenames resolved automatically |
+| `locale/` | You want the theme translated |
+| `src/` plus `extra.entry-class` | You want extra public pages |
+
+## Rules that still apply
+
+- **Guard optional variables.** Debug mode enables strict Twig variables, so `{% if user is defined %}` and `|default(...)` matter even in a small theme.
+- **Use the theme translation domain.** `d__('theme', '...')` and `dp__('theme', 'context', '...')` resolve against your catalogs; a plain `__()` looks in the application's.
+- **Honor admin settings.** Reading `option.site.name`, `option.brand.logo` and `option.policies.*` keeps the admin panel meaningful.
+- **Include the script-tag snippets** if you want the analytics codes administrators configure to work. See [Script tags and analytics](/development/themes/script-tags-and-analytics).
+
+## Related
+
+- [Theme structure](/development/themes/structure)
+- [Theme manifest](/development/themes/manifest)
+- [Templates and layouts](/development/themes/templates-and-layouts)

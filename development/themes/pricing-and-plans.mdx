@@ -1,0 +1,186 @@
+---
+title: "Pricing and plans"
+sidebarTitle: "Pricing and plans"
+description: "Render Aikeedo subscription plans on a theme's landing page, including billing cycles, credits, features and checkout links."
+---
+
+The landing page is the only theme template that receives `plans`. It holds the active plans, sorted by price ascending, each serialized with everything a pricing table needs.
+
+## What a plan contains
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `id` | string | Use it to build the checkout link |
+| `title` | string | Plan name |
+| `description` | string or null | Short summary |
+| `icon` | string or null | An icon name, or raw SVG markup |
+| `price` | integer | Minor units, for example `2900` for 29.00 |
+| `sale_price` | integer or null | Set when a coupon applies |
+| `billing_cycle` | string | `one-time`, `monthly`, `yearly` or `lifetime` |
+| `credit_count` | integer or null | `null` means unlimited |
+| `member_cap` | integer or null | Workspace member limit, `null` for unlimited |
+| `is_featured` | boolean | Highlight this plan |
+| `superiority` | integer | Ordering weight for comparison tables |
+| `feature_list` | array | Objects of `{ title, is_included }` |
+| `config` | object | Capability configuration, see below |
+| `coupon` | object or null | The applied coupon |
+| `discount` | number or null | Discount amount when a coupon applies |
+| `snapshot` | object | The plan snapshot subscriptions are based on |
+
+A feature line entered as `-No API access` becomes `{ title: 'No API access', is_included: false }`, so you can render excluded features with a different marker.
+
+## A pricing section
+
+```twig sections/pricing.twig
+<section id="pricing" class="container py-20">
+	<h2>{{ dp__('theme', 'heading', 'Pricing') }}</h2>
+
+	<div class="grid gap-6 md:grid-cols-3">
+		{% for plan in plans|default([]) %}
+			{% include "@theme/snippets/plan.twig" with { plan } %}
+		{% endfor %}
+	</div>
+</section>
+```
+
+```twig snippets/plan.twig
+<article class="box {{ plan.is_featured ? 'border-accent' : '' }}">
+	<h3>{{ plan.title }}</h3>
+
+	{% if plan.description %}
+		<p class="text-content-dimmed">{{ plan.description }}</p>
+	{% endif %}
+
+	<p class="text-3xl font-semibold">
+		<x-money
+			data-value="{{ plan.sale_price ?? plan.price }}"
+			currency="{{ currency.code }}"
+			minor-units="{{ currency.fraction_digits }}"
+			fraction="auto"></x-money>
+
+		{% if plan.billing_cycle == 'monthly' %}
+			<span class="text-base">{{ d__('theme', '/ month') }}</span>
+		{% elseif plan.billing_cycle == 'yearly' %}
+			<span class="text-base">{{ d__('theme', '/ year') }}</span>
+		{% endif %}
+	</p>
+
+	<p>
+		<x-credit
+			data-value="{{ plan.credit_count }}"
+			format="{{ d__('theme', ':count credits') }}"></x-credit>
+	</p>
+
+	<ul>
+		{% for feature in plan.feature_list %}
+			<li class="{{ feature.is_included ? '' : 'line-through opacity-60' }}">
+				{{ feature.title }}
+			</li>
+		{% endfor %}
+	</ul>
+
+	<a href="/app/billing/checkout/{{ plan.id }}" class="button">
+		{{ dp__('theme', 'button', 'Get started') }}
+	</a>
+</article>
+```
+
+## Formatting money and credits
+
+Two custom elements do the formatting for you:
+
+```html
+<x-money data-value="2900" currency="USD" minor-units="2" fraction="auto"></x-money>
+<x-credit data-value="5000" format="Credits: :count"></x-credit>
+```
+
+| Element | Attributes |
+| --- | --- |
+| `<x-money>` | `data-value` in minor units, `currency`, `minor-units`, `fraction` (`auto`, `true`, `false`), `currency-display` |
+| `<x-credit>` | `data-value`, `format` with a `:count` placeholder, `fraction`. A `null` value renders as unlimited. |
+
+The `currency` global gives you what they need:
+
+```twig
+{{ currency.code }}            {# USD #}
+{{ currency.symbol }}          {# $, or null when it equals the code #}
+{{ currency.fraction_digits }} {# 2 #}
+```
+
+## Grouping by billing cycle
+
+Most pricing pages separate recurring plans from one-time packs:
+
+```twig
+{% set monthly = plans|filter(p => p.billing_cycle == 'monthly' and p.price > 0) %}
+{% set yearly = plans|filter(p => p.billing_cycle == 'yearly' and p.price > 0) %}
+{% set packs = plans|filter(p => p.billing_cycle == 'one-time') %}
+{% set free = plans|filter(p => p.price == 0) %}
+```
+
+For a monthly and yearly toggle, render both groups and switch between them with Alpine:
+
+```twig
+<div x-data="{ cycle: 'monthly' }">
+	<button @click="cycle = 'monthly'">{{ d__('theme', 'Monthly') }}</button>
+	<button @click="cycle = 'yearly'">{{ d__('theme', 'Yearly') }}</button>
+
+	<div x-show="cycle === 'monthly'">
+		{% for plan in monthly %}{% include "@theme/snippets/plan.twig" with { plan } %}{% endfor %}
+	</div>
+
+	<div x-show="cycle === 'yearly'">
+		{% for plan in yearly %}{% include "@theme/snippets/plan.twig" with { plan } %}{% endfor %}
+	</div>
+</div>
+```
+
+To show a yearly plan as a monthly figure, divide by twelve and say what's actually billed:
+
+```twig
+<x-money data-value="{{ (plan.price / 12)|round }}" currency="{{ currency.code }}" minor-units="{{ currency.fraction_digits }}"></x-money>
+<small>{{ dp__('theme', 'pricing', 'billed annually') }}</small>
+```
+
+## Feature rows from plan capabilities
+
+`plan.config` mirrors what the plan grants, so a comparison table can be generated rather than hand-written:
+
+```twig
+{% if option.features.chat.is_enabled|default(false) %}
+	<li class="{{ plan.config.chat.is_enabled|default(false) ? '' : 'opacity-60' }}">
+		{{ d__('theme', 'AI chat') }}
+	</li>
+{% endif %}
+```
+
+Check the global feature flag as well as the plan, so a capability the administrator turned off platform-wide doesn't appear in your table.
+
+## Checkout links
+
+```twig
+<a href="/app/billing/checkout/{{ plan.id }}">{{ dp__('theme', 'button', 'Get started') }}</a>
+```
+
+Signed-out visitors are sent to sign in first, and return to checkout afterwards, so you don't need to branch on `user`.
+
+## Credit pricing pages
+
+Because the model registry and credit rates are exposed to templates, you can build a calculator that shows what credits buy:
+
+```twig
+{% for service in config.model.registry.directory|default([]) %}
+	{% for rate in service.rates|default([]) %}
+		<tr>
+			<td>{{ service.name }}</td>
+			<td>{{ option.credit_rate[rate.key]|default('—') }}</td>
+		</tr>
+	{% endfor %}
+{% endfor %}
+```
+
+## Related
+
+- [Template objects](/development/themes/template-objects)
+- [JavaScript components](/development/themes/javascript-components)
+- [Billing overview](/billing/overview)

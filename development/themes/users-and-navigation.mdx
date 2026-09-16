@@ -1,0 +1,160 @@
+---
+title: "Users and navigation"
+sidebarTitle: "Users and navigation"
+description: "Build a theme header that adapts to signed-in visitors, links into the app, and lets people switch language."
+---
+
+The public site is seen by guests and by signed-in users. A good header tells them apart, and gets people into the application quickly.
+
+## Guest or signed in
+
+```twig sections/header.twig
+<header class="container flex items-center justify-between py-6">
+	<a href="/">
+		{% if option.brand.logo is defined and option.brand.logo %}
+			<img src="{{ option.brand.logo }}" alt="{{ option.site.name ?? '' }}" class="h-8">
+		{% else %}
+			<img src="{{ '/assets/logo.svg'|asset_url }}" alt="{{ option.site.name ?? '' }}" class="h-8">
+		{% endif %}
+	</a>
+
+	<nav class="flex items-center gap-3">
+		{% if user is defined %}
+			{% set full_name = user.first_name ~ ' ' ~ user.last_name %}
+
+			<a href="/app" class="flex items-center gap-2">
+				<x-avatar title="{{ full_name }}" src="{{ user.avatar }}" length="2"></x-avatar>
+
+				<span class="flex flex-col text-left">
+					<span class="font-medium">{{ full_name }}</span>
+					<span class="text-sm text-content-dimmed">{{ user.email }}</span>
+				</span>
+			</a>
+		{% else %}
+			<a href="/login" class="button button-outline">{{ dp__('theme', 'button', 'Sign in') }}</a>
+			<a href="/signup" class="button">{{ dp__('theme', 'button', 'Get started') }}</a>
+		{% endif %}
+	</nav>
+</header>
+```
+
+`user` is only defined for signed-in visitors, and debug mode errors on undefined variables, so the `is defined` check isn't optional.
+
+## Links into the application
+
+| Destination | Path |
+| --- | --- |
+| The app | `/app` |
+| Account settings | `/app/settings/account` |
+| Billing | `/app/billing` |
+| Checkout for a plan | `/app/billing/checkout/{plan_id}` |
+| Sign in | `/login` |
+| Sign up | `/signup` |
+| Sign out | `/logout` |
+| Terms, privacy, refunds | `/policies/terms`, `/policies/privacy`, `/policies/refund` |
+
+Policy pages exist only when the administrator filled them in, so link conditionally:
+
+```twig
+{% if option.policies.tos is defined and option.policies.tos %}
+	<a href="/policies/terms">{{ d__('theme', 'Terms of service') }}</a>
+{% endif %}
+```
+
+## Showing workspace details
+
+For a signed-in visitor you can show the current workspace, its plan and its credits:
+
+```twig
+{% if user is defined and workspace is defined %}
+	<span>{{ workspace.name }}</span>
+
+	{% if workspace.subscription %}
+		<span>{{ workspace.subscription.plan.title }}</span>
+		<x-credit data-value="{{ workspace.total_credit_count }}" format="{{ d__('theme', ':count credits') }}"></x-credit>
+	{% endif %}
+{% endif %}
+```
+
+<Tip>
+  Keep this light. The landing page is a marketing page, and account details belong in the app.
+</Tip>
+
+## The language switcher
+
+Languages come from `locales`, and the current one from `locale`. Each enabled language is reachable at a URL prefix:
+
+```twig
+{% if locales|filter(l => l.enabled)|length > 1 %}
+	<div x-data="{ open: false }" class="relative">
+		<button @click="open = !open">
+			{{ locale.label|default('English') }}
+		</button>
+
+		<ul x-show="open" x-cloak class="absolute right-0 mt-2 rounded-lg bg-main border border-line">
+			{% for item in locales %}
+				{% if item.enabled %}
+					<li>
+						<a href="/{{ item.code }}"
+							@click="document.cookie = `locale={{ item.code }}; path=/; max-age=31536000`">
+							{{ item.label }}
+						</a>
+					</li>
+				{% endif %}
+			{% endfor %}
+		</ul>
+	</div>
+{% endif %}
+```
+
+Setting the cookie is what makes the choice stick on pages without a prefix.
+
+### How the language is resolved
+
+<Steps>
+  <Step title="URL prefix">
+    `/de-DE/...` wins, if that language is enabled.
+  </Step>
+  <Step title="The signed-in user's language">
+    Their account preference.
+  </Step>
+  <Step title="The locale cookie">
+    What the switcher set.
+  </Step>
+  <Step title="Accept-Language">
+    The browser's preference.
+  </Step>
+  <Step title="The default language">
+    Configured in the admin panel.
+  </Step>
+</Steps>
+
+Themes register routes with an optional `[locale:locale]?` segment so their pages work under a prefix. See [Custom pages](/development/themes/custom-pages).
+
+## Right-to-left languages
+
+```twig
+<html lang="{{ locale.code|default('en-US') }}" dir="{{ locale.dir|default('ltr') }}">
+```
+
+Use logical CSS properties, such as Tailwind's `ms-*`, `me-*`, `ps-*` and `pe-*`, rather than left and right, so an RTL language lays out correctly.
+
+## Social and footer links
+
+```twig
+<footer>
+	{% for key, url in option.links|default({}) %}
+		{% if url %}
+			<a href="{{ url }}" rel="noopener" target="_blank">{{ key|capitalize }}</a>
+		{% endif %}
+	{% endfor %}
+
+	<p>{{ option.business.name|default(option.site.name ?? '') }}</p>
+</footer>
+```
+
+## Related
+
+- [Template objects](/development/themes/template-objects)
+- [Theme localization](/development/themes/localization)
+- [Templates and layouts](/development/themes/templates-and-layouts)

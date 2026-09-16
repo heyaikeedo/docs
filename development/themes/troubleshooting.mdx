@@ -1,0 +1,102 @@
+---
+title: "Theme troubleshooting"
+sidebarTitle: "Troubleshooting"
+description: "Fix the problems that come up most often when developing or installing an Aikeedo theme."
+---
+
+## The theme doesn't appear in the admin panel
+
+The package failed validation, or it isn't where Aikeedo looks.
+
+<Check>The directory is `extra/extensions/{vendor}/{name}` and matches the `name` field.</Check>
+<Check>`type` is `aikeedo-theme`.</Check>
+<Check>`require` includes `heyaikeedo/composer`.</Check>
+<Check>`composer.json` is valid JSON.</Check>
+
+Turn on `DEBUG=true` to see the validation error instead of a silently skipped package.
+
+## Styles or scripts don't load
+
+<AccordionGroup>
+  <Accordion title="In development">
+    `npm run dev` must be running, and `THEME_ASSETS_SERVER` in the Aikeedo `.env` must match its port. The starter serves on 5174.
+  </Accordion>
+  <Accordion title="In production">
+    `extra.public` must include `assets` and `.vite`, and the theme must have been installed or reinstalled after the build so those files were copied to `public/e/{vendor}/{name}/`.
+  </Accordion>
+  <Accordion title="Assets point at localhost">
+    `THEME_ASSETS_SERVER` is still set. Remove it outside development.
+  </Accordion>
+</AccordionGroup>
+
+## Template changes do nothing
+
+- With `CACHE=true` and `DEBUG=false`, templates are cached. Clear the cache from **Status → Clear cache**.
+- In development, the dev server copies `static/` into `BUILD_DIR`. If `BUILD_DIR` is wrong, the installed theme never changes.
+- Check you're editing the repository, not the installed copy, which is overwritten by the next build.
+
+## Twig errors about undefined variables
+
+Debug mode enables strict variables:
+
+```twig
+{% if user is defined %}…{% endif %}
+{{ option.site.name ?? '' }}
+{{ plans|default([]) }}
+{{ locale.code|default('en-US') }}
+```
+
+`user` and `workspace` exist only for signed-in visitors, `plans` only on the landing page, and `locale` only when your theme has a catalog for the resolved language.
+
+## The build deleted my files
+
+The production build empties `BUILD_DIR` before writing. Point it at the theme's own directory, `extra/extensions/{vendor}/{name}`, and nothing else.
+
+## A custom page returns 404
+
+<Check>The theme is published, since a theme's entry class only boots while it's active.</Check>
+<Check>The package was installed with `composer require`, so the class autoloads.</Check>
+<Check>`AttributeMapper::addPath()` covers the handler's directory.</Check>
+<Check>The route cache was cleared, or `CACHE=false`.</Check>
+
+## Strings aren't translated
+
+<Check>The string uses `d__('theme', …)` or `dp__('theme', …)`, not a plain `__()`.</Check>
+<Check>A `theme.po` exists for that language, with `X-Domain: theme`.</Check>
+<Check>The language is enabled in **Settings → Languages**.</Check>
+<Check>Extraction was re-run after the last copy change.</Check>
+
+## The favicon 404s
+
+`{{ 'favicon.ico'|asset_url }}` resolves to your theme's assets, so either ship that file or fall back to the brand setting:
+
+```twig
+<link rel="icon" href="{{ option.brand.favicon ?? ('favicon.ico'|asset_url) }}">
+```
+
+## Dark mode flashes the wrong colors
+
+The mode must be applied in the `<head>`, before the body paints. See [Dark mode and colors](/development/themes/dark-mode-and-colors).
+
+## The site shows the old theme after publishing
+
+Clear the cache, and check that the theme's package name matches its directory. Preview separately at `/preview?theme=vendor/name`, which sets a short-lived cookie rather than switching the live site.
+
+## Analytics stopped working after switching themes
+
+Your theme has to render the script-tag snippets. Without them the codes configured in the admin panel never load. See [Script tags and analytics](/development/themes/script-tags-and-analytics).
+
+## Where to look
+
+| Source | What it tells you |
+| --- | --- |
+| `var/log/app-*.log`, `var/log/error-*.log` | PHP errors, including template failures |
+| Browser console and network tab | Missing assets, JavaScript errors |
+| The Vite terminal | Build failures |
+| **Status** in the admin panel | Cache clearing, and installation health |
+
+## Related
+
+- [Build and assets](/development/themes/build-and-assets)
+- [Theme quickstart](/development/themes/quickstart)
+- [Local development](/development/local-development)

@@ -1,0 +1,199 @@
+---
+title: "Custom pages"
+sidebarTitle: "Custom pages"
+description: "Add public pages to an Aikeedo theme with a PHP entry class, attribute routes and your own templates."
+---
+
+A theme isn't limited to the landing page. With a small entry class it can register routes and render any template it ships, which is how you add pages such as `/features`, `/about` or a pricing explainer.
+
+## What you need
+
+| Piece | Purpose |
+| --- | --- |
+| `extra.entry-class` and `autoload.psr-4` in the manifest | So Composer can load your PHP |
+| An entry class implementing `Plugin\Domain\PluginInterface` | Registers the directory to scan for routes |
+| A request handler with a `#[Route]` attribute | Serves the page |
+| A template under `templates/` | The page itself |
+| `composer require` | Registers the autoloader |
+
+## 1. Declare the class
+
+```json static/composer.json
+{
+  "name": "acme/aurora",
+  "type": "aikeedo-theme",
+  "require": { "heyaikeedo/composer": "^1.0.0" },
+  "extra": {
+    "entry-class": "Acme\\Aurora\\Theme",
+    "title": "Aurora"
+  },
+  "autoload": {
+    "psr-4": { "Acme\\Aurora\\": "src/" }
+  }
+}
+```
+
+## 2. Write the entry class
+
+```php static/src/Theme.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Aurora;
+
+use Easy\Router\Mapper\AttributeMapper;
+use Override;
+use Plugin\Domain\Context;
+use Plugin\Domain\PluginInterface;
+
+class Theme implements PluginInterface
+{
+    public function __construct(
+        private AttributeMapper $mapper,
+    ) {}
+
+    #[Override]
+    public function boot(Context $context): void
+    {
+        // Scan this directory for request handlers with #[Route] attributes.
+        $this->mapper->addPath(__DIR__);
+    }
+}
+```
+
+The class is resolved from the container, so anything you type-hint is injected. `boot()` runs only while your theme is the published one.
+
+## 3. Add a request handler
+
+```php static/src/FeaturesView.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Aurora;
+
+use Easy\Container\Attributes\Inject;
+use Easy\Http\Message\RequestMethod;
+use Easy\Router\Attributes\Middleware;
+use Easy\Router\Attributes\Route;
+use Presentation\Middlewares\ViewMiddleware;
+use Presentation\RequestHandlers\AbstractRequestHandler;
+use Presentation\Response\RedirectResponse;
+use Presentation\Response\ViewResponse;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+
+#[Middleware(ViewMiddleware::class)]
+#[Route(path: '/[locale:locale]?/features', method: RequestMethod::GET)]
+class FeaturesView extends AbstractRequestHandler implements RequestHandlerInterface
+{
+    public function __construct(
+        #[Inject('option.site.is_landing_page_enabled')]
+        private bool $isLandingPageEnabled = true,
+    ) {}
+
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        // Respect the setting that turns the public site off.
+        if (!$this->isLandingPageEnabled) {
+            return new RedirectResponse('/app');
+        }
+
+        return new ViewResponse('@theme/templates/features.twig');
+    }
+}
+```
+
+| Piece | Why |
+| --- | --- |
+| `AbstractRequestHandler` | Gives the standard public middleware: error handling, body parsing, user resolution and locale |
+| `#[Middleware(ViewMiddleware::class)]` | Renders `ViewResponse` and adds the template globals |
+| `[locale:locale]?` | Makes the page work under a language prefix such as `/de-DE/features` |
+| `@theme/...` | Loads the template from the active theme |
+
+## 4. Add the template
+
+```twig static/templates/features.twig
+{% extends "@theme/layouts/theme.twig" %}
+
+{% block title %}{{ dp__('theme', 'title', 'Features') }}{% endblock %}
+
+{% block template %}
+	{% include "@theme/sections/header.twig" %}
+
+	<main class="container py-20">
+		<h1>{{ dp__('theme', 'heading', 'Everything included') }}</h1>
+	</main>
+
+	{% include "@theme/sections/footer.twig" %}
+{% endblock %}
+```
+
+## 5. Install and clear the cache
+
+```bash
+composer require acme/aurora
+```
+
+Routes are discovered by scanning, and the result is cached when `CACHE=true`. During development set `CACHE=false`; in production clear the cache from **Status → Clear cache** after publishing a theme that adds routes.
+
+## Passing data to the template
+
+```php
+return new ViewResponse('@theme/templates/features.twig', [
+    'highlights' => $this->highlights(),
+]);
+```
+
+To show plans on a page of your own, dispatch the same command the landing page uses:
+
+```php
+use Billing\Application\Commands\ListPlansCommand;
+use Presentation\Resources\Api\PlanResource;
+use Shared\Infrastructure\CommandBus\Dispatcher;
+
+$cmd = new ListPlansCommand();
+$cmd->setStatus(1);
+$cmd->setOrderBy('price', 'ASC');
+
+$plans = [];
+
+foreach ($this->dispatcher->dispatch($cmd) as $plan) {
+    $plans[] = new PlanResource($plan);
+}
+
+return new ViewResponse('@theme/templates/pricing.twig', ['plans' => $plans]);
+```
+
+<Tip>
+  Check the command's setters in the source before copying this: they've changed between versions, and the landing handler is the reference for what the current one expects.
+</Tip>
+
+## Rules
+
+- **Keep the theme's pages public.** A page that needs a signed-in user belongs in a plugin under `/app`, not a theme.
+- **Handle the landing-page switch.** If the public site is disabled, redirect rather than rendering.
+- **Don't do heavy work.** Marketing pages should hit the database rarely, and never call a third-party API on render.
+- **Namespace your classes** under your own vendor, so two themes can be installed at once without colliding.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="The route returns 404">
+    The theme isn't published, the cache is stale, or `addPath()` doesn't cover the handler's directory.
+  </Accordion>
+  <Accordion title="Class not found">
+    Run `composer require acme/aurora`, and check that the manifest's namespace, the PSR-4 map and the class all agree.
+  </Accordion>
+  <Accordion title="The page renders without the layout or globals">
+    `#[Middleware(ViewMiddleware::class)]` is missing, so the `ViewResponse` was never rendered.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Theme structure](/development/themes/structure)
+- [Templates and layouts](/development/themes/templates-and-layouts)
+- [Plugin routes and handlers](/development/plugins/routes-and-request-handlers)
