@@ -1,0 +1,200 @@
+---
+title: "Payment webhooks"
+sidebarTitle: "Webhooks"
+description: "Receive and verify provider webhooks in an Aikeedo payment gateway, and act on them safely and idempotently."
+---
+
+Providers report what happens after checkout through webhooks: a subscription cancelled, a renewal that failed, an asynchronous payment that finally settled. Aikeedo routes them to your gateway automatically.
+
+## The endpoint
+
+Every gateway shares one route:
+
+```text
+POST https://your-domain.com/webhooks/{gateway-key}
+```
+
+The request handler resolves your gateway from its key, asks for `getWebhookHandler()`, and calls `handle()`. Return the URL from `Helper::generateWebhookUrl()`, and show it on your settings page so administrators can paste it into the provider's dashboard.
+
+```php
+#[Override]
+public function getWebhookHandler(): string|WebhookHandlerInterface
+{
+    // A class-string is resolved from the container, so dependencies are injected.
+    return WebhookHandler::class;
+}
+```
+
+<Note>
+  The webhook route runs with error handling only. There's no session, no authentication and no CSRF protection, because the caller is a machine. Your signature check is the authentication.
+</Note>
+
+## A handler
+
+```php src/WebhookHandler.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\DemoPay;
+
+use Billing\Application\Commands\CancelSubscriptionCommand;
+use Billing\Application\Commands\ReadSubscriptionCommand;
+use Billing\Domain\Exceptions\SubscriptionNotFoundException;
+use Billing\Infrastructure\Payments\Exceptions\WebhookException;
+use Billing\Infrastructure\Payments\WebhookHandlerInterface;
+use Easy\Container\Attributes\Inject;
+use Override;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Log\LoggerInterface;
+use Shared\Infrastructure\CommandBus\Dispatcher;
+
+class WebhookHandler implements WebhookHandlerInterface
+{
+    public function __construct(
+        private Dispatcher $dispatcher,
+        private LoggerInterface $logger,
+
+        #[Inject('option.demo_pay.webhook_secret')]
+        private ?string $secret = null,
+    ) {}
+
+    #[Override]
+    public function handle(ServerRequestInterface $request): void
+    {
+        $payload = $this->verify($request);
+
+        match ($payload->type ?? null) {
+            'subscription.cancelled' => $this->cancelSubscription($payload),
+            default => null,
+        };
+    }
+
+    private function verify(ServerRequestInterface $request): object
+    {
+        // Fail closed: without a secret nothing can be verified.
+        if (!$this->secret) {
+            throw new WebhookException('Webhook secret is not configured');
+        }
+
+        $body = (string) $request->getBody();
+        $signature = $request->getHeaderLine('X-DemoPay-Signature');
+        $expected = hash_hmac('sha256', $body, $this->secret);
+
+        if (!$signature || !hash_equals($expected, $signature)) {
+            throw new WebhookException('Invalid webhook signature');
+        }
+
+        $payload = json_decode($body);
+
+        if (!is_object($payload)) {
+            throw new WebhookException('Invalid webhook payload');
+        }
+
+        return $payload;
+    }
+
+    private function cancelSubscription(object $payload): void
+    {
+        try {
+            $subscription = $this->dispatcher->dispatch(
+                ReadSubscriptionCommand::createByExternalId(
+                    DemoPay::LOOKUP_KEY,
+                    (string) $payload->subscription_id
+                )
+            );
+        } catch (SubscriptionNotFoundException) {
+            // Unknown subscription: acknowledge so the provider stops retrying.
+            $this->logger->info('DemoPay webhook for unknown subscription');
+            return;
+        }
+
+        $this->dispatcher->dispatch(
+            new CancelSubscriptionCommand($subscription->getId())
+        );
+    }
+}
+```
+
+## Verify every request
+
+<Steps>
+  <Step title="Read the raw body">
+    Compute the signature over `(string) $request->getBody()`, not over a re-encoded array. Re-encoding changes key order and escaping, and the signature won't match.
+  </Step>
+  <Step title="Compare in constant time">
+    Use `hash_equals()`, never `==`.
+  </Step>
+  <Step title="Fail closed">
+    If the secret isn't configured, reject the request. Skipping verification "until it's set up" means anyone can cancel subscriptions or mark orders paid.
+  </Step>
+  <Step title="Check what the payload claims">
+    Confirm the event refers to an object you know, and that the amount and currency match the order before you treat it as payment.
+  </Step>
+</Steps>
+
+## Responses
+
+| Outcome | What to do |
+| --- | --- |
+| Handled successfully | Return normally. Aikeedo responds with an empty `200`. |
+| Invalid signature or payload | Throw `WebhookException`, which returns `400`. |
+| Event you don't handle | Return normally. Don't throw, or the provider will retry forever. |
+| Unknown subscription or order | Log it and return normally, unless you expect the object to appear later. |
+
+## Acting on events
+
+| Event | Command to dispatch |
+| --- | --- |
+| Subscription cancelled at the provider | `CancelSubscriptionCommand`, which ends it at period end |
+| Payment failed and access must stop now | `EndSubscriptionCommand`, which ends immediately and applies the fallback plan |
+| Asynchronous payment settled | `PayOrderCommand`, then `FulfillOrderCommand` |
+
+```php
+use Billing\Application\Commands\FulfillOrderCommand;
+use Billing\Application\Commands\PayOrderCommand;
+use Billing\Application\Commands\ReadOrderCommand;
+use Billing\Domain\Exceptions\AlreadyFulfilledException;
+use Billing\Domain\Exceptions\AlreadyPaidException;
+
+$order = $this->dispatcher->dispatch(new ReadOrderCommand($payload->reference));
+
+try {
+    $this->dispatcher->dispatch(
+        new PayOrderCommand($order->getId(), DemoPay::LOOKUP_KEY, $payload->payment_id)
+    );
+} catch (AlreadyPaidException) {
+    // A concurrent callback got there first; continue to fulfilment.
+} catch (AlreadyFulfilledException) {
+    return;
+}
+
+$this->dispatcher->dispatch(new FulfillOrderCommand($order->getId()));
+```
+
+<Warning>
+  Fulfilling from a webhook must mirror what the callback does. If the workspace had a previous subscription, cancel it as well, or the customer ends up with two active subscriptions.
+</Warning>
+
+## Idempotency
+
+Providers retry, deliver out of order, and sometimes deliver twice.
+
+<Check>Look up state before you change it, and make repeated deliveries a no-op.</Check>
+<Check>Rely on the exceptions: `AlreadyPaidException` and `AlreadyFulfilledException` tell you the work is already done.</Check>
+<Check>Never grant credits directly from a webhook. Go through the order commands, which enforce the state machine.</Check>
+<Check>Log the provider's event ID so duplicates are visible while debugging.</Check>
+
+## Testing
+
+- Use the provider's dashboard to replay events at your installation.
+- For local development, expose your machine with a tunnel, and set the site URL so the generated webhook URL is reachable.
+- Send a request with a wrong signature and confirm you get a `400`.
+- Send an unknown event type and confirm you get a `200`.
+- Watch `var/log/app-*.log` while testing.
+
+## Related
+
+- [Subscriptions and renewals](/development/plugins/guides/payments/subscriptions-and-renewals)
+- [Build a gateway](/development/plugins/guides/payments/building-a-gateway)
+- [Public endpoints](/development/plugins/public-endpoints-and-embeds)

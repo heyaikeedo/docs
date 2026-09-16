@@ -1,0 +1,211 @@
+---
+title: "Build a storage adapter"
+sidebarTitle: "Storage adapters"
+description: "Add a file storage backend to Aikeedo by implementing a Flysystem-based CDN adapter and registering it for administrators to select."
+---
+
+Aikeedo stores generated images, uploads and other user-visible files through a CDN abstraction. Administrators choose one adapter under **Settings → File storage**, and every part of the application uses it. A plugin can add more.
+
+## The interface
+
+```php
+namespace Shared\Infrastructure\FileSystem\Adapters;
+
+interface CdnAdapterInterface extends AdapterInterface
+{
+    public function isEnabled(): bool;
+    public function getName(): string;
+    public function getUrl(string $path): string;
+}
+```
+
+`AdapterInterface` extends `League\Flysystem\FilesystemAdapter`, so your adapter is a Flysystem adapter with three extra methods. In practice you extend an existing Flysystem adapter and add them.
+
+| Method | Purpose |
+| --- | --- |
+| `isEnabled()` | Whether the administrator configured and enabled this backend |
+| `getName()` | Display name in the admin panel |
+| `getUrl(string $path)` | Public URL for an object, or a signed URL when URL signing is on |
+
+## Implementation
+
+This example wraps the S3 adapter, which covers any S3-compatible provider.
+
+```json composer.json
+{
+  "require": {
+    "heyaikeedo/composer": "^1.0.0",
+    "league/flysystem-aws-s3-v3": "^3.0"
+  }
+}
+```
+
+```php src/AcmeCloud.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Storage;
+
+use Aws\S3\S3Client;
+use Easy\Container\Attributes\Inject;
+use League\Flysystem\AwsS3V3\AwsS3V3Adapter;
+use Override;
+use Shared\Infrastructure\FileSystem\Adapters\CdnAdapterInterface;
+
+class AcmeCloud extends AwsS3V3Adapter implements CdnAdapterInterface
+{
+    public const LOOKUP_KEY = 'acme-cloud';
+
+    private S3Client $client;
+    private string $bucket;
+
+    public function __construct(
+        #[Inject('option.acme_cloud.is_enabled')]
+        private ?bool $isEnabled = false,
+
+        #[Inject('option.acme_cloud.endpoint')]
+        private ?string $endpoint = null,
+
+        #[Inject('option.acme_cloud.region')]
+        private ?string $region = null,
+
+        #[Inject('option.acme_cloud.bucket')]
+        private ?string $bucketName = null,
+
+        #[Inject('option.acme_cloud.access_key')]
+        private ?string $accessKey = null,
+
+        #[Inject('option.acme_cloud.secret_key')]
+        private ?string $secretKey = null,
+
+        #[Inject('option.acme_cloud.domain')]
+        private ?string $domain = null,
+
+        #[Inject('option.cdn.sign_urls')]
+        private ?bool $signUrls = false,
+    ) {
+        $this->client = new S3Client([
+            'version' => 'latest',
+            'region' => $this->region ?: 'us-east-1',
+            'endpoint' => $this->endpoint,
+            'use_path_style_endpoint' => true,
+            'credentials' => [
+                'key' => (string) $this->accessKey,
+                'secret' => (string) $this->secretKey,
+            ],
+        ]);
+
+        $this->bucket = (string) $this->bucketName;
+
+        parent::__construct($this->client, $this->bucket);
+    }
+
+    #[Override]
+    public function isEnabled(): bool
+    {
+        return (bool) $this->isEnabled
+            && $this->accessKey
+            && $this->secretKey
+            && $this->bucketName;
+    }
+
+    #[Override]
+    public function getName(): string
+    {
+        return 'Acme Cloud';
+    }
+
+    #[Override]
+    public function getUrl(string $path): string
+    {
+        if ($this->signUrls) {
+            $command = $this->client->getCommand('GetObject', [
+                'Bucket' => $this->bucket,
+                'Key' => $path,
+            ]);
+
+            return (string) $this->client
+                ->createPresignedRequest($command, '+1 hour')
+                ->getUri();
+        }
+
+        if ($this->domain) {
+            return rtrim($this->domain, '/') . '/' . ltrim($path, '/');
+        }
+
+        return rtrim((string) $this->endpoint, '/')
+            . '/' . $this->bucket . '/' . ltrim($path, '/');
+    }
+}
+```
+
+<Note>
+  The constructor runs when the adapter is first resolved, which only happens when it's the selected backend or when the admin page lists adapters. Building the client there is fine.
+</Note>
+
+## Register it
+
+```php src/Plugin.php
+use Shared\Infrastructure\FileSystem\CdnAdapterCollectionInterface;
+
+public function __construct(
+    private CdnAdapterCollectionInterface $adapters,
+    private FilesystemLoader $loader,
+    private AttributeMapper $mapper,
+) {}
+
+public function boot(Context $context): void
+{
+    $this->loader->addPath(__DIR__ . '/../templates', 'acme-storage');
+    $this->mapper->addPath(__DIR__);
+
+    $this->adapters->add(AcmeCloud::LOOKUP_KEY, AcmeCloud::class);
+}
+```
+
+The adapter now appears under **Settings → File storage**. The administrator's choice is stored in `option.cdn.adapter`, and Aikeedo resolves your adapter for every file operation from then on.
+
+## Settings page
+
+The storage list links to `/admin/settings/cdn/{key}`, so declare that route and set `extra.default_url` to it:
+
+```php
+#[Route(path: '/settings/cdn/acme-cloud', method: RequestMethod::GET)]
+class SettingsRequestHandler extends AbstractAdminViewRequestHandler implements
+    RequestHandlerInterface
+{
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        return new ViewResponse('@acme-storage/settings.twig');
+    }
+}
+```
+
+Fields to include: enable toggle, endpoint, region, bucket, access key, secret key, and an optional custom domain for public URLs. Mask the secrets in demo mode.
+
+## Signed URLs
+
+`option.cdn.sign_urls` is a global switch. When it's on, `getUrl()` must return a time-limited URL, and objects should be written privately. When it's off, objects that Aikeedo writes with public visibility must be reachable at a stable URL.
+
+<Warning>
+  Never cache the result of `getUrl()` beyond the signature's lifetime, and never store a signed URL in the database. Aikeedo stores the object key and asks the adapter for a URL when it needs one.
+</Warning>
+
+## Migrating existing files
+
+Changing the adapter doesn't move existing files: records keep the storage key they were written with. Tell administrators to copy their existing objects to the new backend before switching, or to keep the old backend reachable.
+
+## Testing
+
+<Check>Generate an image and confirm the file lands in your bucket.</Check>
+<Check>The image displays in the library, which means `getUrl()` is right.</Check>
+<Check>With URL signing on, URLs expire and are regenerated on the next page load.</Check>
+<Check>Uploading a large file works, and cleanup deletes objects.</Check>
+<Check>Wrong credentials produce a clear error rather than a blank page.</Check>
+
+## Related
+
+- [Files and storage](/development/plugins/files-and-storage)
+- [Storage internals](/development/core/storage-and-files)
+- [Cloud storage setup](/integrations/cloud-storage/overview)

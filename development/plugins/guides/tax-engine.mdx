@@ -1,0 +1,226 @@
+---
+title: "Build a tax engine"
+sidebarTitle: "Tax engines"
+description: "Add a tax calculation engine to Aikeedo so orders are taxed according to your own rules or an external tax service."
+---
+
+A tax engine calculates the tax lines for an order at checkout. Aikeedo ships a null engine that charges nothing, and administrators select an engine under **Settings → Tax engines**.
+
+## When it runs
+
+Tax is calculated once, while the order is created, and the resulting lines are stored on the order. They're included in `getTotalPrice()`, so every payment gateway charges the taxed amount without doing anything extra.
+
+If the configured engine can't be resolved, Aikeedo falls back to the null engine, so a missing plugin never blocks checkout.
+
+## The interface
+
+```php
+namespace Billing\Infrastructure\Tax;
+
+interface TaxEngineInterface
+{
+    public function getLookupKey(): string;
+    public function getName(): string;
+    public function calculate(OrderEntity $order): TaxResult;
+}
+```
+
+`TaxResult` is a list of `Billing\Domain\ValueObjects\TaxLine` objects:
+
+```php
+new TaxLine(
+    name: 'VAT (20%)',   // shown to the customer
+    rate: 20.0,          // percentage, or 0 for a fixed amount
+    amount: new TaxAmount(1999),  // minor units
+    kind: 'percent',     // 'percent' or 'fixed'
+);
+```
+
+`TaxResult::getTaxTotal()` sums the lines, so return several when a jurisdiction has more than one component, such as a state and a city tax.
+
+## Implementation
+
+```php src/FlatTaxEngine.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\FlatTax;
+
+use Billing\Domain\Entities\OrderEntity;
+use Billing\Domain\ValueObjects\TaxAmount;
+use Billing\Domain\ValueObjects\TaxLine;
+use Billing\Infrastructure\Tax\TaxEngineInterface;
+use Billing\Infrastructure\Tax\TaxResult;
+use Easy\Container\Attributes\Inject;
+use Override;
+
+class FlatTaxEngine implements TaxEngineInterface
+{
+    public const LOOKUP_KEY = 'flat-tax';
+
+    public function __construct(
+        #[Inject('option.flat_tax.rate')]
+        private ?float $rate = null,
+
+        #[Inject('option.flat_tax.label')]
+        private ?string $label = null,
+
+        /** @var array<string,float>|null Country code to rate */
+        #[Inject('option.flat_tax.rules')]
+        private ?array $rules = null,
+    ) {}
+
+    #[Override]
+    public function getLookupKey(): string
+    {
+        return self::LOOKUP_KEY;
+    }
+
+    #[Override]
+    public function getName(): string
+    {
+        return 'Flat tax';
+    }
+
+    #[Override]
+    public function calculate(OrderEntity $order): TaxResult
+    {
+        $address = $order->getWorkspace()->getAddress();
+        $country = $address?->country;
+
+        $rate = $this->rules[$country] ?? $this->rate;
+
+        if (!$rate) {
+            // No rule, no tax. Returning an empty result is always safe.
+            return new TaxResult();
+        }
+
+        // Tax the amount the customer actually pays.
+        $base = $order->getSubtotal()->value - $order->getDiscount()->value;
+        $amount = (int) round($base * $rate / 100);
+
+        if ($amount <= 0) {
+            return new TaxResult();
+        }
+
+        return new TaxResult(
+            new TaxLine(
+                name: sprintf('%s (%s%%)', $this->label ?: 'Tax', $rate),
+                rate: (float) $rate,
+                amount: new TaxAmount($amount),
+                kind: 'percent',
+            )
+        );
+    }
+}
+```
+
+### Rules to follow
+
+- **Return an empty `TaxResult()` when you can't calculate**, including when an external service fails. Throwing blocks checkout entirely.
+- **Work in minor units.** Round once, at the end.
+- **Decide your base.** Tax the discounted amount, or the pre-discount amount, according to the rules you're implementing, and document which you chose.
+- **Handle a missing address.** Many workspaces have none, and a plan may be sold without one.
+- **Don't call a slow API without a timeout.** Order creation waits for you.
+
+## Register it
+
+```php src/Plugin.php
+use Billing\Infrastructure\Tax\TaxEngineInterface;
+use Shared\Infrastructure\Collections\ServiceCollectionInterface;
+
+public function __construct(
+    private ServiceCollectionInterface $services,
+    private FilesystemLoader $loader,
+    private AttributeMapper $mapper,
+) {}
+
+public function boot(Context $context): void
+{
+    $this->loader->addPath(__DIR__ . '/../templates', 'flat-tax');
+    $this->mapper->addPath(__DIR__);
+
+    $this->services->add(
+        FlatTaxEngine::LOOKUP_KEY,
+        FlatTaxEngine::class,
+        TaxEngineInterface::class
+    );
+}
+```
+
+The engine appears under **Settings → Tax engines**, where an administrator selects it. The selected key is stored in `option.billing.tax_engine`.
+
+## The settings page
+
+The tax engines list links each engine to `/admin/settings/tax-engines/{key}`, so declare that route:
+
+```php
+#[Route(path: '/settings/tax-engines/flat-tax', method: RequestMethod::GET)]
+class SettingsRequestHandler extends AbstractAdminViewRequestHandler implements
+    RequestHandlerInterface
+{
+    public function __construct(
+        private CountryDataProvider $countries,
+    ) {}
+
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        return new ViewResponse('@flat-tax/settings.twig', [
+            'countries' => $this->countries->getCountryData(),
+        ]);
+    }
+}
+```
+
+Set `extra.default_url` to the same path. For the form itself, see [Admin settings pages](/development/plugins/admin-settings-pages).
+
+<Tip>
+  `Shared\Infrastructure\CountryDataProvider` gives you the country list Aikeedo already uses, so your rules editor matches the rest of the admin panel.
+</Tip>
+
+## Using an external tax service
+
+For a service such as a rate API, keep the network call tight:
+
+```php
+public function calculate(OrderEntity $order): TaxResult
+{
+    try {
+        $result = $this->client->post('/calculate', [
+            'amount' => $order->getSubtotal()->value - $order->getDiscount()->value,
+            'currency' => $order->getCurrencyCode()->value,
+            'country' => $order->getWorkspace()->getAddress()?->country,
+        ]);
+    } catch (Throwable $th) {
+        $this->logger->error('Tax service failed', ['exception' => $th]);
+
+        return new TaxResult();
+    }
+
+    return new TaxResult(...array_map(
+        fn(object $line) => new TaxLine(
+            name: $line->name,
+            rate: (float) $line->rate,
+            amount: new TaxAmount((int) $line->amount),
+        ),
+        $result->lines,
+    ));
+}
+```
+
+Cache rates that rarely change with the PSR-6 pool, and never let a provider outage stop a sale.
+
+## Testing
+
+<Check>Checkout shows your tax lines, and the total includes them.</Check>
+<Check>A workspace without an address still reaches checkout.</Check>
+<Check>A zero or missing rate produces no tax line at all.</Check>
+<Check>A discounted order taxes the amount you intended.</Check>
+<Check>With the service unreachable, checkout still completes.</Check>
+
+## Related
+
+- [Payment gateways](/development/plugins/guides/payments/overview)
+- [Tax engine settings](/integrations/tax-engines/overview)
+- [Billing internals](/development/core/billing-subsystem)

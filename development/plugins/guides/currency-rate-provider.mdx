@@ -1,0 +1,173 @@
+---
+title: "Build a currency rate provider"
+sidebarTitle: "Currency rate providers"
+description: "Supply exchange rates to Aikeedo so payment gateways can charge in a currency other than the platform default."
+---
+
+Aikeedo prices plans in one currency. When a payment gateway bills in a different one, it converts the amount through the configured rate provider. Without a provider, no conversion happens and everything is charged in the default currency.
+
+## The interface
+
+```php
+namespace Billing\Infrastructure\Currency;
+
+interface RateProviderInterface
+{
+    public function getName(): string;
+    public function getRate(CurrencyCode $from, CurrencyCode $to): int|float;
+}
+```
+
+`getRate()` returns the multiplier that converts an amount in `$from` into `$to`. It's called during checkout, so it must be fast and must not throw for a currency pair you support.
+
+## Implementation
+
+Rates change slowly, so fetch them in bulk and cache them. Storing them in an option makes them survive cache clears and keeps the checkout path free of network calls.
+
+```php src/AcmeRates.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Rates;
+
+use Billing\Infrastructure\Currency\RateProviderInterface;
+use Easy\Container\Attributes\Inject;
+use Option\Application\Commands\SaveOptionCommand;
+use Override;
+use RuntimeException;
+use Shared\Domain\ValueObjects\CurrencyCode;
+use Shared\Infrastructure\CommandBus\Dispatcher;
+
+class AcmeRates implements RateProviderInterface
+{
+    public const LOOKUP_KEY = 'acme-rates';
+
+    /** Refresh at most every four hours. */
+    private const TTL = 3600 * 4;
+
+    public function __construct(
+        private Client $client,
+        private Dispatcher $dispatcher,
+
+        #[Inject('option.acme_rates.api_key')]
+        private ?string $apiKey = null,
+
+        #[Inject('option.acme_rates.updated_at')]
+        private ?int $updatedAt = null,
+
+        /** @var array<string,float>|null */
+        #[Inject('option.acme_rates.rates')]
+        private ?array $rates = null,
+    ) {}
+
+    #[Override]
+    public function getName(): string
+    {
+        return 'Acme Rates';
+    }
+
+    #[Override]
+    public function getRate(CurrencyCode $from, CurrencyCode $to): int|float
+    {
+        $rates = $this->rates();
+
+        if (!isset($rates[$from->value], $rates[$to->value])) {
+            throw new RuntimeException(sprintf(
+                'No rate for %s to %s',
+                $from->value,
+                $to->value
+            ));
+        }
+
+        // Rates are quoted against a single base currency.
+        return $rates[$to->value] / $rates[$from->value];
+    }
+
+    /** @return array<string,float> */
+    private function rates(): array
+    {
+        $now = time();
+
+        if ($this->rates && $this->updatedAt && $this->updatedAt + self::TTL >= $now) {
+            return $this->rates;
+        }
+
+        if (!$this->apiKey) {
+            throw new RuntimeException('Acme Rates API key is not configured');
+        }
+
+        $rates = $this->client->fetchRates($this->apiKey);
+
+        $this->dispatcher->dispatch(new SaveOptionCommand(
+            'acme_rates',
+            json_encode(['updated_at' => $now, 'rates' => $rates])
+        ));
+
+        $this->rates = $rates;
+
+        return $rates;
+    }
+}
+```
+
+<Warning>
+  A conversion failure is swallowed by the billing helper, which then charges the original amount in the original currency. That's safer than blocking checkout, but it means a broken provider is invisible to the customer. Log failures so administrators can see them.
+</Warning>
+
+## Register it
+
+```php src/Plugin.php
+use Billing\Infrastructure\Currency\RateProviderCollectionInterface;
+
+public function __construct(
+    private RateProviderCollectionInterface $providers,
+    private FilesystemLoader $loader,
+    private AttributeMapper $mapper,
+) {}
+
+public function boot(Context $context): void
+{
+    $this->loader->addPath(__DIR__ . '/../templates', 'acme-rates');
+    $this->mapper->addPath(__DIR__);
+
+    $this->providers->add(AcmeRates::LOOKUP_KEY, AcmeRates::class);
+}
+```
+
+The provider appears in the **Currency rate provider** select under **Settings → Billing**, and the choice is stored in `option.currency.provider`.
+
+## Settings page
+
+The billing page links to `/admin/settings/rate-providers/{key}`, so declare that route and point `extra.default_url` at it:
+
+```php
+#[Route(path: '/settings/rate-providers/acme-rates', method: RequestMethod::GET)]
+class SettingsRequestHandler extends AbstractAdminViewRequestHandler implements
+    RequestHandlerInterface
+{
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        return new ViewResponse('@acme-rates/settings.twig');
+    }
+}
+```
+
+Show the API key field, and the timestamp of the last successful refresh, so administrators can tell whether rates are current.
+
+## Testing
+
+<Check>Set a gateway to a currency other than the platform default and confirm the charge is converted.</Check>
+<Check>The converted amount is plausible, and rounding lands on whole minor units.</Check>
+<Check>Rates are fetched once and reused until they expire.</Check>
+<Check>With an invalid API key, checkout still completes in the default currency.</Check>
+
+## A public reference implementation
+
+The [Currency Beacon plugin](https://github.com/heyaikeedo/plugins-currency-beacon) is a small, complete rate-provider plugin you can read end to end.
+
+## Related
+
+- [Payment gateways](/development/plugins/guides/payments/overview)
+- [Billing internals](/development/core/billing-subsystem)
+- [Billing settings](/billing/overview)

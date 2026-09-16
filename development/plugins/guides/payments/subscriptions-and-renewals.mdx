@@ -1,0 +1,203 @@
+---
+title: "Subscriptions and renewals"
+sidebarTitle: "Subscriptions"
+description: "Handle recurring billing in an Aikeedo payment gateway: provider-managed schedules, merchant-initiated charges, trials and cancellation."
+---
+
+For a recurring plan, Aikeedo creates a subscription when the order is fulfilled and tracks usage against it. Who charges the customer each period, though, depends on your provider.
+
+## What Aikeedo does
+
+When an order for a monthly, yearly or lifetime plan is fulfilled:
+
+1. A subscription is created from the order, copying the order's **external ID** and **payment gateway**.
+2. The workspace is subscribed to the plan, which grants its credits.
+3. Usage resets are scheduled: the first is 30 days out, or after the trial period.
+
+The value your `completePurchase()` returned becomes that external ID. Everything later, including cancellation and webhook lookups, finds the subscription by it, so return the identifier you'll need again:
+
+| Provider model | Return from `completePurchase()` |
+| --- | --- |
+| The provider manages the schedule | The provider's subscription ID |
+| You charge each period yourself | The saved payment method or mandate ID |
+| One-time payment, no recurrence | The charge or transaction ID |
+
+## Usage resets are not charges
+
+<Warning>
+  Aikeedo never charges a card by itself. The renewal cron resets usage and dispatches `Billing\Domain\Events\SubscriptionUsageResetEvent`. Money only moves if your provider charges on its own schedule, or your plugin listens to that event and charges.
+</Warning>
+
+Usage resets run every 30 days, including for yearly plans, because the credit allowance is monthly. Use `SubscriptionEntity::getNextBillingAt()` when you need the actual next payment date, which follows the plan's billing cycle.
+
+## Model A: the provider manages the schedule
+
+Most providers do. Create a subscription during `purchase()`, and let the provider bill on its own:
+
+```php
+public function purchase(OrderEntity $order): UriInterface|PurchaseToken|string
+{
+    $snapshot = $order->getPlan();
+
+    if (!$snapshot->getBillingCycle()->isRecurring()) {
+        return $this->createOneTimeCheckout($order);
+    }
+
+    $plan = $this->findOrCreateProviderPlan($order);
+
+    $session = $this->client->post('/subscriptions', [
+        'plan' => $plan->id,
+        'reference' => (string) $order->getId()->getValue(),
+        'trial_days' => $order->getTrialPeriodDays()->value,
+        'success_url' => $this->helper->generateReturnUrl($order, self::LOOKUP_KEY),
+    ]);
+
+    $order->initiatePayment(
+        new PaymentGateway(self::LOOKUP_KEY),
+        new ExternalId($session->id),
+    );
+
+    return new Uri($session->url);
+}
+```
+
+Then `completePurchase()` returns the provider's subscription ID, and your webhook handler reacts to cancellations and failed payments.
+
+### Creating provider plans
+
+Providers usually need their own plan object, with a price and an interval. Derive it from the order rather than the Aikeedo plan alone, because tax and coupons change what the customer actually pays. A reliable approach is to look up a plan keyed by a fingerprint, and create it if it's missing:
+
+```php
+$fingerprint = implode('/', array_filter([
+    (string) $order->getPlan()->getId()->getValue(),
+    $order->getCoupon()?->getId()->getValue(),
+    $order->getTaxAmount()->value > 0 ? 'tax:' . $order->getTaxAmount()->value : null,
+]));
+```
+
+Store that fingerprint in the provider plan's name or metadata, and reuse the plan for every customer with the same combination.
+
+<Note>
+  Use `getTotalPrice(true)` when the provider can't express "discount for the first N cycles". It applies the coupon to the recurring price instead, which is the closest equivalent most providers support.
+</Note>
+
+## Model B: you charge each period
+
+If the provider only gives you a saved payment method or a mandate, charge when Aikeedo resets usage:
+
+```php src/Plugin.php
+use Billing\Domain\Events\SubscriptionUsageResetEvent;
+use Easy\EventDispatcher\Mapper\ArrayMapper;
+
+public function boot(Context $context): void
+{
+    $this->mapper->addEventListener(
+        SubscriptionUsageResetEvent::class,
+        ChargeRecurringPayment::class
+    );
+}
+```
+
+```php src/Listeners/ChargeRecurringPayment.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\DemoPay\Listeners;
+
+use Acme\DemoPay\Client;
+use Acme\DemoPay\DemoPay;
+use Billing\Application\Commands\EndSubscriptionCommand;
+use Billing\Domain\Events\SubscriptionUsageResetEvent;
+use Psr\Log\LoggerInterface;
+use Shared\Infrastructure\CommandBus\Dispatcher;
+use Throwable;
+
+class ChargeRecurringPayment
+{
+    public function __construct(
+        private Client $client,
+        private Dispatcher $dispatcher,
+        private LoggerInterface $logger,
+    ) {}
+
+    public function __invoke(SubscriptionUsageResetEvent $event): void
+    {
+        $subscription = $event->subscription;
+
+        // Only subscriptions that belong to this gateway.
+        if ($subscription->getPaymentGateway()->value !== DemoPay::LOOKUP_KEY) {
+            return;
+        }
+
+        try {
+            $this->client->post('/charges', [
+                'payment_method' => (string) $subscription->getExternalId()->value,
+                'amount' => $subscription->getPlan()->getPrice()->value,
+            ]);
+        } catch (Throwable $th) {
+            $this->logger->error('DemoPay renewal failed', ['exception' => $th]);
+
+            // No payment, no service: end the subscription.
+            $this->dispatcher->dispatch(
+                new EndSubscriptionCommand($subscription->getId())
+            );
+        }
+    }
+}
+```
+
+Always filter by gateway key first: the event fires for every subscription in the installation, not just yours.
+
+## Trials
+
+`OrderEntity::getTrialPeriodDays()` carries the plan's trial length. Providers support trials differently, and all of these appear in practice:
+
+| Approach | Notes |
+| --- | --- |
+| Native trial | Pass the trial length, and let the provider start billing afterwards |
+| Delayed start | Create the subscription with a start date after the trial |
+| Authorize and void | Verify the card with a small authorization, then release it |
+| Charge and refund | Only when nothing else is available, because refunds cost fees |
+
+When the installation has "trial without payment" enabled and the plan has trial days, Aikeedo cancels the subscription right after creating it, so the customer gets the trial period and nothing renews. Don't fight that: if the order's trial days are set and no payment was taken, return a reference that reflects reality.
+
+## Cancellation
+
+```php
+public function cancelSubscription(string $id): void
+{
+    $this->client->post('/subscriptions/' . $id . '/cancel', []);
+}
+```
+
+Aikeedo calls this from the user's billing page, from the admin panel, when a workspace switches plans, and while handling your own webhook.
+
+<Warning>
+  Make `cancelSubscription()` idempotent. It's called even when the provider was the one that cancelled, so a second cancellation must not throw. Treat "already cancelled" and "not found" as success.
+</Warning>
+
+Cancelling in Aikeedo sets the subscription to end at its next renewal date, so the customer keeps what they paid for. A separate cron job ends expired subscriptions and moves the workspace to the fallback plan.
+
+| Command | Effect |
+| --- | --- |
+| `Billing\Application\Commands\CancelSubscriptionCommand` | Ends at period end, and calls your `cancelSubscription()` |
+| `Billing\Application\Commands\EndSubscriptionCommand` | Ends immediately, moves the workspace to the fallback plan, and does **not** call the provider |
+
+Use `CancelSubscriptionCommand` for a normal cancellation, and `EndSubscriptionCommand` when service must stop now, such as after a failed renewal or a chargeback.
+
+## Testing checklist
+
+<Check>A recurring plan creates a subscription whose external ID is the one your provider knows.</Check>
+<Check>A trial starts without charging, and the first charge lands when the trial ends.</Check>
+<Check>Cancelling in Aikeedo cancels at the provider, and cancelling at the provider cancels in Aikeedo.</Check>
+<Check>Cancelling twice doesn't throw.</Check>
+<Check>A failed renewal ends the subscription instead of leaving free access.</Check>
+<Check>Switching plans cancels the previous subscription exactly once.</Check>
+
+## Related
+
+- [Webhooks](/development/plugins/guides/payments/webhooks)
+- [Build a gateway](/development/plugins/guides/payments/building-a-gateway)
+- [Billing internals](/development/core/billing-subsystem)
+- [Plans, snapshots and subscriptions](/billing/plans-snapshots-subscriptions)

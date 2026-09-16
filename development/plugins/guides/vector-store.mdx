@@ -1,0 +1,259 @@
+---
+title: "Build a vector store"
+sidebarTitle: "Vector stores"
+description: "Connect an external vector database to Aikeedo so knowledge-base embeddings are stored and searched outside the default file store."
+---
+
+Aikeedo turns uploaded documents and links into embeddings, then searches them when answering questions. By default those vectors are kept as JSON files in the configured storage. A vector store plugin replaces that with a real vector database.
+
+## The interface
+
+```php
+namespace Ai\Domain\Embedding;
+
+interface VectorStoreInterface
+{
+    public function isEnabled(): bool;
+    public function getName(): string;
+
+    public function upsert(Id $id, Embedding $embedding): void;
+    public function exists(Id $id): bool;
+    public function retrieve(Id $id): Embedding;
+    public function remove(Id $id): void;
+
+    public function search(
+        array $vector,
+        VectorSearchContextInterface $context,
+        int $limit = 5
+    ): array;
+}
+```
+
+| Method | Contract |
+| --- | --- |
+| `upsert(Id, Embedding)` | Stores every chunk of one dataset unit, replacing what was there |
+| `exists(Id)` | Whether that unit has vectors stored |
+| `retrieve(Id)` | Returns the stored `Embedding` |
+| `remove(Id)` | Deletes the unit's vectors |
+| `search(array $vector, VectorSearchContextInterface $context, int $limit)` | Returns the most similar chunks |
+
+### The data shape
+
+An `Ai\Domain\ValueObjects\Embedding` wraps a list of chunks, each an `EmbeddingMap` with the text and its vector:
+
+```php
+use Ai\Domain\ValueObjects\Embedding;
+use Ai\Domain\ValueObjects\EmbeddingMap;
+
+$embedding = new Embedding(
+    new EmbeddingMap('The first chunk of text', [0.01, -0.22, ...]),
+    new EmbeddingMap('The second chunk', [0.04, 0.11, ...]),
+);
+
+// $embedding->value === [['content' => '...', 'embedding' => [...]], ...]
+```
+
+`search()` returns a ranked list in the same shape the default store produces:
+
+```php
+[
+    ['content' => 'The matching chunk of text', 'similarity' => 0.87],
+    ['content' => 'Another chunk', 'similarity' => 0.81],
+]
+```
+
+The `content` values are what ends up in the model's context, so return the text, not just IDs.
+
+### The search context
+
+```php
+interface VectorSearchContextInterface
+{
+    public function getSearchNamespace(): string;
+    public function getDatasetIds(): iterable;
+}
+```
+
+The context tells you **where** to search: a namespace to isolate one tenant or assistant, and the dataset unit IDs that are attached to the current conversation. Respect both, or one customer's knowledge base will leak into another's answers.
+
+## Implementation
+
+```php src/AcmeVectors.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Vectors;
+
+use Ai\Domain\Embedding\VectorSearchContextInterface;
+use Ai\Domain\Embedding\VectorStoreInterface;
+use Ai\Domain\ValueObjects\Embedding;
+use Ai\Domain\ValueObjects\EmbeddingMap;
+use Easy\Container\Attributes\Inject;
+use Override;
+use Ramsey\Uuid\Uuid;
+use Shared\Domain\ValueObjects\Id;
+
+class AcmeVectors implements VectorStoreInterface
+{
+    public const LOOKUP_KEY = 'acme-vectors';
+
+    /** Namespace used to derive stable point ids. */
+    private const ID_NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+
+    public function __construct(
+        private Client $client,
+
+        #[Inject('option.acme_vectors.is_enabled')]
+        private ?bool $isEnabled = false,
+
+        #[Inject('option.acme_vectors.collection_prefix')]
+        private ?string $prefix = 'aikeedo_',
+    ) {}
+
+    #[Override]
+    public function isEnabled(): bool
+    {
+        return (bool) $this->isEnabled;
+    }
+
+    #[Override]
+    public function getName(): string
+    {
+        return 'Acme Vectors';
+    }
+
+    #[Override]
+    public function upsert(Id $id, Embedding $embedding): void
+    {
+        // Replace, don't append: a re-indexed document must not keep old chunks.
+        $this->remove($id);
+
+        $points = [];
+
+        foreach ($embedding->value ?? [] as $index => $chunk) {
+            $points[] = [
+                // Deterministic id, so re-indexing overwrites cleanly.
+                'id' => Uuid::uuid5(self::ID_NAMESPACE, $id->getValue() . ':' . $index)->toString(),
+                'vector' => $chunk['embedding'],
+                'payload' => [
+                    'unit_id' => (string) $id->getValue(),
+                    'content' => $chunk['content'],
+                ],
+            ];
+        }
+
+        if ($points) {
+            $this->client->upsert($this->collection(), $points);
+        }
+    }
+
+    #[Override]
+    public function exists(Id $id): bool
+    {
+        return $this->client->count($this->collection(), (string) $id->getValue()) > 0;
+    }
+
+    #[Override]
+    public function retrieve(Id $id): Embedding
+    {
+        $maps = [];
+
+        foreach ($this->client->scroll($this->collection(), (string) $id->getValue()) as $point) {
+            $maps[] = new EmbeddingMap($point->payload->content, $point->vector);
+        }
+
+        return new Embedding(...$maps);
+    }
+
+    #[Override]
+    public function remove(Id $id): void
+    {
+        $this->client->deleteByUnit($this->collection(), (string) $id->getValue());
+    }
+
+    #[Override]
+    public function search(
+        array $vector,
+        VectorSearchContextInterface $context,
+        int $limit = 5
+    ): array {
+        $unitIds = [];
+
+        foreach ($context->getDatasetIds() as $id) {
+            $unitIds[] = (string) $id;
+        }
+
+        if (!$unitIds) {
+            return [];
+        }
+
+        $hits = $this->client->search(
+            $this->collection($context->getSearchNamespace()),
+            $vector,
+            $unitIds,
+            $limit,
+        );
+
+        return array_map(fn(object $hit) => [
+            'content' => $hit->payload->content,
+            'similarity' => $hit->score,
+        ], $hits);
+    }
+
+    private function collection(?string $namespace = null): string
+    {
+        return $this->prefix . ($namespace ?: 'default');
+    }
+}
+```
+
+<Note>
+  Create collections lazily, on the first write, and make creation idempotent. Vector dimensions depend on the embedding model the installation uses, so read the dimension from the first vector you receive rather than hardcoding it.
+</Note>
+
+## Register it
+
+```php src/Plugin.php
+use Ai\Domain\Embedding\VectorStoreInterface;
+use Shared\Infrastructure\Collections\ServiceCollectionInterface;
+
+public function boot(Context $context): void
+{
+    $this->loader->addPath(__DIR__ . '/../templates', 'acme-vectors');
+    $this->mapper->addPath(__DIR__);
+
+    $this->services->add(
+        AcmeVectors::LOOKUP_KEY,
+        AcmeVectors::class,
+        VectorStoreInterface::class
+    );
+}
+```
+
+The store appears under **Settings → Vector databases**, and the selected key is stored in `option.embeddings.adapter`. If that key can't be resolved, Aikeedo falls back to its built-in file store.
+
+## Settings page
+
+Declare a route at `/admin/settings/vector-databases/acme-vectors`, and set `extra.default_url` to it. Useful fields: enable toggle, endpoint, API key, collection prefix, and a switch for per-assistant collections.
+
+## Operational notes
+
+- **Switching stores doesn't migrate data.** Existing knowledge bases must be re-indexed after a switch. Say so on your settings page.
+- **Deletes matter.** When a document is removed, `remove()` must delete its vectors, or answers will cite deleted content.
+- **Fail soft on search.** If the database is unreachable, returning an empty array degrades the answer. Throwing breaks the chat.
+- **Watch the payload size.** Store the chunk text, since search results must return it.
+
+## Testing
+
+<Check>Upload a document to a knowledge base and confirm vectors appear in your database.</Check>
+<Check>Ask a question that the document answers, and check the answer cites it.</Check>
+<Check>Re-upload the same document and confirm chunks are replaced, not duplicated.</Check>
+<Check>Delete the document and confirm its vectors are gone.</Check>
+<Check>Two knowledge bases don't see each other's content.</Check>
+
+## Related
+
+- [AI models and credits](/development/plugins/ai-models-and-credits)
+- [AI tools](/development/plugins/guides/ai-tool)
+- [AI subsystem internals](/development/core/ai-subsystem)
