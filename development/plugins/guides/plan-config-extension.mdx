@@ -1,0 +1,198 @@
+---
+title: "Add per-plan settings"
+sidebarTitle: "Plan config extensions"
+description: "Let administrators configure your Aikeedo plugin per subscription plan, and read those settings at runtime."
+---
+
+Plans decide what a workspace can do. A plan config extension adds your own fields to the plan editor, stores them with the plan, and carries them into the snapshot a subscription is based on.
+
+## The interface
+
+```php
+namespace Billing\Infrastructure\PlanConfig;
+
+interface PlanConfigExtensionInterface
+{
+    public function getDefaults(): ?array;
+    public function getTemplatePath(): ?string;
+    public function getSnapshotTemplatePath(): ?string;
+}
+```
+
+| Method | Purpose |
+| --- | --- |
+| `getDefaults()` | Default values, applied to plans that don't have your settings yet |
+| `getTemplatePath()` | Twig template rendered in the plan editor |
+| `getSnapshotTemplatePath()` | Read-only template rendered when viewing a plan snapshot |
+
+## Implementation
+
+```php src/PlanConfigExtension.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Projects;
+
+use Billing\Infrastructure\PlanConfig\PlanConfigExtensionInterface;
+use Override;
+
+class PlanConfigExtension implements PlanConfigExtensionInterface
+{
+    public const LOOKUP_KEY = 'acme_projects';
+
+    #[Override]
+    public function getDefaults(): ?array
+    {
+        return [
+            'is_enabled' => false,
+            'project_cap' => null,
+        ];
+    }
+
+    #[Override]
+    public function getTemplatePath(): ?string
+    {
+        return '@acme-projects/plan.twig';
+    }
+
+    #[Override]
+    public function getSnapshotTemplatePath(): ?string
+    {
+        return '@acme-projects/plan-snapshot.twig';
+    }
+}
+```
+
+## Register it
+
+```php src/Plugin.php
+use Billing\Infrastructure\PlanConfig\PlanConfigExtensionInterface;
+use Shared\Infrastructure\Collections\ServiceCollectionInterface;
+
+public function boot(Context $context): void
+{
+    $this->loader->addPath(__DIR__ . '/../templates', 'acme-projects');
+
+    $this->services->add(
+        PlanConfigExtension::LOOKUP_KEY,
+        PlanConfigExtension::class,
+        PlanConfigExtensionInterface::class
+    );
+}
+```
+
+The key you register under namespaces your settings inside the plan, under `config.extensions.{key}`.
+
+## The editor template
+
+The plan editor is an Alpine form bound to a `model` object. Your template receives `key` and `defaults`, and binds inputs into `model.config.extensions[key]`:
+
+```twig templates/plan.twig
+<section class="grid grid-cols-1 gap-6 box" data-density="comfortable">
+	<h2>{{ p__('heading', 'Projects') }}</h2>
+
+	<div class="flex items-center justify-between p-3 rounded-lg bg-intermediate">
+		{{ p__('label', 'Projects enabled') }}
+
+		<label class="inline-flex items-center gap-2 cursor-pointer">
+			<input type="checkbox" class="hidden peer"
+				x-model="model.config.extensions['{{ key }}'].is_enabled">
+
+			<span class="relative block w-10 h-6 transition-all rounded-3xl bg-line peer-checked:bg-success after:h-5 after:w-5 after:top-0.5 after:absolute after:left-0 after:ml-0.5 after:transition-all after:rounded-full after:bg-white peer-checked:after:left-4"></span>
+		</label>
+	</div>
+
+	<div>
+		<label for="{{ key }}.project_cap">
+			{{ p__('label', 'Maximum projects') }}
+		</label>
+
+		<input type="number" min="0" id="{{ key }}.project_cap" class="mt-2 input"
+			x-model.number="model.config.extensions['{{ key }}'].project_cap"
+			placeholder="{{ __('Unlimited') }}">
+
+		<ul class="mt-2 info">
+			<li>{{ __('Leave empty for unlimited projects.') }}</li>
+		</ul>
+	</div>
+</section>
+```
+
+The editor initializes your subtree from `getDefaults()` when a plan doesn't have it yet, so you can bind directly without guarding for missing keys.
+
+### The snapshot template
+
+Snapshots are historical copies of a plan, so the template is read-only, and the data may predate your extension:
+
+```twig templates/plan-snapshot.twig
+<div class="flex justify-between">
+	<span>{{ p__('label', 'Projects') }}</span>
+	<span x-text="snapshot.config.extensions['{{ key }}']?.is_enabled ? '{{ __('Enabled') }}' : '{{ __('Disabled') }}'"></span>
+</div>
+```
+
+Use optional chaining, since older snapshots won't contain your key.
+
+## Read the settings at runtime
+
+Your settings travel with the plan and its snapshots, so read them from the workspace's subscription:
+
+```php
+use Workspace\Domain\Entities\WorkspaceEntity;
+
+public function canCreateProject(WorkspaceEntity $workspace): bool
+{
+    $subscription = $workspace->getSubscription();
+
+    if (!$subscription) {
+        return false;
+    }
+
+    $config = $subscription->getPlan()->getConfig();
+    $settings = $config->extensions[PlanConfigExtension::LOOKUP_KEY] ?? [];
+
+    if (!($settings['is_enabled'] ?? false)) {
+        return false;
+    }
+
+    $cap = $settings['project_cap'] ?? null;
+
+    return $cap === null || $this->countProjects($workspace) < $cap;
+}
+```
+
+In Twig, the same data is on the workspace:
+
+```twig
+{% set projects = workspace.subscription.plan.config.extensions.acme_projects|default({}) %}
+
+{% if projects.is_enabled|default(false) %}
+	<a href="/app/projects" class="button">{{ p__('button', 'Projects') }}</a>
+{% endif %}
+```
+
+<Warning>
+  Aikeedo stores and displays your settings, but it doesn't enforce them. Every limit you define has to be checked by your own code, in every path that can create or consume the resource.
+</Warning>
+
+## Design notes
+
+- **Use `null` for unlimited**, and say so in the field's help text.
+- **Default to off.** A new extension must not silently enable a paid capability on every existing plan.
+- **Keep keys stable.** They're written into every plan snapshot, and renaming one orphans historical data.
+- **Keep it small.** Per-plan settings belong here; global configuration belongs on your settings page.
+
+## Testing
+
+<Check>Your section appears in the plan editor, both for new and existing plans.</Check>
+<Check>Saving a plan persists your values, and reopening shows them.</Check>
+<Check>A snapshot of the plan shows your read-only summary.</Check>
+<Check>A workspace on a plan with the capability disabled is blocked by your checks.</Check>
+<Check>A cap is enforced at the limit, not one over.</Check>
+
+## Related
+
+- [Admin settings pages](/development/plugins/admin-settings-pages)
+- [Billing internals](/development/core/billing-subsystem)
+- [Plans, snapshots and subscriptions](/billing/plans-snapshots-subscriptions)
