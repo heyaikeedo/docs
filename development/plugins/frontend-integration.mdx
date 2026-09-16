@@ -1,0 +1,182 @@
+---
+title: "Frontend integration"
+sidebarTitle: "Frontend integration"
+description: "Add JavaScript and CSS to plugin pages, reuse Aikeedo's Alpine components, web components and API client, and ship your own built bundles."
+---
+
+Aikeedo pages are server-rendered Twig with Alpine.js for interactivity. A plugin page gets the same building blocks: the layout's blocks, the global API client, and the web components the core registers.
+
+## Add scripts and styles to a page
+
+The base layout exposes `styles` and `scripts` blocks. Call `{{ parent() }}` so the core's own assets keep loading:
+
+```twig templates/notes.twig
+{% extends "/layouts/main.twig" %}
+{% set xdata = 'notes' %}
+
+{% block styles %}
+	{{ parent() }}
+	<style>{% include "@acme-notes/assets/notes.css" %}</style>
+{% endblock %}
+
+{% block scripts %}
+	{{ parent() }}
+	<script>{% include "@acme-notes/assets/notes.js" %}</script>
+{% endblock %}
+
+{% block template %}
+	<h1>{{ p__('heading', 'Notes') }}</h1>
+	<button class="button" @click="create()">{{ p__('button', 'New note') }}</button>
+{% endblock %}
+```
+
+Including a `.js` or `.css` file through your Twig namespace inlines it, which keeps a small plugin to two files and no build step. For anything larger, ship a built bundle instead.
+
+## Write the Alpine component
+
+`xdata` names the component the page binds to. Register it with `Alpine.data()` before Alpine starts:
+
+```javascript assets/notes.js
+document.addEventListener('alpine:init', () => {
+    Alpine.data('notes', () => ({
+        notes: [],
+        isProcessing: false,
+
+        init() {
+            this.fetch();
+        },
+
+        fetch() {
+            window.api.get('/notes')
+                .then(res => this.notes = res.data.data)
+                .catch(() => window.toast.error('Could not load notes'));
+        },
+
+        create() {
+            if (this.isProcessing) {
+                return;
+            }
+
+            this.isProcessing = true;
+
+            window.api.post('/notes', { title: 'Untitled' })
+                .then(res => {
+                    this.notes.unshift(res.data);
+                    window.toast.show('Note created');
+                })
+                .finally(() => this.isProcessing = false);
+        },
+    }));
+});
+```
+
+### Pass server data to the component
+
+Render data as JSON and read it from a ref, instead of interpolating values into JavaScript:
+
+```twig
+<script type="application/json" x-ref="config">
+	{{ { workspace: workspace.id, currency: currency.code }|json_encode|raw }}
+</script>
+```
+
+```javascript
+init() {
+    const config = JSON.parse(this.$refs.config.textContent);
+}
+```
+
+## Globals you can use
+
+| Global | What it does |
+| --- | --- |
+| `window.api` | A configured HTTP client. On app pages its base URL is `/api`; on admin pages it's `/admin/api`. It attaches the session token and workspace header for you. |
+| `window.modal` | Opens and closes modal dialogs by ID: `window.modal.open('delete-note-modal')` |
+| `window.toast` | Shows notifications: `toast.show()`, `toast.success()`, `toast.error()` |
+
+Because `window.api` already points at the right base, call it with a path relative to that base: `window.api.get('/notes')` hits `/api/notes` from an app page.
+
+The client resolves with the `fetch` response, plus a `data` property holding the parsed JSON body, which is why the examples read `res.data`. It also handles two cases for you: a failed request shows the server's error message as a toast and rejects with an `ApiError`, and a `401` sends the user back to the login page.
+
+## Reuse the core's web components
+
+These custom elements are registered by the core bundles, so plugin templates can use them directly:
+
+| Element | Purpose |
+| --- | --- |
+| `<x-form>` | Wraps a form, manages submit state and validation styling |
+| `<x-avatar>` | Avatar or icon tile, also used for navigation icons |
+| `<x-copy>` | Copy-to-clipboard control |
+| `<x-money>` | Formats a minor-unit amount in a currency |
+| `<x-credit>` | Formats a credit balance, including "unlimited" |
+| `<x-time>` | Formats a timestamp |
+| `<x-filesize>` | Formats a byte count |
+| `<x-dropzone>` | File drop target |
+| `<x-code>` | Syntax-highlighted code block |
+| `<x-markdown>` | Renders Markdown |
+| `<x-chart>` | Chart rendering |
+| `<modal-element>` | A modal dialog, opened through `window.modal` |
+
+```twig
+<x-money data-value="{{ plan.price }}" currency="{{ currency.code }}" minor-units="{{ currency.fraction_digits }}"></x-money>
+<x-copy data-copy="{{ webhook_url }}"><span>{{ webhook_url }}</span></x-copy>
+```
+
+Core snippets are includable too, such as `{% include "/snippets/spinner.twig" %}`.
+
+<Tip>
+  Match the surrounding markup: `box`, `button`, `button-accent`, `input` and `label` are the core's Tailwind component classes, so your page inherits the admin and app styling, including dark mode.
+</Tip>
+
+## Ship a built bundle
+
+Inlining stops making sense once you have a real frontend, for example a widget or an editor. Build with Vite, publish the output, and read the manifest from PHP.
+
+```javascript vite.config.js
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+    build: {
+        outDir: 'public/assets',
+        manifest: true,
+        rollupOptions: {
+            input: { app: 'assets/src/index.js' },
+        },
+    },
+});
+```
+
+```json composer.json
+{
+  "extra": {
+    "public": [
+      { "source": "public/assets/*", "target": "." }
+    ]
+  }
+}
+```
+
+The installer copies those files to `public/e/{vendor}/{name}/`, so they're served from `/e/acme/notes/...`. Read the manifest to resolve the hashed filenames:
+
+```php
+$manifestPath = dirname(__DIR__) . '/public/assets/.vite/manifest.json';
+$manifest = json_decode((string) file_get_contents($manifestPath), true);
+$entry = $manifest['assets/src/index.js']['file'] ?? null;
+$url = '/e/acme/notes/' . $entry;
+```
+
+For local development, let an environment variable point at your dev server and fall back to the published files:
+
+```twig
+{% set base = env.ACME_NOTES_ASSETS_SERVER|default('/e/acme/notes') %}
+<script type="module" src="{{ base }}/{{ entry }}"></script>
+```
+
+See [Public assets](/development/plugins/public-assets) for the copy rules.
+
+## Related
+
+- [App pages and APIs](/development/plugins/app-pages-and-apis)
+- [Admin settings pages](/development/plugins/admin-settings-pages)
+- [Public assets](/development/plugins/public-assets)
+- [Views and frontend internals](/development/core/views-and-frontend)

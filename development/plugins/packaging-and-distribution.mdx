@@ -1,0 +1,113 @@
+---
+title: "Packaging and distribution"
+sidebarTitle: "Packaging"
+description: "Package an Aikeedo plugin as an installable archive, version it, and distribute it to customers."
+---
+
+Aikeedo installs plugins from a ZIP archive uploaded in the admin panel, or from any Composer repository. Both paths run Composer, so packaging is mostly about producing a clean, correctly versioned archive.
+
+## Archive layout
+
+`composer.json` must sit at the **root** of the archive, not inside a wrapper folder:
+
+```text
+acme-hello.zip
+├── composer.json
+├── README.md
+├── src/
+│   ├── Plugin.php
+│   └── SettingsRequestHandler.php
+├── templates/
+│   └── settings.twig
+├── public/
+│   └── assets/…        # only if extra.public publishes them
+└── locale/
+    └── de-DE/LC_MESSAGES/messages.po
+```
+
+Leave out development files: `.git`, `node_modules`, tests, build configuration, `.env` files and editor settings. Include build **output** if your plugin ships assets.
+
+```bash
+cd acme-hello
+zip -r ../acme-hello-1.2.0.zip . \
+  -x '.git/*' 'node_modules/*' 'tests/*' '.env*' '*.DS_Store'
+```
+
+## Versioning
+
+- Use semantic versioning in `version`, and raise it for every release. Installing from an archive runs `composer require <name>:<version>`, so a stale version installs the wrong code.
+- Record the Aikeedo versions you support in `extra.compatibility`, for example `">=5.0.0"`. Nothing enforces it, so check the version yourself if your code depends on a specific release.
+- Ship with `extra.status` set to `inactive`. Aikeedo manages that field afterwards.
+
+```json composer.json
+{
+  "name": "acme/hello",
+  "version": "1.2.0",
+  "type": "aikeedo-plugin",
+  "require": { "heyaikeedo/composer": "^1.0.0" },
+  "extra": {
+    "entry-class": "Acme\\Hello\\Plugin",
+    "title": "Hello",
+    "default_url": "/admin/settings/hello",
+    "compatibility": ">=5.0.0",
+    "status": "inactive"
+  },
+  "autoload": { "psr-4": { "Acme\\Hello\\": "src/" } }
+}
+```
+
+## Dependencies
+
+Declare third-party libraries in `require`. They're installed into the installation's own `vendor/` directory when the plugin is installed, so don't vendor them into your archive.
+
+<Warning>
+  Your constraints are resolved against everything Aikeedo already requires. A narrow constraint on a shared library can make installation fail. Keep ranges wide, and prefer libraries the application already ships, such as `psr/http-client`, `firebase/php-jwt`, `league/flysystem` and `ramsey/uuid`.
+</Warning>
+
+## Install paths
+
+| How | What happens |
+| --- | --- |
+| **Admin upload** | The archive is validated, stored in `extra/artifacts/`, then installed with Composer |
+| **`composer require acme/hello`** | Resolved from a path repository, a private Composer repository, or Packagist |
+| **Aikeedo update** | Every installed plugin is reinstalled so autoloaders and public assets are rebuilt |
+
+Installing over an existing copy backs the old directory up first and restores it if anything fails.
+
+## Ship a README
+
+Customers read this before they read your code. Cover:
+
+- What the plugin does, and which Aikeedo versions it supports
+- Installation steps, including anything to configure first, such as API keys
+- Where its settings live in the admin panel
+- Required third-party accounts, and any cost involved
+- Whether it needs cron, outbound network access, or a webhook URL the provider must reach
+- A changelog
+
+## Release checklist
+
+<Check>`version` is raised, and the changelog is updated.</Check>
+<Check>`composer.json` sits at the archive root, and the archive has no wrapper folder.</Check>
+<Check>Development files are excluded, and build output is included.</Check>
+<Check>Translation catalogs are up to date and included.</Check>
+<Check>A clean installation test passes: upload, activate, configure, use, deactivate, uninstall.</Check>
+<Check>No errors in `var/log` with `DEBUG=true`.</Check>
+<Check>Secrets, license keys and customer data are nowhere in the archive.</Check>
+
+## Distribution options
+
+| Option | Notes |
+| --- | --- |
+| **Direct download** | Give customers the ZIP; they upload it in the admin panel. Simplest, but updates are manual. |
+| **Private Composer repository** | Customers add the repository and run `composer require`. Good for teams that manage installations from the CLI. |
+| **Packagist** | Only for plugins you're happy to publish publicly. |
+
+Whatever you choose, keep older archives available: customers on an older Aikeedo release may need the matching version of your plugin.
+
+## Related
+
+- [Manifest reference](/development/plugins/manifest)
+- [Lifecycle and hooks](/development/plugins/lifecycle-and-hooks)
+- [Public assets](/development/plugins/public-assets)
+- [Debugging](/development/plugins/debugging)

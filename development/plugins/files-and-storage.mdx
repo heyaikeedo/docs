@@ -1,0 +1,165 @@
+---
+title: "Files and storage"
+sidebarTitle: "Files and storage"
+description: "Store and serve files from an Aikeedo plugin using the CDN abstraction, the local filesystem, and file entities."
+---
+
+Aikeedo has two filesystem services. Use the CDN for anything a user will see, and the local filesystem for private working files. Both are Flysystem instances, so the usual `write()`, `read()`, `delete()` and `listContents()` methods are available.
+
+| Service | Backed by | Use for |
+| --- | --- | --- |
+| `Shared\Infrastructure\FileSystem\CdnInterface` | The storage adapter the administrator selected: local, S3-compatible, and so on | Generated images, uploads, anything served to users |
+| `Shared\Infrastructure\FileSystem\FileSystemInterface` | The local installation directory | Temporary files, imports, logs, scratch space under `var/` |
+
+## Store a user-visible file
+
+```php src/Services/AttachmentStore.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Notes\Services;
+
+use File\Domain\Entities\FileEntity;
+use File\Domain\ValueObjects\ObjectKey;
+use File\Domain\ValueObjects\Size;
+use File\Domain\ValueObjects\Storage;
+use File\Domain\ValueObjects\Url;
+use League\Flysystem\Visibility;
+use Psr\Http\Message\UploadedFileInterface;
+use Shared\Infrastructure\FileSystem\CdnInterface;
+use User\Domain\Entities\UserEntity;
+use Workspace\Domain\Entities\WorkspaceEntity;
+
+class AttachmentStore
+{
+    public function __construct(
+        private CdnInterface $cdn,
+    ) {}
+
+    public function store(
+        UploadedFileInterface $file,
+        WorkspaceEntity $workspace,
+        UserEntity $user,
+    ): FileEntity {
+        $contents = (string) $file->getStream();
+
+        // Let the CDN decide the path; it applies the configured grouping.
+        $key = $this->cdn->generatePath('pdf', $workspace, $user);
+
+        $this->cdn->write($key, $contents, [
+            'visibility' => Visibility::PUBLIC,
+        ]);
+
+        return new FileEntity(
+            new Storage($this->cdn->getAdapterLookupKey()),
+            new ObjectKey($key),
+            new Url((string) $this->cdn->getUrl($key)),
+            new Size($file->getSize() ?? strlen($contents)),
+        );
+    }
+}
+```
+
+| Method | Purpose |
+| --- | --- |
+| `generatePath(string $ext, ?WorkspaceEntity, ?UserEntity)` | Builds a unique object key with the configured grouping, such as per workspace or per user |
+| `write(string $path, string $contents, array $config)` | Writes the file; pass `['visibility' => Visibility::PUBLIC]` for files served directly |
+| `getUrl(string $path)` | Public or signed URL, depending on the adapter and whether URL signing is enabled |
+| `getAdapterLookupKey()` | The active adapter's key, which you store on the file entity so it can be resolved later |
+| `setVisibility(string $path, string $visibility)` | Changes visibility after the fact |
+| `delete(string $path)` | Removes the object |
+
+<Note>
+  Don't build URLs yourself. When signed URLs are enabled, `getUrl()` returns a time-limited URL, and a hardcoded path won't work.
+</Note>
+
+### File entities
+
+`File\Domain\Entities\FileEntity` and its image subclass record where a file lives so other code can resolve it later. Images take dimensions and a blurhash placeholder:
+
+```php
+use File\Domain\Entities\ImageFileEntity;
+use File\Domain\ValueObjects\Height;
+use File\Domain\ValueObjects\Width;
+use File\Infrastructure\BlurhashGenerator;
+
+$image = imagecreatefromstring($contents);
+$width = imagesx($image);
+$height = imagesy($image);
+
+$entity = new ImageFileEntity(
+    new Storage($this->cdn->getAdapterLookupKey()),
+    new ObjectKey($key),
+    new Url((string) $this->cdn->getUrl($key)),
+    new Size(strlen($contents)),
+    new Width($width),
+    new Height($height),
+    BlurhashGenerator::generateBlurHash($image, $width, $height),
+);
+
+$entity->addMeta('name', $file->getClientFilename());
+$entity->addMeta('mime', 'image/png');
+```
+
+## Private working files
+
+```php
+use Shared\Infrastructure\FileSystem\FileSystemInterface;
+
+public function __construct(
+    private FileSystemInterface $fs,
+) {}
+
+$this->fs->write('var/imports/' . $id . '.zip', $contents);
+$stream = $this->fs->readStream('var/imports/' . $id . '.zip');
+$this->fs->delete('var/imports/' . $id . '.zip');
+```
+
+Paths are relative to the installation root. Keep scratch files under `var/`, which isn't web-accessible, and clean them up when you're done.
+
+## Validate uploads
+
+Never trust the client. At minimum, cap the size and sniff the real MIME type:
+
+```php
+use Presentation\Exceptions\HttpException;
+use Easy\Http\Message\StatusCode;
+
+private const MAX_BYTES = 5 * 1024 * 1024;
+private const ALLOWED = ['image/png', 'image/jpeg', 'application/pdf'];
+
+$file = $request->getUploadedFiles()['file'] ?? null;
+
+if (!$file) {
+    throw new HttpException('No file uploaded', StatusCode::BAD_REQUEST);
+}
+
+if (($file->getSize() ?? 0) > self::MAX_BYTES) {
+    throw new HttpException('File is too large', StatusCode::BAD_REQUEST);
+}
+
+$contents = (string) $file->getStream();
+$mime = (new \finfo(FILEINFO_MIME_TYPE))->buffer($contents);
+
+if (!in_array($mime, self::ALLOWED, true)) {
+    throw new HttpException('Unsupported file type', StatusCode::BAD_REQUEST);
+}
+```
+
+<Warning>
+  Decide the extension from the sniffed MIME type, not from the client's filename, and never write a file whose key comes from user input. `generatePath()` avoids both problems.
+</Warning>
+
+Base64 payloads in a JSON body work the same way once decoded: check the decoded length before you write anything.
+
+## Adding a storage backend
+
+Everything above uses whichever adapter the administrator selected. To add a new backend, such as another S3-compatible provider, implement the CDN adapter interface and register it. See [Storage adapters](/development/plugins/guides/storage-adapter).
+
+## Related
+
+- [Data and persistence](/development/plugins/data-and-persistence)
+- [Storage adapters guide](/development/plugins/guides/storage-adapter)
+- [Storage internals](/development/core/storage-and-files)
+- [Cloud storage setup](/integrations/cloud-storage/overview)

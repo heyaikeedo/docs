@@ -1,0 +1,165 @@
+---
+title: "Custom extension points"
+sidebarTitle: "Custom extension points"
+description: "Let other plugins extend yours by publishing your own interfaces through the service collection and the AI service factory."
+---
+
+The mechanisms Aikeedo uses to stay extensible are available to your plugin too. Publish an interface, let implementations register themselves under a key, and resolve them at runtime.
+
+## Publish an interface
+
+Define the contract in your package, and document it:
+
+```php src/Domain/NotificationChannelInterface.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Alerts\Domain;
+
+interface NotificationChannelInterface
+{
+    /** Stable key used to register and select this channel. */
+    public function getLookupKey(): string;
+
+    /** Human-readable name, shown in the admin panel. */
+    public function getName(): string;
+
+    public function isEnabled(): bool;
+
+    public function send(string $subject, string $body): void;
+}
+```
+
+Give the interface a `getLookupKey()` and an `isEnabled()`, the same shape the core's extension points use. It keeps registration, configuration and admin listings predictable.
+
+## Register implementations
+
+`Shared\Infrastructure\Collections\ServiceCollectionInterface` is a keyed registry that works with any interface, not just the core's:
+
+```php src/Plugin.php
+use Acme\Alerts\Channels\EmailChannel;
+use Acme\Alerts\Domain\NotificationChannelInterface;
+use Shared\Infrastructure\Collections\ServiceCollectionInterface;
+
+public function __construct(
+    private ServiceCollectionInterface $services,
+) {}
+
+public function boot(Context $context): void
+{
+    $this->services->add(
+        EmailChannel::LOOKUP_KEY,
+        EmailChannel::class,
+        NotificationChannelInterface::class
+    );
+}
+```
+
+| Method | Purpose |
+| --- | --- |
+| `add(string $key, string\|object $service, string $type)` | Registers a class or instance under a key for a type. It asserts the class implements that type. |
+| `get(string $key, string $type)` | Resolves one implementation, lazily, from the container |
+| `ofType(string $type)` | Iterates every implementation of that type |
+
+Services are resolved from the container when they're first used, so registering is cheap even if the implementation is expensive to build.
+
+## Consume implementations
+
+```php
+use Acme\Alerts\Domain\NotificationChannelInterface;
+
+public function __construct(
+    private ServiceCollectionInterface $services,
+
+    #[Inject('option.alerts.channel')]
+    private ?string $channelKey = null,
+) {}
+
+public function notify(string $subject, string $body): void
+{
+    // One selected implementation
+    $channel = $this->services->get(
+        $this->channelKey ?? 'email',
+        NotificationChannelInterface::class
+    );
+
+    $channel->send($subject, $body);
+}
+
+/** @return iterable<NotificationChannelInterface> */
+public function available(): iterable
+{
+    // Everything registered, for an admin picker
+    foreach ($this->services->ofType(NotificationChannelInterface::class) as $channel) {
+        if ($channel->isEnabled()) {
+            yield $channel;
+        }
+    }
+}
+```
+
+`get()` throws `Shared\Infrastructure\Collections\ServiceNotFoundException` when the key isn't registered, so fall back to a default rather than letting a stale setting break the page.
+
+## Let others configure their implementation
+
+Copy the convention the core uses for its own extension points: the registration key doubles as the settings URL. If your plugin lists channels at `/admin/settings/alerts`, link each one to `/admin/settings/alerts/{key}`, and let the implementing plugin declare that route and point its `extra.default_url` there. See [Admin settings pages](/development/plugins/admin-settings-pages).
+
+## Load order
+
+Plugins boot in the order they're discovered, so don't assume another plugin has registered before you. Resolve implementations when you use them, not in `boot()`, and treat an empty collection as normal.
+
+## Custom AI capabilities
+
+The AI service factory works the same way. Define a capability interface that extends the base AI contract, then register services for it:
+
+```php src/Domain/SummaryServiceInterface.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Alerts\Domain;
+
+use Ai\Domain\Services\AiServiceInterface;
+use Ai\Domain\ValueObjects\Model;
+
+interface SummaryServiceInterface extends AiServiceInterface
+{
+    public function summarize(Model $model, string $input): string;
+}
+```
+
+```php
+use Acme\Alerts\Services\OpenAiSummaryService;
+use Ai\Infrastructure\Services\AiServiceFactory;
+
+public function __construct(
+    private AiServiceFactory $factory,
+) {}
+
+public function boot(Context $context): void
+{
+    $this->factory->register(OpenAiSummaryService::class);
+}
+
+// Later: the first registered service that implements the interface
+// and supports the model.
+$service = $this->factory->create(SummaryServiceInterface::class, $model);
+```
+
+Implementations still provide `supportsModel()` and `getSupportedModels()` from `Ai\Domain\Services\AiServiceInterface`, which is how the factory picks one.
+
+## Document the contract
+
+An extension point is an API. Ship it like one:
+
+- Publish the interface's signatures and semantics in your README.
+- Version the contract, and follow semantic versioning when it changes.
+- Say which key namespace implementers should use, such as `acme-alerts.*`.
+- Provide one reference implementation inside your own package.
+
+## Related
+
+- [Dependency injection](/development/plugins/dependency-injection-and-services)
+- [Events and cron](/development/plugins/events-and-cron)
+- [AI providers guide](/development/plugins/guides/ai-provider)

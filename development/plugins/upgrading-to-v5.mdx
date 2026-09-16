@@ -1,0 +1,104 @@
+---
+title: "Upgrading plugins to Aikeedo 5.0"
+sidebarTitle: "Upgrading to v5"
+description: "What changed in Aikeedo 5.0 for plugin developers, and how to update a plugin written for 4.x."
+---
+
+Aikeedo 5.0 removed several features and the interfaces that went with them. A plugin written for 4.x keeps installing, but it can fatal at boot if it resolves a class that no longer exists, which marks it as failed.
+
+<Warning>
+  Test your plugin against 5.0 before your customers update. A plugin that references a removed class breaks on the first request after the update.
+</Warning>
+
+## Removed interfaces and classes
+
+### `TitleServiceInterface` is gone
+
+`Ai\Domain\Title\TitleServiceInterface` and the per-provider `TitleGeneratorService` classes were removed.
+
+```php
+// Before, 4.x
+$service = $this->factory->create(TitleServiceInterface::class, $model);
+$title = $service->generateTitle($conversation);
+```
+
+Use the title service, which reads the globally configured model for you:
+
+```php
+// After, 5.0
+use Ai\Application\Services\Titler;
+
+public function __construct(
+    private Titler $titler,
+) {}
+```
+
+For a one-shot completion that isn't a title, resolve a text completion service instead:
+
+```php
+use Ai\Domain\Completion\TextCompletionServiceInterface;
+
+$service = $this->factory->create(TextCompletionServiceInterface::class, $model);
+$response = $service->complete($model, $instructions, $input);
+```
+
+### The per-plan titler model is gone
+
+`PlanConfig::$titler` no longer exists. The title model is a single global setting under **Settings → Features → Utilities**, and the title service reads it. Remove any plan configuration or UI your plugin had for it.
+
+## Removed features
+
+| Removed in 5.0 | What to do |
+| --- | --- |
+| The Coder tool | Drop any integration. Existing code documents became chat conversations during the update. |
+| The Composer (music) tool | Drop any integration, including its AI/ML API usage. |
+| The standalone Writer editor | Writer documents became conversations. The `writer.model` plan setting is unused. |
+| `POST /api/ai/completions` | Call the conversations API instead. |
+
+## Renamed capabilities
+
+The `generate_image` plan tool became `generate_media`, which now covers images, video, voice-over and transcription. Update any plan configuration your plugin reads or writes, and any capability check keyed on the old name.
+
+## Translations
+
+Every bundled plugin is translated in 5.0. If your plugin ships user-facing strings, wrap them in the gettext functions and ship catalogs, or your plugin will be the only untranslated part of the interface.
+
+```bash
+php bin/console app:locale:extract --target=acme/hello
+php bin/console app:locale:translate --target=acme/hello --all
+```
+
+See [Localization](/development/plugins/localization).
+
+## Migration checklist
+
+<Steps>
+  <Step title="Search for removed references">
+    ```bash
+    grep -rn "TitleServiceInterface\|TitleGeneratorService\|generate_image\|ai/completions" src/
+    ```
+  </Step>
+  <Step title="Update the code">
+    Replace title generation with `Titler`, completions with `TextCompletionServiceInterface`, and `generate_image` with `generate_media`.
+  </Step>
+  <Step title="Test against 5.0">
+    Install the plugin on a 5.0 installation with `DEBUG=true`, activate it, exercise every page and endpoint, and check `var/log` for errors.
+  </Step>
+  <Step title="Add translations">
+    Extract and translate your strings, and include `locale/` in the archive.
+  </Step>
+  <Step title="Release">
+    Raise `version`, set `extra.compatibility` to `">=5.0.0"`, and tell customers to update the plugin together with Aikeedo.
+
+    <Check>
+      The plugin boots on 5.0 with no entries in `var/plugin-health.json`.
+    </Check>
+  </Step>
+</Steps>
+
+## Related
+
+- [Release notes](/versioning/release-notes)
+- [How to update](/versioning/how-to-update)
+- [Debugging](/development/plugins/debugging)
+- [AI models and credits](/development/plugins/ai-models-and-credits)

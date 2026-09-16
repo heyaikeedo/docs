@@ -1,0 +1,161 @@
+---
+title: "Navigation"
+sidebarTitle: "Navigation"
+description: "Add entries to the Aikeedo app and admin menus from a plugin, choose the right section, and control icons and badges."
+---
+
+Menus are built from a navigation registry that the core fills at boot. A plugin adds its own entries in `boot()`, so its pages appear alongside the built-in ones.
+
+## Add an item
+
+```php src/Plugin.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Notes;
+
+use Override;
+use Plugin\Domain\Context;
+use Plugin\Domain\PluginInterface;
+use Shared\Infrastructure\Navigation\Item;
+use Shared\Infrastructure\Navigation\Registry;
+
+class Plugin implements PluginInterface
+{
+    public function __construct(
+        private Registry $nav,
+    ) {}
+
+    #[Override]
+    public function boot(Context $context): void
+    {
+        $item = new Item(
+            '/app/notes',
+            p__('nav', 'Notes'),
+            'notes'
+        );
+
+        $item->description = p__('nav', 'Capture and organize notes');
+        $item->isBuiltIn = false;
+
+        $this->nav->item('app.build', $item);
+    }
+}
+```
+
+`Registry::item(string $target, Item $item)` appends to a section. If an item with the same URL is already registered in that section, the new one is ignored, so booting twice can't duplicate an entry.
+
+## Item reference
+
+```php
+new Item(string $url, string $label, ?string $icon = null)
+```
+
+| Property | Type | Purpose |
+| --- | --- | --- |
+| `url` | `string` | Destination, for example `/app/notes` |
+| `label` | `string` | Menu text. Wrap it in `p__('nav', '...')` |
+| `icon` | `?string` | Icon, see the formats below |
+| `description` | `?string` | Supporting text, shown in card-style lists such as Settings |
+| `info` | `?string` | Extra hint text |
+| `tags` | `array` | Free-form tags |
+| `isExperimental` | `bool` | Adds an "experimental" marker |
+| `isBuiltIn` | `bool` | Set it to `false` so the entry is marked as coming from a plugin |
+| `from`, `to` | `?string` | Optional date range for temporary entries |
+| `template` | `?string` | A Twig template to render instead of a link, for sections that support injected cards |
+
+### Icon formats
+
+| Value | Renders |
+| --- | --- |
+| `'notes'` | A [Tabler](https://tabler.io/icons) icon, the default |
+| `'svg:path/to/icon.svg'` | An SVG file |
+| `'include:@acme-notes/icon.twig'` | An included Twig template |
+| `'src:https://...'` | An image URL |
+
+## Sections
+
+| Section | Where it appears |
+| --- | --- |
+| `app.primary` | Main app sidebar, top group |
+| `app.build` | App sidebar, "Build" group |
+| `app.engagement` | App sidebar, "Engagement" group |
+| `app.apps` | App sidebar, "Apps" group |
+| `app.settings_nav.account` | User settings sidebar, "Account" group |
+| `app.settings_nav.workspace` | User settings sidebar, "Workspace" group |
+| `app.settings_nav.affiliate` | User settings sidebar, "Affiliate" group, when affiliates are enabled |
+| `admin.primary` | Admin sidebar, top group |
+| `admin.ai` | Admin sidebar, "AI" group |
+| `admin.billing` | Admin sidebar, "Billing" group |
+| `admin.affiliates` | Admin sidebar, "Affiliates" group |
+| `admin.accounts` | Admin sidebar, "Accounts" group |
+| `admin.platform` | Admin sidebar, "Platform" group |
+| `admin.settings.common` | Cards on the admin **Settings** index |
+| `admin.settings.features` | Cards on **Settings → Features** |
+
+<Tip>
+  Put an integration's configuration under `admin.settings.common`, and a feature that users interact with under `admin.settings.features`. Use the app sections for pages your users open every day.
+</Tip>
+
+Creating a section is possible too, though it only shows up where a template renders it:
+
+```php
+$this->nav->section('app.apps', p__('nav', 'Apps'), true);
+```
+
+The third argument makes the group collapsible.
+
+## Show items conditionally
+
+Registration happens once per request, so read your feature flag in `boot()`:
+
+```php
+use Application;
+
+public function boot(Context $context): void
+{
+    $adminItem = new Item('/admin/settings/features/notes', p__('nav', 'Notes'), 'notes');
+    $adminItem->description = p__('nav', 'Configure the notes feature');
+    $adminItem->isBuiltIn = false;
+    $adminItem->isExperimental = true;
+
+    $this->nav->item('admin.settings.features', $adminItem);
+
+    // User-facing entries only when the feature is turned on
+    if (Application::make('option.features.notes.is_enabled', false)) {
+        $item = new Item('/app/notes', p__('nav', 'Notes'), 'notes');
+        $item->isBuiltIn = false;
+
+        $this->nav->item('app.build', $item);
+    }
+}
+```
+
+Keep the admin entry visible even when the feature is off, or administrators can't find the switch that turns it back on.
+
+## Highlighting the current page
+
+Templates decide which entry is active from the `active_menu` variable, so set it to the same URL you registered:
+
+```twig
+{% set active_menu = '/app/notes' %}
+```
+
+Admin settings pages use `{% set active_menu = 'settings' %}` instead, and pages under **Plugins** use `{% set active_menu = '/admin/plugins' %}`.
+
+## Translating labels
+
+Labels pass through gettext with the `nav` context, and the templates translate them again at render time. Always wrap them:
+
+```php
+$item = new Item('/app/notes', p__('nav', 'Notes'), 'notes');
+```
+
+Ship the catalogs with your plugin, as described in [Localization](/development/plugins/localization).
+
+## Related
+
+- [App pages and APIs](/development/plugins/app-pages-and-apis)
+- [Admin settings pages](/development/plugins/admin-settings-pages)
+- [Plugin quickstart](/development/plugins/quickstart)

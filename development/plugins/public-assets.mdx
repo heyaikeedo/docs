@@ -1,0 +1,104 @@
+---
+title: "Public assets"
+sidebarTitle: "Public assets"
+description: "Publish CSS, JavaScript, images and loader scripts from an Aikeedo plugin to the web root with the extra.public manifest entry."
+---
+
+Files inside `extra/extensions/` aren't web-accessible. To serve a stylesheet, script or image, list it in `extra.public`, and the installer copies it into the web root when the plugin is installed or updated.
+
+## Declare files to publish
+
+```json composer.json
+{
+  "extra": {
+    "public": [
+      { "source": "public/assets/*", "target": "." },
+      { "source": "widget/dist/loader.js", "target": "/acme-feedback.js" }
+    ]
+  }
+}
+```
+
+By default, files land in `{web root}/e/{vendor}/{package}/`, which is served from `/e/{vendor}/{package}/...`.
+
+## Entry formats
+
+| Entry | Copied to | Served from |
+| --- | --- | --- |
+| `"assets/app.css"` (plain string) | `public/e/acme/hello/assets/app.css` | `/e/acme/hello/assets/app.css` |
+| `{ "source": "dist" }` | `public/e/acme/hello/dist` | `/e/acme/hello/dist/...` |
+| `{ "source": "dist", "target": "." }` | `public/e/acme/hello/dist` | `/e/acme/hello/dist/...` |
+| `{ "source": "dist", "target": "assets" }` | `public/e/acme/hello/assets` | `/e/acme/hello/assets/...` |
+| `{ "source": "dist/*", "target": "." }` | The contents of `dist` into `public/e/acme/hello/` | `/e/acme/hello/...` |
+| `{ "source": "widget/dist/loader.js", "target": "/loader.js" }` | `public/loader.js` | `/loader.js` |
+| `{ "source": "dist", "target": "/." }` | `public/dist` | `/dist/...` |
+
+A plain string keeps the whole source path, which is why the newer object form is clearer. A `target` that starts with `/` is resolved against the web root, so use it sparingly: that's a shared namespace, and a generic name like `/sdk.js` can collide with another plugin.
+
+<Note>
+  The object form requires a recent `heyaikeedo/composer`. Require `"^1.2.0"` when you use `{ "source": ..., "target": ... }` entries, and `"^1.0.0"` when plain strings are enough.
+</Note>
+
+## When files are copied
+
+| Composer event | What happens |
+| --- | --- |
+| Package installed | Files are copied, and the copy is recorded in `vendor/aikeedo-file-mappings.json` |
+| Package updated | Recorded files are removed, then copied again |
+| Package uninstalled | Recorded files are removed, and the now-empty `e/{vendor}/{package}` directory is cleaned up |
+
+The web root comes from the `PUBLIC_DIR` environment variable, so installations that serve from `public_html` work without any change on your side.
+
+<Warning>
+  Only files that existed when the package was installed are copied. Editing a file during development doesn't republish it: run `composer require acme/hello` again, or copy it yourself while iterating.
+</Warning>
+
+## Reference published files
+
+```twig
+<link rel="stylesheet" href="/e/acme/hello/assets/app.css">
+<script type="module" src="/e/acme/hello/assets/app.js"></script>
+```
+
+For a build with hashed filenames, publish the Vite manifest along with the bundle and resolve the name in PHP:
+
+```php
+$manifest = json_decode(
+    (string) file_get_contents(dirname(__DIR__) . '/public/assets/.vite/manifest.json'),
+    true
+);
+
+$file = $manifest['assets/src/index.js']['file'] ?? null;
+$url = '/e/acme/hello/' . $file;
+```
+
+<Tip>
+  Hashed filenames from an older build aren't deleted when you publish a new one, because the mapping records what the current install copied. Clean stale files out of your build directory before packaging a release.
+</Tip>
+
+## Development workflow
+
+Point an environment variable at your dev server, and fall back to the published path:
+
+```twig
+{% set base = env.ACME_HELLO_ASSETS_SERVER|default('/e/acme/hello') %}
+<script type="module" src="{{ base }}/assets/app.js"></script>
+```
+
+```ini .env
+ACME_HELLO_ASSETS_SERVER=http://localhost:5175
+```
+
+Remember that `env` exposes the whole environment to templates, so read only the key you need and never dump the object.
+
+## What not to publish
+
+- Source files, tests and configuration. Publish build output only.
+- Anything containing credentials. Published files are world-readable.
+- Large media that would be better served from the CDN. See [Files and storage](/development/plugins/files-and-storage).
+
+## Related
+
+- [Manifest reference](/development/plugins/manifest)
+- [Frontend integration](/development/plugins/frontend-integration)
+- [Packaging and distribution](/development/plugins/packaging-and-distribution)

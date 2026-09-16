@@ -1,0 +1,139 @@
+---
+title: "Plugin localization"
+sidebarTitle: "Localization"
+description: "Translate an Aikeedo plugin: wrap strings in gettext functions, extract catalogs with the console, and ship translations with your package."
+---
+
+Aikeedo uses gettext. Wrap your user-facing strings in the translation functions, ship `.po` catalogs inside your package, and Aikeedo merges them into the dictionary for every request.
+
+## Wrap your strings
+
+The functions are global, so they work in PHP, and they're registered as Twig functions and filters too.
+
+| Function | Use for |
+| --- | --- |
+| `__('Save')` | A plain string |
+| `p__('button', 'Save')` | A string with a context, so translators can tell "Save" the button from "Save" the verb |
+| `n__('%d note', '%d notes', $count)` | Plurals |
+| `noop__('Later')` | Marking a string for extraction without translating it yet |
+
+```php
+throw new HttpException(__('The Acme API key is missing.'));
+```
+
+```twig
+<h1>{{ p__('heading', 'Notes') }}</h1>
+<p>{{ n__('%d note', '%d notes', notes|length)|format(notes|length) }}</p>
+<button class="button">{{ p__('button', 'New note') }}</button>
+```
+
+In JavaScript that ships with your plugin, the same `__()` helper is available on pages that load Aikeedo's bundles.
+
+<Tip>
+  Use a context for every short UI string. `p__('button', 'Open')` and `p__('label', 'Open')` can be translated differently, which matters in languages where verbs and adjectives don't share a form.
+</Tip>
+
+## Catalog layout
+
+```text
+extra/extensions/acme/hello/
+└── locale/
+    ├── de-DE/LC_MESSAGES/messages.po
+    ├── es-ES/LC_MESSAGES/messages.po
+    └── fr-FR/LC_MESSAGES/messages.po
+```
+
+- One directory per locale, named with the `xx-XX` code Aikeedo uses.
+- The file is always `messages.po`.
+- Set the `X-Domain` header to `messages`, so your strings merge into the default dictionary and plain `__()` calls resolve. Without that header the catalog is loaded under the `plugin` domain, and your `__()` calls won't find their translations.
+
+```po locale/de-DE/LC_MESSAGES/messages.po
+msgid ""
+msgstr ""
+"Language: de-DE\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Domain: messages\n"
+
+msgctxt "heading"
+msgid "Notes"
+msgstr "Notizen"
+```
+
+<Note>
+  Aikeedo loads catalogs for every installed plugin, active or not, for the language it resolved for the request.
+</Note>
+
+## Extract strings
+
+Run the console command from the installation root, and point it at your package:
+
+```bash
+php bin/console app:locale:extract --target=acme/hello
+```
+
+It scans your `.twig`, `.php` and `.js` files, creates or updates the catalogs, removes entries that no longer exist in the source, and rebuilds the browser catalogs.
+
+| Option | Purpose |
+| --- | --- |
+| `--target`, `-t` | `core` or a package name; repeat for several targets |
+| `--all`, `-a` | The core application and every package |
+| `--path`, `-p` | Scan a directory instead, such as a checkout outside the installation |
+| `--locale-dir` | Where `--path` writes catalogs, defaulting to `<path>/locale` |
+| `--domain` | Gettext domain for `--path`, read from `composer.json` by default |
+| `--language`, `-l` | Restrict to specific languages |
+| `--no-prune` | Keep entries that no longer appear in the source |
+| `--no-build` | Skip rebuilding the browser catalogs |
+
+Developing outside the installation directory works the same way:
+
+```bash
+php bin/console app:locale:extract --path=../acme-hello
+```
+
+## Translate
+
+Aikeedo can machine-translate the missing entries with a model:
+
+```bash
+php bin/console app:locale:translate --target=acme/hello --all
+```
+
+| Option | Purpose |
+| --- | --- |
+| `--lang`, `-l` | Translate specific languages |
+| `--all`, `-a` | Every language that has a catalog |
+| `--target`, `-t` / `--path`, `-p` | Same targeting as the extract command |
+| `--force`, `-f` | Retranslate entries that already have a translation |
+| `--dry-run` | Show what would change |
+
+Review machine translations before release, especially short UI strings where context matters.
+
+## Rebuild browser catalogs
+
+Strings used from JavaScript are compiled into per-language files served to the browser:
+
+```bash
+php bin/console app:locale:build
+```
+
+Extracting and translating already do this, and clearing the cache from the admin panel rebuilds them too.
+
+## Ship the catalogs
+
+Include the `locale/` directory in your release archive. Nothing generates translations at install time, so a package without catalogs shows English to everyone.
+
+## Checklist
+
+<Check>Every user-visible string goes through `__()`, `p__()` or `n__()`.</Check>
+<Check>Navigation labels use the `nav` context.</Check>
+<Check>Catalogs live at `locale/{code}/LC_MESSAGES/messages.po`.</Check>
+<Check>Every catalog sets `X-Domain: messages`.</Check>
+<Check>You re-ran extraction after the last wording change.</Check>
+<Check>The `locale/` directory is in your release archive.</Check>
+
+## Related
+
+- [Localization settings](/advanced/localization)
+- [Theme localization](/development/themes/localization)
+- [Localization internals](/development/core/localization-internals)

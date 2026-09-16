@@ -1,0 +1,142 @@
+---
+title: "Coding standards and quality tools"
+sidebarTitle: "Coding standards"
+description: "The conventions Aikeedo code follows, and the static analysis, style and test tooling that ships with the application."
+---
+
+Follow these conventions in plugins, themes and any core customization. They match the existing code, so your work stays readable to anyone who knows the codebase, and it passes the bundled quality tools.
+
+## PHP conventions
+
+- **PSR-12** formatting and **PSR-4** autoloading.
+- Every file starts with `declare(strict_types=1);` after the opening tag.
+- Type every property, parameter and return value. Use union and nullable types instead of untyped values.
+- Add `#[Override]` when you implement or override a method, and import `Override`.
+- Use constructor property promotion for dependencies.
+- Keep classes final-ish in spirit: prefer composition and small services over deep inheritance.
+
+```php src/Services/RateFetcher.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Hello\Services;
+
+use Override;
+use Psr\Http\Client\ClientInterface;
+
+class RateFetcher implements RateFetcherInterface
+{
+    public function __construct(
+        private ClientInterface $client,
+    ) {}
+
+    #[Override]
+    public function fetch(string $code): float
+    {
+        // ...
+    }
+}
+```
+
+### Naming
+
+| Kind | Convention | Example |
+| --- | --- | --- |
+| Namespace | `Vendor\Package\Layer` | `Acme\Hello\Services` |
+| Entity | `*Entity` | `CategoryEntity` |
+| Repository contract | `*RepositoryInterface` | `CategoryRepositoryInterface` |
+| Command | `<Verb><Noun>Command` | `CreateCategoryCommand` |
+| Command handler | `<Command>Handler` | `CreateCategoryCommandHandler` |
+| Domain event | `<Noun><PastTenseVerb>Event` | `CategoryCreatedEvent` |
+| Request handler | `<Verb><Noun>RequestHandler`, or `*View` for pages | `CreateCategoryRequestHandler` |
+| Value object | A plain noun | `Title`, `Price`, `CreditCount` |
+
+### Domain modeling
+
+Core code keeps domain rules inside the domain layer, and you should do the same in a plugin:
+
+- **Value objects** validate their input in the constructor and throw `Shared\Domain\Exceptions\InvalidValueException` when it's wrong. They're immutable.
+- **Entities** expose behavior, not setters for every field. They take value objects, not raw scalars.
+- **Commands** are simple data holders that convert scalars into value objects, and they're tagged with `#[Handler(...)]`.
+- **Handlers** do the work, persist through a repository, and dispatch a domain event.
+
+```php src/Application/Commands/CreateNoteCommand.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Notes\Application\Commands;
+
+use Acme\Notes\Application\CommandHandlers\CreateNoteCommandHandler;
+use Acme\Notes\Domain\ValueObjects\Title;
+use Shared\Infrastructure\CommandBus\Attributes\Handler;
+
+#[Handler(CreateNoteCommandHandler::class)]
+class CreateNoteCommand
+{
+    public Title $title;
+
+    public function __construct(string $title)
+    {
+        $this->title = new Title($title);
+    }
+}
+```
+
+See [Command bus](/development/core/command-bus) and [Modules and layers](/development/core/modules-and-layers) for the full pattern.
+
+## Twig conventions
+
+- Use `{% extends "/layouts/main.twig" %}` for app and admin pages, and put your markup in the blocks that layout defines.
+- Register your own namespace and reference templates as `@acme-hello/...`.
+- Guard optional variables with `is defined`, because debug mode enables strict variables.
+- Wrap every user-facing string in a translation function: `__()`, `p__()` with a context, `n__()` for plurals. Themes use the `theme` domain, so they call `d__('theme', ...)` and `dp__('theme', ...)`.
+
+## JavaScript conventions
+
+- Alpine.js drives interactivity. Register components with `Alpine.data('name', () => ({ ... }))`.
+- Call the JSON API through the `window.api` client so authentication headers are handled for you.
+- Reuse the built-in web components, such as `x-form` and `modal-element`, instead of reimplementing them.
+
+## Quality tools
+
+The installation ships with its own tooling and Composer scripts:
+
+| Command | Tool | What it checks |
+| --- | --- | --- |
+| `composer phpstan` | PHPStan, level 5 | Static analysis of `src`, excluding `src/Presentation` |
+| `composer phpcs` | PHP_CodeSniffer | PSR-1, PSR-12 and PHP 8.2 compatibility |
+| `composer phpcbf` (or `composer fix`) | PHP_CodeSniffer | Fixes the style issues it can fix automatically |
+| `composer phpmd` | PHPMD | Common code smells, configured by `phpmd.xml` |
+| `composer unit-test` | PHPUnit | The suite in `tests/` |
+| `composer code-coverage` | PHPUnit | An HTML coverage report in `coverage/` |
+| `composer analyse` | All of the above | Runs PHPStan, PHP_CodeSniffer, PHPMD and PHPUnit in order |
+
+Configuration lives in `phpstan.neon.dist`, `phpcs.xml.dist`, `phpmd.xml` and `phpunit.xml`. Point the tools at your own package to check it:
+
+```bash
+vendor/bin/phpcs --standard=phpcs.xml.dist extra/extensions/acme/hello/src
+vendor/bin/phpstan analyse --level=5 extra/extensions/acme/hello/src
+```
+
+<Tip>
+  Give your package its own `composer.json` scripts and CI so it can be checked outside an Aikeedo installation too.
+</Tip>
+
+## Testing your extension
+
+The bundled PHPUnit configuration loads `bootstrap/autoload.php` and runs the suite in `tests/`. For a plugin, test the parts you can isolate: value objects, services, mappers and API clients, using a PSR-18 client double instead of live HTTP calls. Verify integration points, such as routes, settings pages and webhooks, against a local installation with `DEBUG=true`.
+
+## Documentation and versioning
+
+- Ship a `README.md` with installation and configuration steps.
+- Use semantic versioning in your package's `version` field, and raise it with every release, because the installer passes it to Composer.
+- Record which Aikeedo versions you support.
+- Translate your strings and ship the catalogs. See [Plugin localization](/development/plugins/localization) and [Theme localization](/development/themes/localization).
+
+## Related
+
+- [Modules and layers](/development/core/modules-and-layers)
+- [Testing and quality](/development/core/testing-and-quality)
+- [Plugin quickstart](/development/plugins/quickstart)

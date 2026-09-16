@@ -1,0 +1,171 @@
+---
+title: "Local development environment"
+sidebarTitle: "Local development"
+description: "Configure an Aikeedo installation for development: debug mode, the Vite dev server, hot module replacement, cron, and the console."
+---
+
+import DevVersionNote from '/snippets/dev-version-note.mdx';
+
+This page turns a working local installation into a development environment: verbose errors, no caching, rebuilt frontend assets on save, and a cron runner.
+
+<DevVersionNote />
+
+## Prerequisites
+
+- A local Aikeedo installation. If you don't have one, follow the [local installation guide](/setup/installation/local) first.
+- PHP 8.2 or newer with the `intl`, `gd` and `bcmath` extensions
+- MySQL 8.0 or newer
+- Composer 2
+- Node.js 20.19+ or 22.12+ with npm, needed only for frontend work
+
+```bash
+php -v && composer -V && node -v && npm -v
+```
+
+<Note>
+  The release archive ships with `vendor/` already installed, so you don't need `composer install` to run Aikeedo. It does not ship `node_modules/`, so you need `npm install` before you can run the Vite dev server.
+</Note>
+
+## Step 1: Configure the environment
+
+Edit `.env` in the installation root:
+
+```ini .env
+ENVIRONMENT=dev
+DEBUG=true
+CACHE=false
+HMR=1
+```
+
+| Variable | Effect in development |
+| --- | --- |
+| `ENVIRONMENT` | `dev` marks the installation as a development environment. Other values are `prod`, `install` and `demo`. |
+| `DEBUG` | Shows errors instead of a blank `500`, disables Twig and route caches, and makes Twig strict about undefined variables. It also rethrows plugin boot errors instead of hiding them. |
+| `CACHE` | Turn off template, route, listener and Doctrine metadata caching so changes apply immediately. |
+| `HMR` | `1` makes the app load its JavaScript and CSS from the Vite dev server instead of the built files in `public/assets`. |
+| `ASSETS_SERVER` | Where the app looks for those assets. Defaults to `http://localhost:5173`. |
+| `THEME_ASSETS_SERVER` | Same idea for theme assets, normally `http://localhost:5174`. Set it only while you run a theme dev server. |
+
+<Warning>
+  Never leave `DEBUG=true` on a production site. Debug mode exposes stack traces and disables caching.
+</Warning>
+
+## Step 2: Start the frontend dev server
+
+Aikeedo builds the app, admin and auth bundles with Vite.
+
+```bash
+npm install
+npm run dev
+```
+
+Vite serves on port 5173. Keep the process running: it rebuilds on save and reports build errors.
+
+```text
+  VITE v8.0.16  ready in 412 ms
+
+  ➜  Local:   http://localhost:5173/
+```
+
+<Tip>
+  You only need Vite when you change files under `resources/assets`. For PHP or Twig work, leave `HMR=0` and use the prebuilt assets in `public/assets`.
+</Tip>
+
+### How assets resolve
+
+| Directory | Purpose |
+| --- | --- |
+| `resources/assets/js/{base,app,admin,auth}` | JavaScript entry points, one per bundle |
+| `resources/assets/css` | Stylesheets, including the Tailwind CSS entry |
+| `resources/static` | Files copied to the web root as-is |
+| `public/assets` + `public/.vite/manifest.json` | Build output and the manifest Twig reads |
+
+Templates resolve asset URLs through the `asset` Twig filter. With `HMR` enabled, that filter points at `ASSETS_SERVER` instead of the manifest.
+
+## Step 3: Serve the application
+
+Use PHP's built-in server for local work:
+
+```bash
+php -S 0.0.0.0:8000 -t public
+```
+
+Open `http://localhost:8000`. Run this in a second terminal so Vite keeps running in the first.
+
+<Note>
+  The built-in server is single-threaded. Streamed responses, such as chat, occupy the process while they run, so a second request can appear to hang. Use `php -S` with a worker-capable setup, Docker, Valet or nginx with PHP-FPM if that gets in your way.
+</Note>
+
+## Step 4: Run cron
+
+Scheduled work, including subscription renewals, usage resets, statistics and import jobs, runs through `cron.php`. Nothing schedules it for you locally, so run it by hand when you need it:
+
+```bash
+php cron.php
+```
+
+To mirror production, add a crontab entry that runs it every minute. See [Initial setup](/setup/initial-setup) for the production configuration.
+
+## Step 5: Use the console
+
+`bin/console` exposes the Symfony Console application, including Doctrine's commands:
+
+```bash
+php bin/console list
+```
+
+Commands you'll use often in development:
+
+| Command | Purpose |
+| --- | --- |
+| `php bin/console migrations:migrate` | Apply pending database migrations |
+| `php bin/console migrations:status` | Show the current migration state |
+| `php bin/console orm:validate-schema` | Check entity mappings against the database |
+| `php bin/console app:locale:extract` | Extract translatable strings into catalogs |
+| `php bin/console app:import:seeds` | Import the bundled starter content |
+
+See [Console commands](/development/core/console-commands) for the full list.
+
+## Development workflow
+
+- **PHP changes** apply on the next request. If you add or move a route, clear the route cache or keep `CACHE=false`.
+- **Twig changes** apply immediately while caching is off.
+- **Asset changes** are rebuilt by Vite and pushed to the browser.
+- **Plugin and theme changes** may need a cache clear, and a new plugin needs `composer require`. See the [plugin quickstart](/development/plugins/quickstart) and [theme quickstart](/development/themes/quickstart).
+
+Clear caches at any time from **Status → Clear cache** in the admin panel, which also rebuilds the browser translation catalogs.
+
+## Build for production
+
+```bash
+npm run build
+```
+
+This writes optimized bundles to `public/assets`, copies `resources/static` into the web root, and refreshes `public/.vite/manifest.json`. Set `HMR=0`, `DEBUG=false` and `CACHE=true` before you deploy.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Pages load without styling, or the browser console shows failed asset requests">
+    Vite isn't running, or `ASSETS_SERVER` doesn't match its port. Start `npm run dev`, or set `HMR=0` to use the built assets.
+  </Accordion>
+  <Accordion title="A change to a Twig template has no effect">
+    Caching is on. Set `CACHE=false`, or clear the cache from **Status → Clear cache**.
+  </Accordion>
+  <Accordion title="Twig reports an undefined variable that production tolerates">
+    Debug mode enables strict variables. Guard optional values with `{% if foo is defined %}`.
+  </Accordion>
+  <Accordion title="A new route returns 404">
+    Routes are cached when `CACHE=true` and `DEBUG=false`. Turn caching off during development, or clear the cache.
+  </Accordion>
+  <Accordion title="Nothing is written to the log">
+    Logs are in `var/log/app-YYYY-MM-DD.log` and `var/log/error-YYYY-MM-DD.log`. Check that `var/` is writable by your PHP user.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Coding standards](/development/coding-standards)
+- [Core architecture](/development/core/overview)
+- [Bootstrap and lifecycle](/development/core/bootstrap-and-lifecycle)
+- [Troubleshooting](/setup/troubleshooting)

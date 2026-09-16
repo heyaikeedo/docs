@@ -1,0 +1,228 @@
+---
+title: "App pages and workspace APIs"
+sidebarTitle: "App pages and APIs"
+description: "Add pages and JSON endpoints for signed-in Aikeedo users, scope them to the current workspace, and enforce access control."
+---
+
+Plugins can extend the part of Aikeedo that users see: pages under `/app` and JSON endpoints under `/api`. Both run inside a workspace, so every read and write has to be scoped to it.
+
+## A page under /app
+
+```php src/RequestHandlers/NotesView.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Notes\RequestHandlers;
+
+use Easy\Container\Attributes\Inject;
+use Easy\Http\Message\RequestMethod;
+use Easy\Router\Attributes\Route;
+use Presentation\Exceptions\NotFoundException;
+use Presentation\RequestHandlers\App\AppView;
+use Presentation\Response\ViewResponse;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+
+#[Route(path: '/notes', method: RequestMethod::GET)]
+class NotesView extends AppView implements RequestHandlerInterface
+{
+    public function __construct(
+        #[Inject('option.features.notes.is_enabled')]
+        private ?bool $isEnabled = false,
+    ) {}
+
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        if (!$this->isEnabled) {
+            throw new NotFoundException();
+        }
+
+        return new ViewResponse('@acme-notes/templates/notes.twig');
+    }
+}
+```
+
+`AppView` prefixes `/app`, requires an authenticated user, enforces the email verification policy and renders `ViewResponse` through Twig. The example above is served at `GET /app/notes`.
+
+### The template
+
+```twig templates/notes.twig
+{% extends "/layouts/main.twig" %}
+{% set active_menu = '/app/notes' %}
+{% set xdata = 'notes' %}
+
+{% block title p__('title', 'Notes')|title %}
+
+{% block template %}
+	<h1>{{ p__('heading', 'Notes') }}</h1>
+
+	<template x-for="note in notes" :key="note.id">
+		<article class="box" x-text="note.title"></article>
+	</template>
+{% endblock %}
+```
+
+| Variable | Effect |
+| --- | --- |
+| `active_menu` | Highlights your entry in the sidebar; use the same URL you registered in navigation |
+| `xdata` | Names the Alpine component that backs the page |
+| `nav_mode = 'settings'` | Renders the settings sidebar instead of the primary one, for pages under **Settings** |
+| `{% block template %}` | Your content inside the standard chrome |
+| `{% block layout %}` | Replaces the whole layout, for full-screen pages such as editors |
+
+See [Frontend integration](/development/plugins/frontend-integration) for the Alpine and asset side.
+
+## A workspace-scoped JSON endpoint
+
+```php src/RequestHandlers/Api/ListNotesRequestHandler.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Notes\RequestHandlers\Api;
+
+use Acme\Notes\Application\Commands\ListNotesCommand;
+use Acme\Notes\Presentation\Resources\NoteResource;
+use Easy\Http\Message\RequestMethod;
+use Easy\Router\Attributes\Route;
+use Presentation\Resources\ListResource;
+use Presentation\Response\JsonResponse;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use Shared\Infrastructure\CommandBus\Dispatcher;
+use Workspace\Domain\Entities\WorkspaceEntity;
+
+#[Route(path: '/', method: RequestMethod::GET)]
+class ListNotesRequestHandler extends NotesApi implements RequestHandlerInterface
+{
+    public function __construct(
+        private Dispatcher $dispatcher,
+    ) {}
+
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        /** @var WorkspaceEntity $workspace */
+        $workspace = $request->getAttribute(WorkspaceEntity::class);
+
+        $cmd = new ListNotesCommand();
+        $cmd->setWorkspace($workspace);
+
+        $res = new ListResource();
+
+        foreach ($this->dispatcher->dispatch($cmd) as $note) {
+            $res->pushData(new NoteResource($note));
+        }
+
+        return new JsonResponse($res);
+    }
+}
+```
+
+With a shared base class for the group:
+
+```php src/RequestHandlers/Api/NotesApi.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Notes\RequestHandlers\Api;
+
+use Easy\Router\Attributes\Path;
+use Presentation\RequestHandlers\Api\Api;
+
+#[Path('/notes')]
+abstract class NotesApi extends Api {}
+```
+
+Endpoints are then served under `/api/notes`, and they accept the same authentication as the rest of the User API: a session token from the app, or an API key. See the [REST API overview](/development/api/overview).
+
+## The user and the workspace
+
+`UserMiddleware` attaches both entities to the request:
+
+```php
+use User\Domain\Entities\UserEntity;
+use Workspace\Domain\Entities\WorkspaceEntity;
+
+$user = $request->getAttribute(UserEntity::class);
+$workspace = $request->getAttribute(WorkspaceEntity::class);
+```
+
+- The workspace is the caller's current workspace, or the one named by the `X-Workspace-Id` header when the caller is a member of it.
+- The workspace attribute is set **only** when the user belongs to it, so treat a missing workspace as an error rather than a reason to fall back.
+
+## Access control
+
+Scope every query by workspace, and verify ownership whenever an ID comes from the request.
+
+```php src/AccessControls/NoteAccessControl.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Notes\AccessControls;
+
+use Acme\Notes\Domain\Entities\NoteEntity;
+use Presentation\Exceptions\NotFoundException;
+use User\Domain\Entities\UserEntity;
+
+class NoteAccessControl
+{
+    public function denyUnlessGranted(
+        NoteEntity $note,
+        UserEntity $user,
+    ): NoteEntity {
+        if (!$note->getWorkspace()->hasUser($user)) {
+            // Treat someone else's resource as missing, not forbidden:
+            // a 403 would confirm that the id exists.
+            throw new NotFoundException(param: 'note');
+        }
+
+        return $note;
+    }
+}
+```
+
+The core uses the same shape in `Presentation\AccessControls\*`, with `Presentation\AccessControls\Permission` for finer-grained checks. Two conventions worth copying:
+
+- A resource the caller may not see is a `404`, not a `403`.
+- A resource that exists but is withheld by the user's plan is a `403`.
+
+<Warning>
+  Checking the parent resource isn't enough for nested routes. On a route such as `/api/notes/{noteId}/comments/{commentId}`, verify that the comment belongs to that note **and** that the note belongs to the caller's workspace. Skipping the second check lets anyone read another workspace's data by guessing IDs.
+</Warning>
+
+## Feature flags and plan limits
+
+Gate your feature behind an option so administrators can turn it off:
+
+```php
+#[Inject('option.features.notes.is_enabled')]
+private ?bool $isEnabled = false,
+```
+
+Enforce per-plan limits yourself, reading the plan configuration from the workspace's subscription. To expose your own per-plan settings in the admin panel, see [Plan config extensions](/development/plugins/guides/plan-config-extension).
+
+## Write endpoints
+
+- Validate with `Presentation\Validation\Validator::validateRequest()`.
+- Add `#[Middleware(DemoEnvironmentMiddleware::class)]` to writes you want blocked on demo installations.
+- Return `StatusCode::CREATED` with the created resource, or `EmptyResponse` with `StatusCode::NO_CONTENT` for deletes.
+- Changes are flushed at the end of the request, so persist through a repository and return.
+
+```php
+use Easy\Http\Message\StatusCode;
+use Presentation\Response\EmptyResponse;
+
+return new EmptyResponse(StatusCode::NO_CONTENT);
+```
+
+## Related
+
+- [Routes and request handlers](/development/plugins/routes-and-request-handlers)
+- [Frontend integration](/development/plugins/frontend-integration)
+- [Navigation](/development/plugins/navigation)
+- [Authentication internals](/development/core/authentication-and-authorization)

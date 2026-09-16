@@ -1,0 +1,145 @@
+---
+title: "Debugging plugins"
+sidebarTitle: "Debugging"
+description: "Diagnose Aikeedo plugins that don't load, don't boot or misbehave, using debug mode, logs and the plugin health record."
+---
+
+Aikeedo protects a production site from a broken plugin: boot errors are swallowed, fatals are recorded, and the plugin is skipped on later requests. That's the opposite of what you want while developing, so start by turning debug mode on.
+
+## Turn on debug mode
+
+```ini .env
+ENVIRONMENT=dev
+DEBUG=true
+CACHE=false
+```
+
+With `DEBUG=true`:
+
+- Exceptions thrown while loading or booting a plugin are rethrown instead of hidden.
+- Plugins previously recorded as failed are booted anyway, so you can see the error again.
+- Twig and route caches are off, so template and route changes apply immediately.
+- Twig runs with strict variables, and undefined variables raise errors instead of rendering nothing.
+
+## Plugin health
+
+When debug mode is off and a plugin causes a fatal error during boot, the failure is written to `var/plugin-health.json`, and the admin panel shows the plugin as **failed**. It stays skipped until someone reactivates it, which clears the record.
+
+```bash
+cat var/plugin-health.json
+```
+
+The entry names the package, the error, the file and line, and the application version at the time. Reactivating the plugin from **Plugins** clears it; so does deleting the file.
+
+<Note>
+  Only fatal errors, such as a parse error or a missing class, are recorded this way. A catchable exception in `boot()` is skipped silently in production, which is why development should always run with `DEBUG=true`.
+</Note>
+
+## Logs
+
+| File | Contents |
+| --- | --- |
+| `var/log/app-YYYY-MM-DD.log` | Everything the application logs, including your `LoggerInterface` calls |
+| `var/log/error-YYYY-MM-DD.log` | Errors only, including unhandled exceptions with a correlation ID |
+
+An unhandled exception in production returns `{"message": "Internal error", "id": "..."}`. Search that ID in the error log to find the stack trace.
+
+```php
+use Psr\Log\LoggerInterface;
+
+public function __construct(
+    private LoggerInterface $logger,
+) {}
+
+$this->logger->info('Acme sync started', ['workspace' => (string) $workspace->getId()]);
+```
+
+## Common problems
+
+<AccordionGroup>
+  <Accordion title="The plugin isn't listed in the admin panel">
+    The manifest failed validation, or the package isn't where Aikeedo looks.
+
+    - The directory must be `extra/extensions/{vendor}/{name}` and match the `name` field.
+    - `type` must be `aikeedo-plugin`.
+    - `require` must include `heyaikeedo/composer`.
+    - `extra.entry-class` must be set.
+
+    An invalid manifest raises `InvalidPluginComposerJsonFileException`, which debug mode surfaces.
+  </Accordion>
+
+  <Accordion title="Class ... not found">
+    Composer doesn't know about your package.
+
+    ```bash
+    composer require acme/hello
+    composer dump-autoload
+    ```
+
+    Check that `autoload.psr-4` maps your namespace to `src/`, and that the namespace in `extra.entry-class` matches the class exactly, including escaped backslashes in JSON.
+  </Accordion>
+
+  <Accordion title="PluginInterfaceNotImplementedException">
+    The entry class exists but doesn't implement `Plugin\Domain\PluginInterface`. Implement it and define `boot(Context $context): void`.
+  </Accordion>
+
+  <Accordion title="The plugin is active, but boot() never runs">
+    `boot()` runs on the request **after** activation. Reload the page. If it still doesn't run, the plugin may be marked as failed: check `var/plugin-health.json` and the admin panel.
+  </Accordion>
+
+  <Accordion title="A route returns 404">
+    - Did you call `AttributeMapper::addPath()` for the directory that holds the handler?
+    - Does the handler implement `Psr\Http\Server\RequestHandlerInterface`?
+    - Is the route cached? Set `CACHE=false`, or clear the cache from **Status → Clear cache**.
+    - Is the full path what you expect? The base class adds a prefix such as `/admin` or `/api`.
+  </Accordion>
+
+  <Accordion title="Template not found">
+    The namespace passed to `FilesystemLoader::addPath($dir, 'acme-hello')` must match the `@acme-hello/...` reference, the path must exist, and the plugin must be active so `boot()` ran.
+  </Accordion>
+
+  <Accordion title="An injected option is always null">
+    The option hasn't been saved yet, or the dot path is wrong. `#[Inject('option.hello.api_key')]` matches the JSON under the option key `hello`. Confirm what was stored by dumping `option.hello` in a template.
+  </Accordion>
+
+  <Accordion title="Settings don't save">
+    The form needs `x-ref="form"`, `@submit.prevent="submit"` and `{% set xdata = 'settings' %}`. Check the browser network tab for the `POST /admin/api/options` request, and remember that demo installations block writes.
+  </Accordion>
+
+  <Accordion title="Changes to a public asset don't appear">
+    Files listed in `extra.public` are copied at install time. Re-run `composer require acme/hello`, or copy the file into `public/e/{vendor}/{name}/` while iterating.
+  </Accordion>
+
+  <Accordion title="The whole site is blank after installing a plugin">
+    A fatal error during boot, with debug mode off and a stale health record missing. Check `var/log/error-*.log`, then remove the plugin directory or run `composer remove acme/hello` to recover.
+  </Accordion>
+</AccordionGroup>
+
+## Useful checks
+
+```bash
+# Is the package installed and autoloadable?
+composer show acme/hello
+
+# Does the console boot the application cleanly?
+php bin/console list
+
+# What did the last cron tick do?
+php cron.php && tail -n 50 var/log/app-$(date +%F).log
+```
+
+Booting the console exercises the same bootstrap path as a web request, so a plugin that breaks boot usually breaks `bin/console` too, with a visible stack trace.
+
+## Before you release
+
+<Check>The plugin installs cleanly into an installation that never had it.</Check>
+<Check>Activating, deactivating and uninstalling all work, and uninstalling leaves nothing behind.</Check>
+<Check>No errors appear in `var/log` with `DEBUG=true`.</Check>
+<Check>Static analysis passes: `vendor/bin/phpstan analyse --level=5 extra/extensions/acme/hello/src`.</Check>
+<Check>The plugin behaves when its settings are empty, since that's the state right after install.</Check>
+
+## Related
+
+- [Lifecycle and hooks](/development/plugins/lifecycle-and-hooks)
+- [Local development](/development/local-development)
+- [Packaging and distribution](/development/plugins/packaging-and-distribution)

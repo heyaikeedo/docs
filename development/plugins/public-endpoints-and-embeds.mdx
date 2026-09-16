@@ -1,0 +1,179 @@
+---
+title: "Public endpoints and embeds"
+sidebarTitle: "Public endpoints"
+description: "Expose unauthenticated endpoints from an Aikeedo plugin, authenticate visitors with tokens, embed a widget on third-party sites, and do it safely."
+---
+
+Some plugins need routes that no signed-in user requests: a webhook receiver, a public form, or a widget embedded on a customer's website. Those routes opt out of Aikeedo's authentication, so you're responsible for the security the framework normally provides.
+
+<Warning>
+  Read the [security checklist](#security-checklist) before you ship a public endpoint. Most serious plugin vulnerabilities come from missing ownership checks on these routes.
+</Warning>
+
+## Declare a public route
+
+A handler that extends no base class gets no prefix and no middleware. Add exactly the middleware you need:
+
+```php src/RequestHandlers/Widget/AbstractWidgetApi.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Feedback\RequestHandlers\Widget;
+
+use Acme\Feedback\Middlewares\VisitorMiddleware;
+use Acme\Feedback\Middlewares\WidgetMiddleware;
+use Easy\Router\Attributes\Middleware;
+use Easy\Router\Attributes\Path;
+use Presentation\Middlewares\ClientIpMiddleware;
+use Presentation\Middlewares\ExceptionMiddleware;
+use Presentation\Middlewares\RequestBodyParserMiddleware;
+
+#[Middleware(ExceptionMiddleware::class)]
+#[Middleware(RequestBodyParserMiddleware::class)]
+#[Middleware(ClientIpMiddleware::class)]
+#[Middleware(WidgetMiddleware::class)]
+#[Middleware(VisitorMiddleware::class)]
+#[Path('/feedback/[uuid:wid]/')]
+abstract class AbstractWidgetApi {}
+```
+
+| Core middleware | Why you'd add it |
+| --- | --- |
+| `ExceptionMiddleware` | Turns exceptions into JSON responses instead of fatals. Add it first, always. |
+| `RequestBodyParserMiddleware` | Parses JSON and form bodies into the parsed body object |
+| `ClientIpMiddleware` | Resolves the visitor's IP behind proxies |
+
+Your own middleware then loads the widget from the route parameter and authenticates the visitor.
+
+## Authenticate visitors with a token
+
+Each widget gets a secret. The visitor exchanges it for a short-lived token, and later requests carry that token.
+
+```php src/Services/VisitorToken.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Feedback\Services;
+
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+
+class VisitorToken
+{
+    private const TTL = 3600;
+
+    public function issue(string $widgetId, string $visitorId, string $secret): string
+    {
+        return JWT::encode([
+            'sub' => $visitorId,
+            'wid' => $widgetId,
+            'iat' => time(),
+            'exp' => time() + self::TTL,
+        ], $secret, 'HS256');
+    }
+
+    public function parse(string $token, string $secret): object
+    {
+        return JWT::decode($token, new Key($secret, 'HS256'));
+    }
+}
+```
+
+<Warning>
+  Never mint a token for an identifier the caller supplied without proving they own it. Accepting `{"visitor_id": "..."}` and returning a token for that visitor lets anyone impersonate any visitor. Either create a fresh visitor, or require a signature made with a secret only the host site knows.
+</Warning>
+
+## Embed a page in an iframe
+
+An embeddable page is a normal route that renders a standalone template, plus a frame policy:
+
+```php
+use Presentation\Response\HtmlResponse;
+
+$response = new HtmlResponse($html);
+
+return $response->withHeader(
+    'Content-Security-Policy',
+    "frame-ancestors " . implode(' ', $widget->getTrustedDomains())
+);
+```
+
+`frame-ancestors` is enforced by the browser, which makes it the control that actually restricts where your widget can be framed. A custom header sent by your own script, such as an origin hint, is advisory: anyone can forge it with cURL, so never use it as an authorization check.
+
+Serve the loader script from the web root so customers can embed it with one tag:
+
+```json composer.json
+{
+  "extra": {
+    "public": [
+      { "source": "widget/dist/loader.js", "target": "/acme-feedback.js" }
+    ]
+  }
+}
+```
+
+```html
+<script src="https://your-domain.com/acme-feedback.js" data-id="WIDGET_ID" async></script>
+```
+
+The loader injects an iframe pointing at your embed route, and the two sides talk with `postMessage`. Always check `event.origin` before you act on a message, and send messages to a specific origin rather than `*`.
+
+## Receiving webhooks
+
+Providers post to an endpoint you publish, so verify every request:
+
+```php
+$signature = $request->getHeaderLine('X-Acme-Signature');
+$body = (string) $request->getBody();
+
+if (!$this->secret) {
+    // Fail closed: an unconfigured secret means you cannot verify anything.
+    throw new HttpException('Webhook secret is not configured', StatusCode::BAD_REQUEST);
+}
+
+$expected = hash_hmac('sha256', $body, $this->secret);
+
+if (!hash_equals($expected, $signature)) {
+    throw new HttpException('Invalid signature', StatusCode::BAD_REQUEST);
+}
+```
+
+Read the raw body for the signature, not the parsed one, and make handling idempotent: providers retry, and the same event can arrive twice.
+
+Payment gateways have a dedicated webhook route and interface. See [Payment webhooks](/development/plugins/guides/payments/webhooks).
+
+## Security checklist
+
+<Check>**Verify ownership of every nested ID.** On `/feedback/{widgetId}/threads/{threadId}`, confirm the thread belongs to that widget and that the caller's token was issued for it. Loading by ID alone lets anyone read another customer's data by guessing UUIDs.</Check>
+<Check>**Never issue a token for a caller-supplied internal ID.** Tokens are proof of identity, so they can only be created from something the caller proved.</Check>
+<Check>**Treat origin and referer headers as hints.** Enforce with `frame-ancestors`, a server-side allowlist, and token checks.</Check>
+<Check>**Bill the right workspace.** Work triggered by a visitor is paid for by the workspace that owns the widget; check its credits before doing anything expensive.</Check>
+<Check>**Rate-limit.** Public endpoints are abused. Cap requests per visitor and per widget, and reject oversized payloads early.</Check>
+<Check>**Respond in constant shapes.** Don't leak whether a record exists through different error messages or timings.</Check>
+<Check>**Scrub what you return.** A public endpoint should return the minimum: never internal IDs, workspace details or configuration.</Check>
+<Check>**Honor demo mode.** Add `DemoEnvironmentMiddleware` to writes, or check `ENVIRONMENT` yourself.</Check>
+
+## CORS
+
+Requests from an iframe on your own origin don't need CORS. If your endpoint is called directly from a customer's page, add the headers yourself, and reflect only origins you've allowlisted:
+
+```php
+$origin = $request->getHeaderLine('Origin');
+
+if (in_array($origin, $widget->getTrustedDomains(), true)) {
+    $response = $response
+        ->withHeader('Access-Control-Allow-Origin', $origin)
+        ->withHeader('Vary', 'Origin');
+}
+```
+
+Never reflect an arbitrary origin, and never combine `Access-Control-Allow-Origin: *` with credentials.
+
+## Related
+
+- [Routes and request handlers](/development/plugins/routes-and-request-handlers)
+- [Embeddable widget guide](/development/plugins/guides/embeddable-widget)
+- [Public assets](/development/plugins/public-assets)
+- [Streaming responses](/development/plugins/streaming-responses)

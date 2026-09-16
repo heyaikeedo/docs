@@ -1,0 +1,189 @@
+---
+title: "Streaming responses"
+sidebarTitle: "Streaming responses"
+description: "Send Server-Sent Events from an Aikeedo plugin endpoint, including streamed AI output, and keep the connection working behind proxies."
+---
+
+Long-running work shouldn't make a user stare at a spinner. Aikeedo streams chat responses as Server-Sent Events, and a plugin can stream its own output the same way.
+
+## How streaming works here
+
+A handler returns a response whose body is a `CallbackStream`. The emitter calls that callback while it writes the body, so your generator runs after the headers are already on the wire.
+
+```php src/RequestHandlers/Api/StreamSummaryRequestHandler.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Notes\RequestHandlers\Api;
+
+use Acme\Notes\Application\Commands\SummarizeNoteCommand;
+use Easy\Http\Message\RequestMethod;
+use Easy\Router\Attributes\Route;
+use Generator;
+use Presentation\EventStream\Streamer;
+use Presentation\Http\Message\CallbackStream;
+use Presentation\Response\Response;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use Shared\Infrastructure\CommandBus\Dispatcher;
+
+#[Route(path: '/[uuid:id]/summary', method: RequestMethod::POST)]
+class StreamSummaryRequestHandler extends NotesApi implements RequestHandlerInterface
+{
+    public function __construct(
+        private Dispatcher $dispatcher,
+        private Streamer $streamer,
+    ) {}
+
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        $cmd = new SummarizeNoteCommand($request->getAttribute('id'));
+
+        /** @var Generator $generator */
+        $generator = $this->dispatcher->dispatch($cmd);
+
+        $response = (new Response())
+            ->withHeader('Content-Type', 'text/event-stream')
+            ->withHeader('Cache-Control', 'no-cache')
+            ->withHeader('Connection', 'keep-alive')
+            // Required so nginx doesn't buffer the whole response
+            ->withHeader('X-Accel-Buffering', 'no');
+
+        return $response->withBody(
+            new CallbackStream($this->stream(...), $generator)
+        );
+    }
+
+    private function stream(Generator $generator): void
+    {
+        foreach ($generator as $chunk) {
+            $this->streamer->sendEvent('text-delta', ['delta' => $chunk]);
+        }
+    }
+}
+```
+
+`Presentation\EventStream\Streamer` writes one event at a time and flushes:
+
+| Method | Purpose |
+| --- | --- |
+| `open()` | Clears output buffering and stops if the client already disconnected |
+| `sendEvent(string $event, string\|array\|JsonSerializable $data = null, ?string $id = null)` | Writes an `event:`, `data:` and `id:` block, then flushes |
+| `close()` | Marks the stream finished |
+| `stream(Generator $generator)` | Streams Aikeedo's own message parts, used by the chat endpoint |
+
+Call `open()` before your first event if you send events yourself rather than through `stream()`.
+
+## The wire format
+
+```text
+event: text-delta
+data: {"delta":"Once upon a time"}
+id: 1726480000.1234
+
+event: done
+data: {"id":"0190a1b2-..."}
+id: 1726480000.9876
+```
+
+Pick short event names, and keep each `data` payload to a single JSON object. Clients parse this with the browser's `EventSource`, or with a streaming `fetch` and an SSE parser when they need to POST.
+
+## Handle the write side carefully
+
+<AccordionGroup>
+  <Accordion title="Persist before you stream">
+    The entity manager is flushed after the response is emitted, which for a stream is after the last byte. If your generator creates records that the client will reference, inject `Doctrine\ORM\EntityManagerInterface` and call `flush()` before or during the stream.
+  </Accordion>
+  <Accordion title="Stop when the client leaves">
+    A user who closes the tab shouldn't keep a provider call running and a workspace paying for it. `Streamer::open()` exits when `connection_aborted()` reports a dead connection; check it in long loops of your own too.
+  </Accordion>
+  <Accordion title="Report errors as events">
+    Once the headers are sent you can't change the status code. Catch exceptions inside the generator and emit an `error` event with a message the client can show.
+  </Accordion>
+  <Accordion title="Charge after the fact">
+    Reserve credits before you start, then consume the real cost as usage arrives. See [AI models and credits](/development/plugins/ai-models-and-credits).
+  </Accordion>
+</AccordionGroup>
+
+## Forwarding AI output
+
+When you stream a model's answer, fold Aikeedo's stream parts into your own events:
+
+```php
+use Ai\Domain\ValueObjects\Stream\ErrorPart;
+use Ai\Domain\ValueObjects\Stream\TextDeltaPart;
+use Ai\Domain\ValueObjects\Stream\UsagePart;
+
+private function stream(Generator $generator): void
+{
+    $this->streamer->open();
+
+    foreach ($generator as $part) {
+        if ($part instanceof TextDeltaPart) {
+            $this->streamer->sendEvent('text-delta', $part);
+        }
+
+        if ($part instanceof ErrorPart) {
+            $this->streamer->sendEvent('error', $part);
+        }
+
+        if ($part instanceof UsagePart) {
+            // Internal accounting; don't leak cost details to the client.
+            $cost = $part->cost;
+        }
+    }
+
+    $this->streamer->close();
+}
+```
+
+Stream parts are `JsonSerializable`, so passing one straight to `sendEvent()` produces a payload shaped like `{"type": "...", ...}`.
+
+## Consume the stream in the browser
+
+```javascript
+const res = await fetch(`/api/notes/${id}/summary`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+});
+
+const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+let buffer = '';
+
+while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+
+    buffer += value;
+    const blocks = buffer.split('\n\n');
+    buffer = blocks.pop() ?? '';
+
+    for (const block of blocks) {
+        const event = block.match(/^event: (.*)$/m)?.[1];
+        const data = block.match(/^data: (.*)$/m)?.[1];
+
+        if (event === 'text-delta') {
+            this.summary += JSON.parse(data).delta;
+        }
+    }
+}
+```
+
+<Warning>
+  PHP's built-in development server handles one request at a time, so a stream blocks everything else. Test streaming against nginx with PHP-FPM, or a similar setup, before you ship.
+</Warning>
+
+## Deployment notes
+
+- `X-Accel-Buffering: no` disables nginx buffering; other proxies and CDNs have their own switch.
+- Check `output_buffering` and any compression module, since gzip on a stream can delay flushes.
+- Keep `max_execution_time` in mind for long generations.
+
+## Related
+
+- [AI models and credits](/development/plugins/ai-models-and-credits)
+- [App pages and APIs](/development/plugins/app-pages-and-apis)
+- [REST API streaming](/development/api/overview)
+- [Text streaming settings](/advanced/text-streaming)
