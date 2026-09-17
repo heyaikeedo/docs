@@ -4,6 +4,8 @@ sidebarTitle: "Embeddable widgets"
 description: "Ship a plugin whose widget runs on third-party websites: a loader script, an iframe app, visitor tokens, streamed AI replies and workspace billing."
 ---
 
+import { OfficialPlugins } from '/snippets/official-plugins.mdx';
+
 This guide combines the public-endpoint, asset, streaming and billing building blocks into one feature: `acme/feedback-widget`, a widget a customer embeds on their own site, where visitors ask questions and get AI-generated answers.
 
 It's the most security-sensitive kind of plugin you can build, so read [Public pages and endpoints](/development/plugins/public-endpoints-and-embeds) first.
@@ -13,11 +15,11 @@ It's the most security-sensitive kind of plugin you can build, so read [Public p
 ```mermaid
 flowchart TD
     A[Customer's website] -->|script tag| B[loader.js from your web root]
-    B --> C[iframe to /feedback/{id}/embed]
+    B --> C["iframe to /feedback/{id}/embed"]
     C --> D[Widget app bundle]
-    D -->|POST /feedback/{id}/session| E[Session endpoint]
+    D -->|"POST /feedback/{id}/session"| E[Session endpoint]
     E -->|visitor JWT| D
-    D -->|POST /feedback/{id}/messages| F[Message endpoint]
+    D -->|"POST /feedback/{id}/messages"| F[Message endpoint]
     F --> G[AI service + workspace credits]
     G -->|server-sent events| D
 ```
@@ -249,6 +251,12 @@ Test the embed on a separate local origin, not inside the Aikeedo tab, so you ex
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Disabling the feature or deactivating the widget returns `404` for every route.</span></div>
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The loader is small, framework-free, and degrades quietly if the iframe fails to load.</span></div>
 </div>
+
+## Official chatbots
+
+If you need embeddable AI chatbots rather than a custom widget, the official Chatbots plugin is available on the [Aikeedo Marketplace](https://aikeedo.com/marketplace/):
+
+<OfficialPlugins skus={['chatbots']} />
 
 ## Related
 

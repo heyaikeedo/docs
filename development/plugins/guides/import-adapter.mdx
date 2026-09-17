@@ -4,6 +4,8 @@ sidebarTitle: "Import adapters"
 description: "Let users migrate conversations from another service into Aikeedo by implementing a migration adapter that a background job drives."
 ---
 
+import { OfficialPlugins } from '/snippets/official-plugins.mdx';
+
 Aikeedo imports conversation archives in the background: a user uploads a file, a job is created, and the cron tick feeds the file through an adapter in batches. A plugin supplies the adapter for a new source.
 
 ## How an import runs
@@ -210,6 +212,12 @@ Store the upload with `FileSystemInterface` under `var/`, not the CDN: it's a wo
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>A corrupt archive fails the job with a readable error, rather than looping forever.</span></div>
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Temporary files are removed when the job finishes.</span></div>
 </div>
+
+## Official import adapters
+
+The official Migration plugin already imports from ChatGPT, Claude and Grok. It's available on the [Aikeedo Marketplace](https://aikeedo.com/marketplace/):
+
+<OfficialPlugins skus={['migration']} />
 
 ## Related
 

@@ -4,6 +4,8 @@ sidebarTitle: "Storage adapters"
 description: "Add a file storage backend to Aikeedo by implementing a Flysystem-based CDN adapter and registering it for administrators to select."
 ---
 
+import { OfficialPlugins } from '/snippets/official-plugins.mdx';
+
 Aikeedo stores generated images, uploads and other user-visible files through a CDN abstraction. Administrators choose one adapter under **Settings → File storage**, and every part of the application uses it. A plugin can add more.
 
 ## The interface
@@ -205,6 +207,12 @@ Changing the adapter doesn't move existing files: records keep the storage key t
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Uploading a large file works, and cleanup deletes objects.</span></div>
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Wrong credentials produce a clear error rather than a blank page.</span></div>
 </div>
+
+## Official storage adapters
+
+The official Cloud Storage plugin already supports the most common S3-compatible providers. It's available on the [Aikeedo Marketplace](https://aikeedo.com/marketplace/):
+
+<OfficialPlugins skus={['cloud-storage']} />
 
 ## Related
 

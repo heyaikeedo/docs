@@ -4,6 +4,7 @@ sidebarTitle: "Overview"
 description: "What an Aikeedo theme controls, how the active theme is resolved and rendered, and when to use a theme instead of a plugin or a view override."
 ---
 
+import { OfficialPlugins } from '/snippets/official-plugins.mdx';
 import DevVersionNote from '/snippets/dev-version-note.mdx';
 
 A theme is a Composer package that renders your public website. It owns the landing page, and it can add public pages of its own. Everything behind the login screen belongs to the application.
@@ -72,6 +73,10 @@ Only `composer.json` and `templates/index.twig` are required. Everything else is
 | [The starter kit](/development/themes/quickstart) | You're building a new theme. It ships the build pipeline, a layout, custom elements and catalogs. |
 | [Copy the default theme](/development/themes/customizing-existing-themes) | You want the shipped design with changes. Always rename it, or an update overwrites your work. |
 | From scratch | You want full control and no build step. Start from the minimum theme. |
+
+Want a finished design instead of building one? The official Pulse theme is available on the [Aikeedo Marketplace](https://aikeedo.com/marketplace/):
+
+<OfficialPlugins skus={['pulse']} />
 
 ## Theme development at a glance
 

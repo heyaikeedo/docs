@@ -4,6 +4,8 @@ sidebarTitle: "Tax engines"
 description: "Add a tax calculation engine to Aikeedo so orders are taxed according to your own rules or an external tax service."
 ---
 
+import { OfficialPlugins } from '/snippets/official-plugins.mdx';
+
 A tax engine calculates the tax lines for an order at checkout. Aikeedo ships a null engine that charges nothing, and administrators select an engine under **Settings → Tax engines**.
 
 ## When it runs
@@ -220,6 +222,12 @@ Cache rates that rarely change with the PSR-6 pool, and never let a provider out
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>A discounted order taxes the amount you intended.</span></div>
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>With the service unreachable, checkout still completes.</span></div>
 </div>
+
+## Official tax engines
+
+If you don't need a custom engine, these official ones are available on the [Aikeedo Marketplace](https://aikeedo.com/marketplace/):
+
+<OfficialPlugins skus={['manual-tax', 'stripe-tax']} />
 
 ## Related
 

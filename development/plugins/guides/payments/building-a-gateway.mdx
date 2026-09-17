@@ -4,6 +4,8 @@ sidebarTitle: "Build a gateway"
 description: "Implement, register and configure an Aikeedo payment gateway plugin, from the manifest to a working hosted checkout."
 ---
 
+import { OfficialPlugins } from '/snippets/official-plugins.mdx';
+
 This guide builds `acme/demo-pay`, a gateway for a fictional provider with a hosted checkout page and HMAC-signed webhooks. It's a complete implementation you can adapt to a real provider.
 
 ## Prerequisites
@@ -285,6 +287,12 @@ For separate test and live credentials, use the mirroring pattern from the setti
     </Check>
   </Step>
 </Steps>
+
+## Official gateways
+
+Before you build a gateway, check whether the provider is already covered by an official one on the [Aikeedo Marketplace](https://aikeedo.com/marketplace/):
+
+<OfficialPlugins skus={['paystack', 'razorpay', 'yookassa', 'iyzico', 'mercadopago', 'xendit', 'cryptomus']} />
 
 ## Related
 

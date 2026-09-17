@@ -20,7 +20,7 @@ Configuration comes from three places, with different lifetimes and audiences.
 
 | Variable | Purpose |
 | --- | --- |
-| `ENVIRONMENT` | `prod`, `dev`, `demo` or `install`. `install` routes everything to the installer; `demo` blocks write requests. |
+| `ENVIRONMENT` | `prod`, `dev`, `demo` or `install`. `install` routes everything to the installer; `demo` is used for public demo installations. |
 | `DEBUG` | Shows errors, disables caches, makes Twig strict, and rethrows plugin boot failures. |
 | `CACHE` | Enables template, route, listener and metadata caching, when debug is off. |
 | `JWT_TOKEN` | Secret used to sign session tokens. |

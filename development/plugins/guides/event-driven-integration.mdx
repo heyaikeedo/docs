@@ -4,6 +4,8 @@ sidebarTitle: "Event-driven integrations"
 description: "Sync Aikeedo users to an external service using domain event listeners, a cron backfill with cursors, and a multi-page admin area."
 ---
 
+import { OfficialPlugins } from '/snippets/official-plugins.mdx';
+
 Integrations with CRMs, email platforms and analytics tools share one shape: react to events as they happen, and backfill everything else in the background. This guide builds `acme/crm` against a fictional "Acme CRM".
 
 ## The design
@@ -301,6 +303,12 @@ For providers with strict rate limits, lower the batch size and use a bulk endpo
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Stopping a sync clears its state, and starting again begins from the top.</span></div>
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>With the API unreachable, signup still works and the failure is logged.</span></div>
 </div>
+
+## Official integrations
+
+For email platforms, these official integrations are available on the [Aikeedo Marketplace](https://aikeedo.com/marketplace/):
+
+<OfficialPlugins skus={['loops', 'brevo', 'mailchimp']} />
 
 ## Related
 

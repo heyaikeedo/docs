@@ -4,6 +4,7 @@ sidebarTitle: "Overview"
 description: "How Aikeedo processes a payment end to end, and which interfaces a gateway plugin implements to take part."
 ---
 
+import { OfficialPlugins } from '/snippets/official-plugins.mdx';
 import DevVersionNote from '/snippets/dev-version-note.mdx';
 
 A payment gateway plugin connects Aikeedo's checkout to a payment provider. Aikeedo owns the order, the subscription and the credits; your plugin owns the conversation with the provider.
@@ -109,6 +110,12 @@ Add the marker interfaces that describe your gateway:
 | --- | --- |
 | `Billing\Infrastructure\Payments\Exceptions\PaymentException` | The payment can't start or can't be verified. Checkout returns `422` with your message; on the callback the user goes to the receipt with the order unpaid. |
 | `Billing\Infrastructure\Payments\Exceptions\WebhookException` | A webhook is invalid, for example a bad signature. Returns `400`. |
+
+## Official gateways
+
+Aikeedo ships with Stripe, PayPal, bank transfer and manual payment gateways. Official gateways for more regions are available on the [Aikeedo Marketplace](https://aikeedo.com/marketplace/):
+
+<OfficialPlugins skus={['paystack', 'razorpay', 'yookassa', 'iyzico', 'mercadopago', 'xendit', 'cryptomus']} />
 
 ## Continue
 
