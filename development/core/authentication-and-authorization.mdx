@@ -65,8 +65,6 @@ $workspace = $request->getAttribute(WorkspaceEntity::class);
 | --- | --- |
 | `AuthorizationMiddleware` | An active user must exist; under `/admin`, the user must have the admin role |
 | `EmailVerificationMiddleware` | A verified email, when the policy is strict |
-| `LicenseMiddleware` | A valid license, for admin views |
-| `DemoEnvironmentMiddleware` | Blocks writes in demo mode |
 | Access control classes | Per-resource rules |
 
 Roles are deliberately coarse: `user` and `admin`. Anything finer is a per-resource decision.
