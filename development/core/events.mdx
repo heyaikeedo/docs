@@ -177,7 +177,7 @@ All classes live under `{Module}\Domain\Events`.
 | `OrderFulfilledEvent` | Track an affiliate conversion |
 | `SubscriptionUsageResetEvent` | Track a recurring affiliate conversion |
 | `CreditUsageEvent`, `SubscriptionCreatedEvent`, `OrderCreatedEvent` | Record statistics |
-| `CronEvent` | Renew subscriptions, end cancelled ones, calculate MRR, end failed generations, prune caches, purge expired library items, backfill message parts, record the last run |
+| `CronEvent` | Renew subscriptions, end cancelled ones, calculate MRR, end failed generations, prune caches, purge expired library items, record the last run |
 
 Most other events have no core listener: they exist so that plugins can react.
 
