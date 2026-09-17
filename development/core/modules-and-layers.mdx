@@ -139,18 +139,6 @@ Two behaviors come from the base class:
   Treat this as the intended direction rather than an enforced rule: parts of the codebase reach across it. New code, including plugin code, is easier to maintain when it follows the direction.
 </Note>
 
-## Generating a module
-
-```bash
-php bin/console app:make:module
-```
-
-The generator scaffolds a module with the layout above: entity, value objects, repository interface and implementation, CRUD commands and handlers, and a bootstrapper. It's the fastest way to see the conventions applied consistently.
-
-<Warning>
-  A generated module lives in `src/`, which an update replaces. Use it to learn the structure, or when you maintain a fork; plugins can't add modules. See [Data and persistence](/development/plugins/data-and-persistence).
-</Warning>
-
 ## Related
 
 - [Command bus](/development/core/command-bus)
