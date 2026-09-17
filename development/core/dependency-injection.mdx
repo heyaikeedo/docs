@@ -111,7 +111,7 @@ Bind an interface when callers should depend on the contract:
 $app->set(NotifierInterface::class, EmailNotifier::class);
 ```
 
-Bind an instance when construction is expensive or must happen once:
+Bind an instance when it needs setting up before anything resolves it, such as passing configuration or registering entries:
 
 ```php
 $collection = new ToolCollection($container);
