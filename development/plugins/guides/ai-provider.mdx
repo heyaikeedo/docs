@@ -1,0 +1,277 @@
+---
+title: "Add an AI provider"
+sidebarTitle: "AI providers"
+description: "Implement an AI capability interface in an Aikeedo plugin, register it with the service factory, and make your models selectable."
+---
+
+Aikeedo resolves AI work through a factory: it asks for a capability interface and a model, and gets back the first registered service that supports that model. A plugin registers its own services the same way the core does.
+
+## Decide what to build
+
+<Tabs>
+  <Tab title="A new provider">
+    Your provider has its own API. Implement the capability interfaces you support, register them, and add your models to the registry.
+  </Tab>
+  <Tab title="An OpenAI-compatible server">
+    The provider speaks the OpenAI API. No plugin is needed: administrators add the server under **Settings → AI models** and import its models. Point your users there instead of writing code.
+  </Tab>
+</Tabs>
+
+## The contracts
+
+Every service implements `Ai\Domain\Services\AiServiceInterface`:
+
+```php
+interface AiServiceInterface
+{
+    public function supportsModel(Model $model): bool;
+    public function getSupportedModels(): Traversable;
+}
+```
+
+Then add the capability interfaces you implement:
+
+| Interface | Method |
+| --- | --- |
+| `Ai\Domain\Completion\MessageServiceInterface` | `generateMessage(Model, MessageEntity, ?array $params): Generator` |
+| `Ai\Domain\Completion\TextCompletionServiceInterface` | `complete(Model, string $instructions, string $input, int $maxTokens = 512): TextCompletionResponse` |
+| `Ai\Domain\Image\ImageServiceInterface` | `generateImage(WorkspaceEntity, UserEntity, Model, ?array $params): ImageEntity` |
+| `Ai\Domain\Video\VideoServiceInterface` | `generateVideo(WorkspaceEntity, UserEntity, Model, ?array $params): VideoEntity` |
+| `Ai\Domain\Speech\SpeechServiceInterface` | `getVoiceList()`, `generateSpeech(VoiceEntity, array $params)` |
+| `Ai\Domain\Transcription\TranscriptionServiceInterface` | `generateTranscription(Model, StreamInterface, array $params)` |
+| `Ai\Domain\Classification\ClassificationServiceInterface` | `generateClassification(Model, string $input)` |
+| `Ai\Domain\Embedding\EmbeddingServiceInterface` | `generateEmbedding(Model, string $text)` |
+| `Ai\Domain\IsolatedVoice\VoiceIsolatorServiceInterface` | `generateIsolatedVoice(Model, StreamInterface, array $params)` |
+
+Implement only what your provider actually does. A provider can be chat-only, or image-only.
+
+## A text completion service
+
+```php src/Services/AcmeTextCompletionService.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Provider\Services;
+
+use Acme\Provider\Client;
+use Ai\Domain\Completion\TextCompletionResponse;
+use Ai\Domain\Completion\TextCompletionServiceInterface;
+use Ai\Domain\Exceptions\ApiException;
+use Ai\Domain\ValueObjects\Model;
+use Ai\Infrastructure\Services\CostCalculator;
+use Billing\Domain\ValueObjects\CreditCount;
+use Generator;
+use Override;
+use Throwable;
+use Traversable;
+
+class AcmeTextCompletionService implements TextCompletionServiceInterface
+{
+    private const MODELS = ['acme-large', 'acme-small'];
+
+    public function __construct(
+        private Client $client,
+        private CostCalculator $calculator,
+    ) {}
+
+    #[Override]
+    public function supportsModel(Model $model): bool
+    {
+        return in_array($model->value, self::MODELS, true);
+    }
+
+    #[Override]
+    public function getSupportedModels(): Traversable
+    {
+        foreach (self::MODELS as $model) {
+            yield new Model($model);
+        }
+    }
+
+    #[Override]
+    public function complete(
+        Model $model,
+        string $instructions,
+        string $input,
+        int $maxTokens = 512
+    ): TextCompletionResponse {
+        try {
+            $resp = $this->client->post('/v1/completions', [
+                'model' => $model->value,
+                'system' => $instructions,
+                'prompt' => $input,
+                'max_tokens' => $maxTokens,
+            ]);
+        } catch (Throwable $th) {
+            throw new ApiException($th->getMessage(), previous: $th);
+        }
+
+        $cost = $this->calculator->calculate(
+            $resp->usage->input_tokens,
+            $model,
+            CostCalculator::INPUT
+        );
+
+        return new TextCompletionResponse(trim($resp->text), $cost);
+    }
+}
+```
+
+<Note>
+  Throw `Ai\Domain\Exceptions\ApiException` when the provider fails. Aikeedo surfaces it to the user instead of a generic error.
+</Note>
+
+## A streaming chat service
+
+`MessageServiceInterface::generateMessage()` returns a generator of stream parts. Yield deltas as they arrive, and finish with a usage part carrying the cumulative cost:
+
+```php
+use Ai\Domain\ValueObjects\Stream\TextDeltaPart;
+use Ai\Domain\ValueObjects\Stream\UsagePart;
+
+public function generateMessage(
+    Model $model,
+    MessageEntity $message,
+    ?array $params = null
+): Generator {
+    $stream = $this->client->stream('/v1/chat', [
+        'model' => $model->value,
+        'messages' => $this->history->build($message),
+    ]);
+
+    $inputTokens = 0;
+    $outputTokens = 0;
+
+    foreach ($stream as $event) {
+        if ($event->type === 'delta') {
+            $outputTokens += 1;
+            yield new TextDeltaPart($event->text);
+        }
+
+        if ($event->type === 'usage') {
+            $inputTokens = $event->input_tokens;
+            $outputTokens = $event->output_tokens;
+        }
+    }
+
+    $cost = new CreditCount(
+        $this->calculator->calculate($inputTokens, $model, CostCalculator::INPUT)->value
+        + $this->calculator->calculate($outputTokens, $model, CostCalculator::OUTPUT)->value
+    );
+
+    // Cumulative total; the handler overwrites its tracked cost with the last one.
+    yield new UsagePart($cost);
+}
+```
+
+## Register the services
+
+```php src/Plugin.php
+use Acme\Provider\Services\AcmeMessageService;
+use Acme\Provider\Services\AcmeTextCompletionService;
+use Ai\Infrastructure\Services\AiServiceFactory;
+
+public function __construct(
+    private AiServiceFactory $factory,
+) {}
+
+public function boot(Context $context): void
+{
+    $this->factory
+        ->register(AcmeMessageService::class)
+        ->register(AcmeTextCompletionService::class);
+}
+```
+
+Registration is lazy: the class is only built when a model needs it. The factory returns the **first** registered service that implements the requested interface and supports the model, so keep `supportsModel()` strict.
+
+## Make your models selectable
+
+Services answer "can I handle this model". What users pick from comes from the model registry, which is `config/registry/base.json` merged with the installation's own `config/registry/registry.json`.
+
+A plugin adds its models by writing to that registry, which is exactly how custom servers are stored. Do it in the install or activate hook, not on every boot:
+
+```php src/Plugin.php
+use Plugin\Domain\Hooks\ActivateHookInterface;
+use Shared\Infrastructure\Services\ModelRegistry;
+
+public function __construct(
+    private ModelRegistry $registry,
+) {}
+
+public function activate(Context $context): void
+{
+    $directory = $this->registry['directory'];
+
+    foreach ($directory as $service) {
+        if (($service['key'] ?? null) === 'acme') {
+            return; // already registered
+        }
+    }
+
+    $directory[] = [
+        'key' => 'acme',
+        'name' => 'Acme AI',
+        // Required for entries that aren't in base.json, or the merge drops them.
+        'custom' => true,
+        'models' => [
+            [
+                'type' => 'chat',
+                'key' => 'acme-large',
+                'name' => 'Acme Large',
+                'description' => 'General purpose chat model',
+                'custom' => true,
+                'enabled' => true,
+                'multiplier' => 1000,
+                'modalities' => ['input' => ['text'], 'output' => ['text']],
+                'rates' => [
+                    ['key' => 'acme-large-input', 'type' => 'input', 'unit' => 'token'],
+                    ['key' => 'acme-large-output', 'type' => 'output', 'unit' => 'token'],
+                ],
+            ],
+        ],
+    ];
+
+    $this->registry['directory'] = $directory;
+    $this->registry->save();
+}
+```
+
+<Warning>
+  Entries that don't exist in `base.json` survive the merge only when they're marked `"custom": true`. Without that flag your service and models disappear on the next boot.
+</Warning>
+
+Key fields:
+
+| Field | Meaning |
+| --- | --- |
+| `key` | The model identifier your `supportsModel()` matches |
+| `type` | The capability, such as `chat`, `image`, `video`, `speech`, `transcription`, `embedding` |
+| `multiplier` | Used by `CostCalculator::estimate()` as a pre-flight cost |
+| `rates` | Rate keys administrators price under **Settings → Credit rates** |
+| `modalities`, `specs`, `config` | What the model accepts, and what the UI offers for it |
+
+Remove your entries again in the uninstall hook, so the registry doesn't keep models nothing can serve.
+
+## Credits
+
+Aikeedo charges the workspace based on what your service reports. Use `CostCalculator` with the rate keys you declared, and return the cost on the response or as a `UsagePart`. See [AI models and credits](/development/plugins/ai-models-and-credits).
+
+## Testing
+
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Your models appear under **Settings → AI models** and can be enabled.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>A plan that grants the model lets a user select it in chat.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Streaming shows text arriving progressively, not all at once at the end.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Credits are deducted, and the amount matches the configured rates.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>A provider error shows a readable message instead of a `500`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Deactivating the plugin leaves the installation working, with your models simply unavailable.</span></div>
+</div>
+
+## Related
+
+- [AI models and credits](/development/plugins/ai-models-and-credits)
+- [AI subsystem internals](/development/core/ai-subsystem)
+- [Custom extension points](/development/plugins/custom-extension-points)
+- [OpenAI-compatible servers](/integrations/openai-api-compatibility)

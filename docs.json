@@ -13,6 +13,9 @@
     "dark": "/logo/dark.svg"
   },
   "favicon": "/favicon.ico",
+  "icons": {
+    "library": "tabler"
+  },
   "navbar": {
     "links": [
       {
@@ -66,6 +69,22 @@
     {
       "source": "/get-started/commercial-resources",
       "destination": "/overview/commercial-resources"
+    },
+    {
+      "source": "/development/local-development-guide",
+      "destination": "/development/local-development"
+    },
+    {
+      "source": "/development/plugins/development-guide",
+      "destination": "/development/plugins/quickstart"
+    },
+    {
+      "source": "/development/themes/development-guide",
+      "destination": "/development/themes/quickstart"
+    },
+    {
+      "source": "/development/themes/objects",
+      "destination": "/development/themes/template-objects"
     }
   ],
   "navigation": {
@@ -74,12 +93,12 @@
         {
           "anchor": "Affiliates",
           "href": "https://aikeedo.com/affiliates/",
-          "icon": "dollar-sign"
+          "icon": "coin"
         },
         {
           "anchor": "Changelog",
           "href": "https://aikeedo.com/changelog/",
-          "icon": "arrow-trend-up"
+          "icon": "chart-area-line"
         },
         {
           "anchor": "Feature Requests",
@@ -270,20 +289,166 @@
         "tab": "Development",
         "groups": [
           {
-            "group": "Development",
+            "group": "Get Started",
             "pages": [
               "development/introduction",
-              "development/local-development-guide",
-              "development/api/overview"
+              "development/local-development",
+              "development/extending-aikeedo",
+              "development/coding-standards",
+              "development/community-add-ons"
             ]
           },
           {
-            "group": "Plugins & Themes",
+            "group": "Plugins",
             "pages": [
               "development/plugins/overview",
-              "development/plugins/development-guide",
-              "development/themes/development-guide",
-              "development/themes/objects"
+              "development/plugins/quickstart",
+              "development/plugins/manifest",
+              "development/plugins/lifecycle-and-hooks",
+              {
+                "group": "Building Blocks",
+                "pages": [
+                  "development/plugins/dependency-injection-and-services",
+                  "development/plugins/routes-and-request-handlers",
+                  "development/plugins/admin-settings-pages",
+                  "development/plugins/app-pages-and-apis",
+                  "development/plugins/frontend-integration",
+                  "development/plugins/navigation",
+                  "development/plugins/events-and-cron",
+                  "development/plugins/data-and-persistence",
+                  "development/plugins/files-and-storage",
+                  "development/plugins/ai-models-and-credits",
+                  "development/plugins/streaming-responses",
+                  "development/plugins/public-endpoints-and-embeds",
+                  "development/plugins/public-assets",
+                  "development/plugins/localization",
+                  "development/plugins/custom-extension-points"
+                ]
+              },
+              {
+                "group": "Ship & Maintain",
+                "pages": [
+                  "development/plugins/packaging-and-distribution",
+                  "development/plugins/debugging",
+                  "development/plugins/upgrading-to-v5"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Extension Guides",
+            "pages": [
+              {
+                "group": "Payment Gateways",
+                "pages": [
+                  "development/plugins/guides/payments/overview",
+                  "development/plugins/guides/payments/building-a-gateway",
+                  "development/plugins/guides/payments/checkout-flows",
+                  "development/plugins/guides/payments/subscriptions-and-renewals",
+                  "development/plugins/guides/payments/webhooks"
+                ]
+              },
+              "development/plugins/guides/tax-engine",
+              "development/plugins/guides/storage-adapter",
+              "development/plugins/guides/vector-store",
+              "development/plugins/guides/ai-provider",
+              "development/plugins/guides/ai-tool",
+              "development/plugins/guides/currency-rate-provider",
+              "development/plugins/guides/plan-config-extension",
+              "development/plugins/guides/event-driven-integration",
+              "development/plugins/guides/import-adapter",
+              "development/plugins/guides/embeddable-widget"
+            ]
+          },
+          {
+            "group": "Themes",
+            "pages": [
+              "development/themes/overview",
+              "development/themes/quickstart",
+              "development/themes/minimum-theme",
+              "development/themes/structure",
+              "development/themes/manifest",
+              "development/themes/build-and-assets",
+              {
+                "group": "Templates",
+                "pages": [
+                  "development/themes/templates-and-layouts",
+                  "development/themes/pricing-and-plans",
+                  "development/themes/users-and-navigation",
+                  "development/themes/dark-mode-and-colors",
+                  "development/themes/script-tags-and-analytics",
+                  "development/themes/javascript-components",
+                  "development/themes/custom-pages",
+                  "development/themes/localization"
+                ]
+              },
+              {
+                "group": "Reference",
+                "pages": [
+                  "development/themes/twig-reference",
+                  "development/themes/template-objects"
+                ]
+              },
+              {
+                "group": "Ship & Maintain",
+                "pages": [
+                  "development/themes/customizing-existing-themes",
+                  "development/themes/packaging-and-publishing",
+                  "development/themes/troubleshooting"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Core Architecture",
+            "pages": [
+              {
+                "group": "Foundations",
+                "pages": [
+                  "development/core/overview",
+                  "development/core/directory-structure",
+                  "development/core/bootstrap-and-lifecycle",
+                  "development/core/modules-and-layers",
+                  "development/core/dependency-injection",
+                  "development/core/configuration",
+                  "development/core/command-bus",
+                  "development/core/events"
+                ]
+              },
+              {
+                "group": "HTTP Layer",
+                "pages": [
+                  "development/core/routing-and-middleware",
+                  "development/core/authentication-and-authorization",
+                  "development/core/views-and-frontend"
+                ]
+              },
+              {
+                "group": "Subsystems",
+                "pages": [
+                  "development/core/database-and-migrations",
+                  "development/core/ai-subsystem",
+                  "development/core/billing-subsystem",
+                  "development/core/storage-and-files",
+                  "development/core/background-jobs-and-cron",
+                  "development/core/email",
+                  "development/core/localization-internals",
+                  "development/core/caching-and-logging"
+                ]
+              },
+              {
+                "group": "Tooling",
+                "pages": [
+                  "development/core/console-commands",
+                  "development/core/testing-and-quality"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "REST API",
+            "pages": [
+              "development/api/overview"
             ]
           }
         ]

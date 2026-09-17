@@ -1,0 +1,193 @@
+---
+title: "JavaScript and components"
+sidebarTitle: "JavaScript"
+description: "Add interactivity to an Aikeedo theme with Alpine.js and custom elements for money, credits, avatars and the dark-mode switcher."
+---
+
+Themes ship their own JavaScript bundle. The starter uses Alpine.js for page behavior and a handful of custom elements for formatting that's easier in the browser than in Twig.
+
+## The entry point
+
+```javascript src/js/index.js
+'use strict';
+
+import Alpine from 'alpinejs';
+
+import { ModeSwitcher } from './components/mode.js';
+import { MoneyElement } from './components/money.js';
+import { CreditElement } from './components/credit.js';
+import { AvatarElement } from './components/avatar.js';
+
+customElements.define('mode-switcher', ModeSwitcher);
+customElements.define('x-money', MoneyElement);
+customElements.define('x-credit', CreditElement);
+customElements.define('x-avatar', AvatarElement);
+
+Alpine.start();
+```
+
+The layout loads it as a module:
+
+```twig
+<script type="module" src="{{ '/src/js/index.js'|asset_url }}"></script>
+```
+
+<Note>
+  This is your theme's bundle, separate from the application's. Nothing the app registers, such as its API client or modal controller, is available on the public site.
+</Note>
+
+## Alpine
+
+Add `x-data` to the body in the layout so small inline components work anywhere on the page:
+
+```twig
+<body x-data>
+```
+
+Then use Alpine directly in templates:
+
+```twig
+<div x-data="{ open: false }">
+	<button @click="open = !open">{{ d__('theme', 'Menu') }}</button>
+	<nav x-show="open" x-cloak>…</nav>
+</div>
+```
+
+For anything larger, register a named component before Alpine starts:
+
+```javascript
+document.addEventListener('alpine:init', () => {
+	Alpine.data('pricing', () => ({
+		cycle: 'monthly',
+		toggle(value) { this.cycle = value; },
+	}));
+});
+```
+
+```twig
+<div x-data="pricing">
+	<button @click="toggle('yearly')">{{ d__('theme', 'Yearly') }}</button>
+</div>
+```
+
+## The custom elements
+
+### `<x-money>`
+
+Formats an amount in minor units using the browser's locale support.
+
+| Attribute | Purpose |
+| --- | --- |
+| `data-value` | Amount in minor units, for example `2900` |
+| `currency` | Currency code, such as `USD` |
+| `minor-units` | Fraction digits for the currency |
+| `fraction` | `auto`, `true` or `false` |
+| `currency-display` | `symbol` by default |
+| `content-type` | `rich` wraps parts in spans, `simple` renders plain text |
+
+```twig
+<x-money
+	data-value="{{ plan.price }}"
+	currency="{{ currency.code }}"
+	minor-units="{{ currency.fraction_digits }}"
+	fraction="auto"></x-money>
+```
+
+### `<x-credit>`
+
+Formats a credit balance, and handles the unlimited case.
+
+| Attribute | Purpose |
+| --- | --- |
+| `data-value` | The credit amount; an empty value means unlimited |
+| `format` | A template containing `:count` |
+| `format-unlimited` | Text to show when there's no limit |
+
+```twig
+<x-credit data-value="{{ plan.credit_count }}" format="{{ d__('theme', ':count credits') }}"></x-credit>
+```
+
+### `<x-avatar>`
+
+Renders an image, an icon or initials.
+
+| Attribute | Purpose |
+| --- | --- |
+| `src` | Image URL |
+| `title` | Name, used to derive initials |
+| `icon` | A Tabler icon name, or raw SVG markup |
+| `length` | How many initials to show |
+
+```twig
+<x-avatar title="{{ user.first_name ~ ' ' ~ user.last_name }}" src="{{ user.avatar }}" length="2"></x-avatar>
+```
+
+### `<mode-switcher>`
+
+Wraps a button and toggles the color mode, persisting the choice.
+
+```twig
+<mode-switcher>
+	<button aria-label="{{ d__('theme', 'Toggle dark mode') }}">
+		<i class="ti ti-moon-stars dark:hidden"></i>
+		<i class="hidden ti ti-sun-filled dark:block"></i>
+	</button>
+</mode-switcher>
+```
+
+## Globals the theme sets
+
+```twig snippets/js.twig
+<script>
+	window.currency = JSON.parse('{{ currency|json_encode|raw }}');
+</script>
+```
+
+`window.currency` gives the components a fallback currency, and your own scripts a formatting reference.
+
+## Translating strings in JavaScript
+
+```javascript src/js/translate.js
+export function __(str) {
+	return window.locale?.messages[str] || str;
+}
+```
+
+The lookup reads a catalog exposed as `window.locale`, and falls back to the original string, so untranslated builds still render. Prefer translating in Twig where you can; use this only for strings created in the browser.
+
+## Writing your own element
+
+```javascript src/js/components/countdown.js
+export class CountdownElement extends HTMLElement {
+	static observedAttributes = ['data-until'];
+
+	connectedCallback() {
+		this.render();
+		this.timer = setInterval(() => this.render(), 1000);
+	}
+
+	disconnectedCallback() {
+		clearInterval(this.timer);
+	}
+
+	render() {
+		const until = new Date(this.dataset.until);
+		const seconds = Math.max(0, Math.round((until - Date.now()) / 1000));
+		this.textContent = `${seconds}s`;
+	}
+}
+```
+
+Register it alongside the others in `index.js`, and always clean up timers and listeners in `disconnectedCallback()`.
+
+## Keep it light
+
+- The landing page is what search engines and first-time visitors measure. Ship as little JavaScript as you can.
+- Alpine plus a few custom elements covers most marketing pages; reach for a framework only when you truly need one.
+- Load third-party embeds lazily, and put tracking in the [script tag snippets](/development/themes/script-tags-and-analytics) rather than your bundle.
+
+## Related
+
+- [Build and assets](/development/themes/build-and-assets)
+- [Dark mode and colors](/development/themes/dark-mode-and-colors)
+- [Pricing and plans](/development/themes/pricing-and-plans)

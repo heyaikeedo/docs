@@ -1,0 +1,323 @@
+---
+title: "Template objects reference"
+sidebarTitle: "Template objects"
+description: "Every variable and object available in an Aikeedo theme template, with its fields, types and availability."
+---
+
+This is the complete set of data a theme template can read. Availability matters as much as shape: several of these exist only on certain pages or for signed-in visitors, and debug mode raises an error when you read something undefined.
+
+## Availability at a glance
+
+| Variable | Available |
+| --- | --- |
+| `option`, `config`, `version`, `license`, `theme`, `environment`, `nav`, `currency`, `locales`, `env` | Always |
+| `locale` | When the resolved language has a theme catalog; otherwise `null` |
+| `theme_locale` | Always, but deprecated. Use `locale.code`. |
+| `user`, `workspace` | Only when a visitor is signed in |
+| `plans` | Only on the landing page |
+
+```twig
+{% if user is defined %}…{% endif %}
+{{ plans|default([]) }}
+{{ locale.code|default('en-US') }}
+```
+
+## Globals
+
+<ResponseField name="option" type="object">
+  Every platform setting, as a nested object: `option.site.name`, `option.brand.logo`, `option.policies.tos`, `option.features.chat.is_enabled`, and so on. A setting that was never saved is undefined, so guard it.
+
+  Two values are computed rather than stored:
+
+  - `option.site.url`, built from the configured domain and whether the site is served over HTTPS.
+  - `option.color_scheme.accent` and `.accent_content`, expanded into `{ hex, r, g, b, rgb }`.
+</ResponseField>
+
+<ResponseField name="config" type="object">
+  Application configuration. Most themes only need `config.model.registry`, which lists AI services and models for pricing or capability tables.
+</ResponseField>
+
+<ResponseField name="version" type="string">
+  The application version, also used as the cache-busting query on theme assets.
+</ResponseField>
+
+<ResponseField name="license" type="string | null">
+  The installation's license text, or `null`.
+</ResponseField>
+
+<ResponseField name="theme" type="string">
+  The active theme's package name, such as `acme/aurora`.
+</ResponseField>
+
+<ResponseField name="environment" type="string">
+  `prod`, `dev`, `demo` or `install`.
+</ResponseField>
+
+<ResponseField name="nav" type="object">
+  The navigation registry. Themes rarely need it; it's what the app and admin sidebars are built from.
+</ResponseField>
+
+<ResponseField name="env" type="object">
+  The raw environment. Read one key when you must, such as `env.THEME_ASSETS_SERVER`.
+
+  <Warning>
+    This contains database credentials and secret keys. Never print or serialize the whole object.
+  </Warning>
+</ResponseField>
+
+## Currency
+
+<ResponseField name="currency" type="object">
+  The platform billing currency.
+
+  <Expandable title="Properties">
+    <ResponseField name="code" type="string" required>ISO code, such as `USD`.</ResponseField>
+    <ResponseField name="name" type="string" required>Localized name, such as `US Dollar`.</ResponseField>
+    <ResponseField name="symbol" type="string | null" required>The symbol, or `null` when it's the same as the code.</ResponseField>
+    <ResponseField name="fraction_digits" type="number" required>Decimal places, such as `2`.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Locales
+
+<ResponseField name="locales" type="array">
+  Every configured language.
+
+  <Expandable title="Entry properties">
+    <ResponseField name="code" type="string" required>Language code, such as `de-DE`.</ResponseField>
+    <ResponseField name="label" type="string" required>English name, such as `German`.</ResponseField>
+    <ResponseField name="enabled" type="boolean" required>Whether an administrator enabled it.</ResponseField>
+    <ResponseField name="dir" type="string" required>`ltr` or `rtl`.</ResponseField>
+    <ResponseField name="name" type="string" required>An alias of `code`, kept for older themes.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="locale" type="object | null">
+  The language resolved for this request, in the same shape as a `locales` entry. It's `null` when the theme has no catalog for the resolved language, so always use `locale.code|default('en-US')`.
+</ResponseField>
+
+<ResponseField name="theme_locale" type="string | null">
+  Deprecated. The resolved language code as a plain string.
+</ResponseField>
+
+```twig
+<html lang="{{ locale.code|default('en-US') }}" dir="{{ locale.dir|default('ltr') }}">
+
+{% for item in locales %}
+	{% if item.enabled %}
+		<a href="/{{ item.code }}">{{ item.label }}</a>
+	{% endif %}
+{% endfor %}
+```
+
+## User
+
+<ResponseField name="user" type="object">
+  The signed-in visitor. Undefined for guests.
+
+  <Expandable title="Properties">
+    <ResponseField name="id" type="string" required>UUID.</ResponseField>
+    <ResponseField name="role" type="string" required>`admin` or `user`.</ResponseField>
+    <ResponseField name="email" type="string" required>Email address.</ResponseField>
+    <ResponseField name="first_name" type="string" required>First name.</ResponseField>
+    <ResponseField name="last_name" type="string" required>Last name.</ResponseField>
+    <ResponseField name="phone_number" type="string | null" required>Phone number.</ResponseField>
+    <ResponseField name="language" type="string" required>Preferred language code.</ResponseField>
+    <ResponseField name="has_password" type="boolean" required>False for accounts created through a social login.</ResponseField>
+    <ResponseField name="workspace_cap" type="number | null" required>How many workspaces the user may own; `null` means unlimited.</ResponseField>
+    <ResponseField name="avatar" type="string" required>Gravatar URL derived from the email address.</ResponseField>
+    <ResponseField name="created_at" type="number" required>Unix timestamp.</ResponseField>
+    <ResponseField name="updated_at" type="number | null" required>Unix timestamp, or `null`.</ResponseField>
+    <ResponseField name="ip" type="string | null" required>Last known IP address.</ResponseField>
+    <ResponseField name="country" type="object | null" required>See [Country](#country).</ResponseField>
+    <ResponseField name="city_name" type="string | null" required>City.</ResponseField>
+    <ResponseField name="is_email_verified" type="boolean" required>Verification status.</ResponseField>
+    <ResponseField name="api_key" type="string | null" required>The user's API key, or `null`.</ResponseField>
+    <ResponseField name="affiliate" type="object" required>See [Affiliate](#affiliate).</ResponseField>
+    <ResponseField name="workspace" type="object" required>The current workspace. Note that `owner` and `users` are **not** included on this nested copy.</ResponseField>
+    <ResponseField name="preferences" type="object" required>`memories`, `history`, `disabled_tools`, `instructions`, `preferred_name` and `marketing`.</ResponseField>
+    <ResponseField name="workspaces" type="array" required>Workspaces the user belongs to but doesn't own. Present on the global `user` only.</ResponseField>
+    <ResponseField name="owned_workspaces" type="array" required>Workspaces the user owns. Present on the global `user` only.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Workspace
+
+<ResponseField name="workspace" type="object">
+  The visitor's current workspace. Undefined for guests.
+
+  <Expandable title="Properties">
+    <ResponseField name="id" type="string" required>UUID.</ResponseField>
+    <ResponseField name="name" type="string" required>Workspace name.</ResponseField>
+    <ResponseField name="openai_api_key" type="string | null" required>The workspace's own key, when it brings one.</ResponseField>
+    <ResponseField name="anthropic_api_key" type="string | null" required>As above.</ResponseField>
+    <ResponseField name="address" type="object | null" required>See [Address](#address).</ResponseField>
+    <ResponseField name="is_eligible_for_trial" type="boolean" required>Whether a trial is still available.</ResponseField>
+    <ResponseField name="is_eligible_for_free_plan" type="boolean" required>Whether the free plan is still available.</ResponseField>
+    <ResponseField name="created_at" type="number" required>Unix timestamp.</ResponseField>
+    <ResponseField name="updated_at" type="number | null" required>Unix timestamp, or `null`.</ResponseField>
+    <ResponseField name="invitations" type="array" required>Pending invitations. See [Workspace invitation](#workspace-invitation).</ResponseField>
+    <ResponseField name="credit_count" type="number | null" required>Add-on credits; `null` means unlimited.</ResponseField>
+    <ResponseField name="total_credit_count" type="number | null" required>Add-on plus subscription credits.</ResponseField>
+    <ResponseField name="subscription" type="object | null" required>See [Subscription](#subscription).</ResponseField>
+    <ResponseField name="usage_session" type="object | null" required>`null` unless the installation bills by session; otherwise `{ resets_at, used_percent }`.</ResponseField>
+    <ResponseField name="credit_balance" type="number" required>Present only in session billing mode.</ResponseField>
+    <ResponseField name="owner" type="object" required>The owning user. Present on the global `workspace` only.</ResponseField>
+    <ResponseField name="users" type="array" required>Members. Present on the global `workspace` only.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Subscription
+
+<ResponseField name="subscription" type="object">
+  Available as `workspace.subscription`, or `null` when the workspace has none.
+
+  <Expandable title="Properties">
+    <ResponseField name="id" type="string" required>UUID.</ResponseField>
+    <ResponseField name="trial_period_days" type="number" required>Trial length in days.</ResponseField>
+    <ResponseField name="usage_count" type="number" required>Credits used in the current period.</ResponseField>
+    <ResponseField name="usage_percentage" type="string" required>Percentage **with a `%` suffix**, such as `"45.00%"`.</ResponseField>
+    <ResponseField name="credit_count" type="number | null" required>Credits remaining; `null` means unlimited.</ResponseField>
+    <ResponseField name="credit_percentage" type="string" required>Percentage with a `%` suffix.</ResponseField>
+    <ResponseField name="created_at" type="number" required>Unix timestamp.</ResponseField>
+    <ResponseField name="updated_at" type="number | null" required>Unix timestamp, or `null`.</ResponseField>
+    <ResponseField name="canceled_at" type="number | null" required>When the user cancelled.</ResponseField>
+    <ResponseField name="cancel_at" type="number | null" required>When access ends.</ResponseField>
+    <ResponseField name="renew_at" type="number | null" required>Next usage reset; `null` once cancelled.</ResponseField>
+    <ResponseField name="next_billing_at" type="number | null" required>Next payment date, following the plan's billing cycle.</ResponseField>
+    <ResponseField name="plan" type="object" required>The plan snapshot. See [Plan snapshot](#plan-snapshot).</ResponseField>
+    <ResponseField name="currency" type="object | null" required>The order's currency, or `null` when there's no order.</ResponseField>
+    <ResponseField name="payment_gateway" type="string | null" required>Gateway key.</ResponseField>
+    <ResponseField name="external_id" type="string | null" required>The provider's reference.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Plan
+
+<ResponseField name="plans" type="array">
+  Active plans, sorted by price ascending. **Available on the landing page only.**
+
+  <Expandable title="Plan properties">
+    <ResponseField name="id" type="string" required>UUID, used in the checkout link.</ResponseField>
+    <ResponseField name="title" type="string" required>Plan name.</ResponseField>
+    <ResponseField name="description" type="string | null" required>Short description.</ResponseField>
+    <ResponseField name="icon" type="string | null" required>An icon name, or raw SVG markup.</ResponseField>
+    <ResponseField name="price" type="number" required>Minor units, such as `2900` for 29.00.</ResponseField>
+    <ResponseField name="sale_price" type="number | null" required>Discounted price when a coupon applies.</ResponseField>
+    <ResponseField name="billing_cycle" type="string" required>`one-time`, `monthly`, `yearly` or `lifetime`.</ResponseField>
+    <ResponseField name="credit_count" type="number | null" required>`null` means unlimited.</ResponseField>
+    <ResponseField name="member_cap" type="number | null" required>Member limit; `null` means unlimited.</ResponseField>
+    <ResponseField name="is_featured" type="boolean" required>Highlight this plan.</ResponseField>
+    <ResponseField name="superiority" type="number" required>Ordering weight for comparison tables.</ResponseField>
+    <ResponseField name="created_at" type="number" required>Unix timestamp.</ResponseField>
+    <ResponseField name="updated_at" type="number | null" required>Unix timestamp, or `null`.</ResponseField>
+    <ResponseField name="feature_list" type="array" required>Objects of `{ title, is_included }`. A line entered with a leading `-` becomes `is_included: false`.</ResponseField>
+    <ResponseField name="config" type="object" required>Capabilities. See [Plan config](#plan-config).</ResponseField>
+    <ResponseField name="coupon" type="object | null" required>The applied coupon.</ResponseField>
+    <ResponseField name="discount" type="number | null" required>Discount amount when a coupon applies.</ResponseField>
+    <ResponseField name="snapshot" type="object" required>The snapshot subscriptions are based on.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Plan snapshot
+
+<ResponseField name="plan_snapshot" type="object">
+  A frozen copy of a plan, available as `subscription.plan`. It carries `id`, `title`, `description`, `icon`, `price`, `billing_cycle`, `credit_count`, `member_cap`, `created_at`, `updated_at`, `config` and `feature_list`, with the same meanings as on a plan. It has no `sale_price`, `coupon`, `discount` or `snapshot`.
+</ResponseField>
+
+## Plan config
+
+<ResponseField name="config" type="object">
+  What a plan grants. Available as `plan.config` and `subscription.plan.config`.
+
+  <Expandable title="Properties">
+    <ResponseField name="chat" type="object">Chat capability settings.</ResponseField>
+    <ResponseField name="writer" type="object">Writer settings.</ResponseField>
+    <ResponseField name="imagine" type="object">Image generation settings.</ResponseField>
+    <ResponseField name="video" type="object">Video settings.</ResponseField>
+    <ResponseField name="transcriber" type="object">Transcription settings.</ResponseField>
+    <ResponseField name="voiceover" type="object">Voice-over settings.</ResponseField>
+    <ResponseField name="voice_isolator" type="object">Voice isolation settings.</ResponseField>
+    <ResponseField name="classifier" type="object">Classification settings.</ResponseField>
+    <ResponseField name="models" type="array | null">Allowed model keys; `null` means all.</ResponseField>
+    <ResponseField name="tools" type="object">Tool switches, keyed by capability.</ResponseField>
+    <ResponseField name="assistants" type="array | null">Allowed assistants; `null` means all.</ResponseField>
+    <ResponseField name="presets" type="array | null">Allowed templates; `null` means all.</ResponseField>
+    <ResponseField name="extensions" type="object">Per-plan settings added by plugins, keyed by extension.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Affiliate
+
+<ResponseField name="affiliate" type="object">
+  Available as `user.affiliate`. Every user has one.
+
+  <Expandable title="Properties">
+    <ResponseField name="id" type="string" required>UUID.</ResponseField>
+    <ResponseField name="code" type="string" required>Referral code.</ResponseField>
+    <ResponseField name="clicks" type="number" required>Tracked clicks.</ResponseField>
+    <ResponseField name="referrals" type="number" required>Referred signups.</ResponseField>
+    <ResponseField name="balance" type="number" required>Available balance, converted into the billing currency.</ResponseField>
+    <ResponseField name="pending" type="number" required>Pending balance, converted into the billing currency.</ResponseField>
+    <ResponseField name="withdrawn" type="number" required>Withdrawn total, converted into the billing currency.</ResponseField>
+    <ResponseField name="currency" type="object" required>The currency those amounts are in.</ResponseField>
+    <ResponseField name="paypal_email" type="string | null" required>Payout email.</ResponseField>
+    <ResponseField name="bank_requisites" type="string | null" required>Bank details.</ResponseField>
+    <ResponseField name="payout_method" type="string | null" required>Chosen payout method.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Address
+
+<ResponseField name="address" type="object">
+  Available as `workspace.address`, or `null`.
+
+  <Expandable title="Properties">
+    <ResponseField name="country" type="string | null">Country code.</ResponseField>
+    <ResponseField name="state" type="string | null">State or region.</ResponseField>
+    <ResponseField name="city" type="string | null">City.</ResponseField>
+    <ResponseField name="line1" type="string | null">Street address.</ResponseField>
+    <ResponseField name="line2" type="string | null">Second address line.</ResponseField>
+    <ResponseField name="zip" type="string | null">Postal code.</ResponseField>
+    <ResponseField name="phone_number" type="string | null">Phone number.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Country
+
+<ResponseField name="country" type="object | null">
+  Available as `user.country`.
+
+  <Expandable title="Properties">
+    <ResponseField name="name" type="string" required>Localized country name.</ResponseField>
+    <ResponseField name="alpha2" type="string" required>Two-letter code.</ResponseField>
+    <ResponseField name="alpha3" type="string" required>Three-letter code.</ResponseField>
+    <ResponseField name="flag_url" type="string" required>Flag image URL.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Workspace invitation
+
+<ResponseField name="workspace_invitation" type="object">
+  Entries of `workspace.invitations`.
+
+  <Expandable title="Properties">
+    <ResponseField name="id" type="string" required>UUID.</ResponseField>
+    <ResponseField name="email" type="string" required>Invited address.</ResponseField>
+    <ResponseField name="created_at" type="number" required>Unix timestamp.</ResponseField>
+    <ResponseField name="updated_at" type="number | null" required>Unix timestamp, or `null`.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Notes on types
+
+- **Timestamps** are Unix seconds, or `null`. Format them with Twig's date filters.
+- **Money** is an integer in the currency's minor units. Use `<x-money>` or `format_currency`.
+- **Credits** use `null` for unlimited, which is different from `0`.
+- **Percentages** on a subscription are strings that already include `%`.
+
+## Related
+
+- [Twig reference](/development/themes/twig-reference)
+- [Pricing and plans](/development/themes/pricing-and-plans)
+- [Users and navigation](/development/themes/users-and-navigation)

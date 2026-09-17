@@ -1,83 +1,81 @@
 ---
-title: Introduction to Aikeedo Development
-sidebarTitle: Introduction
-description: 'Dive into the world of Aikeedo development and learn how to extend, customize, and enhance your AI-powered platform.'
+title: "Aikeedo developer documentation"
+sidebarTitle: "Introduction"
+description: "Technical documentation for extending, customizing and integrating a self-hosted Aikeedo installation with plugins, themes, the REST API and the core architecture."
 ---
 
-import Support from '/snippets/support.mdx';
+import DevVersionNote from '/snippets/dev-version-note.mdx';
 
-Welcome to the Aikeedo Development documentation! Whether you're a seasoned developer or just starting your coding journey, this guide will help you unlock the full potential of your Aikeedo platform.
+Aikeedo is a self-hosted PHP application, and you get its full source code. This section is for developers who want to extend an installation, change how it looks, integrate it with other systems, or understand how the core works before changing it.
 
-## What is Aikeedo Development?
+<DevVersionNote />
 
-Aikeedo Development refers to the process of customizing and extending the Aikeedo platform to meet your specific needs. This can include:
+## What you can build
 
-- Creating custom plugins to add new features
-- Developing themes to personalize your platform's appearance
-- Integrating with third-party services and APIs
-- Optimizing performance and functionality
+<CardGroup cols={2}>
+  <Card title="Plugins" icon="puzzle" href="/development/plugins/overview">
+    Add features, pages, API endpoints, payment gateways, tax engines, storage adapters, AI providers and integrations, all without editing core files.
+  </Card>
+  <Card title="Themes" icon="palette" href="/development/themes/overview">
+    Design the public landing page and add your own marketing pages with Twig, Tailwind CSS and Alpine.js.
+  </Card>
+  <Card title="REST API integrations" icon="code" href="/development/api/overview">
+    Connect external applications to the User and Admin REST APIs, including streamed chat responses.
+  </Card>
+  <Card title="Core customizations" icon="stack-2" href="/development/core/overview">
+    Learn the architecture, request lifecycle, modules and subsystems before you override or extend core behavior.
+  </Card>
+</CardGroup>
 
-## Why Develop for Aikeedo?
+## Choose where to start
 
-By diving into Aikeedo development, you can:
+<Steps>
+  <Step title="Set up a local environment">
+    Install Aikeedo locally, then follow [Local development](/development/local-development) to turn on debug mode, frontend hot reloading and cron.
+  </Step>
+  <Step title="Pick the right extension mechanism">
+    Read [Extending Aikeedo](/development/extending-aikeedo) to decide between a plugin, a theme and a view override, and to see which changes survive updates.
+  </Step>
+  <Step title="Build something">
+    Follow the [plugin quickstart](/development/plugins/quickstart) or the [theme quickstart](/development/themes/quickstart). Both take you from an empty directory to working code in an installation.
+  </Step>
+</Steps>
 
-1. **Tailor your platform**: Create a unique experience that aligns perfectly with your brand and user needs.
-2. **Extend functionality**: Add new features and capabilities beyond the core Aikeedo offering.
-3. **Integrate seamlessly**: Connect Aikeedo with your existing tools and services for a unified workflow.
-4. **Optimize performance**: Fine-tune your platform for maximum efficiency and user satisfaction.
+## Technology at a glance
 
-## Getting Started
+| Layer | Technology |
+| --- | --- |
+| Language | PHP 8.2+ with `intl`, `gd` and `bcmath` |
+| Application framework | Lightweight PSR components from the [`iziphp`](https://github.com/iziphp) packages (`Easy\*`): [DI container](https://github.com/iziphp/container), [attribute router](https://github.com/iziphp/router), [PSR-14 events](https://github.com/iziphp/event-dispatcher), [PSR-15 middleware](https://github.com/iziphp/http-server-handler) |
+| Persistence | Doctrine ORM 3 and Doctrine Migrations on MySQL, with binary UUIDv7 identifiers |
+| Views | Twig 3 with gettext translation functions |
+| Frontend | Alpine.js 3, Tailwind CSS 4 and Vite 8 for the app and admin panel |
+| Themes | Twig, Alpine.js, Tailwind CSS 3 and Vite 5 in the official starter kit |
+| Tooling | Symfony Console, Composer, PHPStan, PHP_CodeSniffer, PHPMD, PHPUnit |
 
-Before you begin your development journey, make sure you have:
+See [Core architecture](/development/core/overview) for the full picture.
 
-1. A local installation of Aikeedo (If not, check out our [Local Installation Guide](/setup/installation/local))
-2. Basic knowledge of PHP, JavaScript, and web development
-3. Familiarity with composer and npm package managers
+## Conventions in these docs
+
+- **Paths** are relative to the Aikeedo installation root, the directory that contains `composer.json`, `bin/` and `src/`. The web root is `public/` by default, or whatever the `PUBLIC_DIR` environment variable names.
+- **Class names** are fully qualified. Core classes have no vendor prefix; for example, `Billing\Infrastructure\Payments\PaymentGatewayInterface` lives in `src/Billing/Infrastructure/Payments/PaymentGatewayInterface.php`.
+- **Examples** use a fictional vendor, `acme`, with packages such as `acme/hello` and the namespace `Acme\Hello\`. Replace them with your own vendor and package names.
+- **Commands** run from the installation root unless a page says otherwise, for example `php bin/console app:locale:extract`.
+
+## Prerequisites
+
+To follow the guides, you should be comfortable with:
+
+- Modern PHP: namespaces, attributes, enums, readonly properties and Composer
+- Twig templates and basic Alpine.js
+- Working in a terminal with `php`, `composer` and `npm`
 
 <Note>
-  New to development? Don't worry! Our documentation is designed to guide you through the process step-by-step.
+  Develop and test extensions on a local or staging copy, not on your production installation.
 </Note>
 
-## Key Development Areas
+## Related
 
-### 1. Plugin Development
-
-Plugins are the backbone of Aikeedo customization. Learn how to create powerful extensions that add new features and functionality to your platform.
-
-<Card title="Plugin Development Guide" icon="puzzle-piece" href="/development/plugins/development-guide">
-  Start building your first Aikeedo plugin
-</Card>
-
-### 2. Theme Development
-
-Make your Aikeedo platform visually stunning and on-brand with custom themes. Dive into our theming system and create beautiful, responsive designs.
-
-<Card title="Theme Development Guide" icon="paintbrush" href="/development/themes/development-guide">
-  Design and implement custom Aikeedo themes
-</Card>
-
-### 3. Local Development Environment
-
-Set up a robust local development environment to streamline your workflow and test your changes efficiently.
-
-<Card title="Local Development Guide" icon="laptop-code" href="/development/local-development-guide">
-  Configure your perfect Aikeedo development setup
-</Card>
-
-## Best Practices
-
-As you embark on your Aikeedo development journey, keep these best practices in mind:
-
-1. **Follow coding standards**: Adhere to PHP-FIG standards and Aikeedo's coding style for consistency.
-2. **Prioritize security**: Always validate user input and follow security best practices.
-3. **Optimize performance**: Write efficient code and minimize database queries.
-4. **Document your work**: Provide clear documentation for your plugins and themes.
-5. **Stay updated**: Keep an eye on Aikeedo updates and adjust your code accordingly.
-
-<Support />
-
-<Tip>
-  Remember, the best way to learn is by doing. Start with small projects and gradually tackle more complex developments as you become familiar with the Aikeedo ecosystem.
-</Tip>
-
-Ready to supercharge your Aikeedo platform? Let's start developing! 🚀
+- [Local installation](/setup/installation/local)
+- [Server requirements](/overview/server-requirements)
+- [How to update](/versioning/how-to-update)

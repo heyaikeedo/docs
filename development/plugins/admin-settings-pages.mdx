@@ -1,0 +1,267 @@
+---
+title: "Admin settings pages"
+sidebarTitle: "Admin settings pages"
+description: "Add a settings screen to the Aikeedo admin panel, save values through the options API, and read them back in PHP and Twig."
+---
+
+Plugins configure themselves through the admin panel. You add a page under `/admin/settings/...`, render a form with the core layout, and let Aikeedo's settings component save the values as options.
+
+## The page
+
+```php src/RequestHandlers/SettingsRequestHandler.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Hello\RequestHandlers;
+
+use Easy\Container\Attributes\Inject;
+use Easy\Http\Message\RequestMethod;
+use Easy\Router\Attributes\Route;
+use Presentation\RequestHandlers\Admin\AbstractAdminViewRequestHandler;
+use Presentation\Response\ViewResponse;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+
+#[Route(path: '/settings/hello', method: RequestMethod::GET)]
+class SettingsRequestHandler extends AbstractAdminViewRequestHandler implements
+    RequestHandlerInterface
+{
+    public function __construct(
+        #[Inject('option.hello.mode')]
+        private ?string $mode = 'test',
+    ) {}
+
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        return new ViewResponse('@acme-hello/settings.twig', [
+            'mode' => $this->mode,
+        ]);
+    }
+}
+```
+
+`AbstractAdminViewRequestHandler` puts the route under `/admin` and applies the admin middleware, so non-administrators never reach it.
+
+## The template
+
+```twig templates/settings.twig
+{% extends "/layouts/main.twig" %}
+{% set active_menu = 'settings' %}
+{% set xdata = 'settings' %}
+
+{% block title p__('title', 'Hello settings')|title %}
+
+{% block template %}
+	<div class="flex flex-col items-start gap-2">
+		<a href="admin/settings" class="flex items-center text-xs font-semibold text-content-dimmed hover:text-content">
+			<span>{{ p__('button', 'Settings') }}</span>
+			<i class="ti ti-chevron-right"></i>
+		</a>
+
+		<h1>{{ p__('heading', 'Hello settings') }}</h1>
+	</div>
+
+	<x-form>
+		<form @submit.prevent="submit" x-ref="form">
+			<section class="grid grid-cols-1 gap-6 box" data-density="comfortable">
+				<h2>{{ p__('heading', 'Connection') }}</h2>
+
+				<div class="flex items-center justify-between p-3 rounded-lg bg-intermediate">
+					{{ p__('label', 'Status') }}
+
+					<label class="inline-flex items-center gap-2 cursor-pointer">
+						<input type="checkbox" name="hello[is_enabled]" class="hidden peer"
+							{{ option.hello.is_enabled is defined and option.hello.is_enabled ? 'checked' : '' }}>
+
+						<span class="relative block w-10 h-6 transition-all rounded-3xl bg-line peer-checked:bg-success after:h-5 after:w-5 after:top-0.5 after:absolute after:left-0 after:ml-0.5 after:transition-all after:rounded-full after:bg-white peer-checked:after:left-4"></span>
+
+						<span class="text-content-dimmed peer-checked:hidden">{{ __('Disabled') }}</span>
+						<span class="hidden text-success peer-checked:inline">{{ __('Enabled') }}</span>
+					</label>
+				</div>
+
+				<div>
+					<label for="hello.api_key">{{ p__('label', 'API key') }}</label>
+
+					<input
+						type="password"
+						id="hello.api_key"
+						name="hello[api_key]"
+						class="mt-2 input"
+						autocomplete="new-password"
+						value="{{ option.hello.api_key ?? '' }}"
+					/>
+				</div>
+			</section>
+
+			<div class="flex justify-end gap-2 mt-8">
+				<button type="submit" class="button button-accent" :processing="isProcessing">
+					{{ p__('button', 'Save changes') }}
+				</button>
+			</div>
+		</form>
+	</x-form>
+{% endblock %}
+```
+
+### What each piece does
+
+| Piece | Purpose |
+| --- | --- |
+| `{% extends "/layouts/main.twig" %}` | Uses the admin chrome: sidebar, header and asset tags |
+| `{% set active_menu = 'settings' %}` | Highlights **Settings** in the sidebar |
+| `{% set xdata = 'settings' %}` | Binds the page to Aikeedo's `settings` Alpine component, which owns `submit()` and `isProcessing` |
+| `<x-form>` | A web component that styles and manages form state |
+| `@submit.prevent="submit"` and `x-ref="form"` | Hand the form to the component; both are required |
+| `:processing="isProcessing"` | Shows a spinner on the button while saving |
+
+## How values are stored
+
+`submit()` posts the form to `/admin/api/options`. Each **top-level** field name becomes one option key, and the nested values become its JSON payload:
+
+| Field name | Option key | Read it as |
+| --- | --- | --- |
+| `hello[api_key]` | `hello` | `option.hello.api_key` |
+| `hello[modes][]` | `hello` | `option.hello.modes` |
+| `features[hello][is_enabled]` | `features` | `option.features.hello.is_enabled` |
+
+Saving merges your fields into the existing option, so you can split settings across several pages without wiping the other page's values.
+
+<Tip>
+  Namespace your options with your package name, such as `hello`, unless you're extending an existing group like `features`.
+</Tip>
+
+### Reading values back
+
+```php
+use Easy\Container\Attributes\Inject;
+
+public function __construct(
+    #[Inject('option.hello.api_key')]
+    private ?string $apiKey = null,
+
+    #[Inject('option.hello.is_enabled')]
+    private ?bool $isEnabled = false,
+) {}
+```
+
+In Twig, every option is available under `option`:
+
+```twig
+{{ option.hello.api_key ?? '' }}
+{% if option.hello.is_enabled is defined and option.hello.is_enabled %}
+```
+
+<Note>
+  Checkboxes submit `1` or `0`, which is cast to a boolean when injected. An option nobody saved yet resolves to `null`, so always provide defaults.
+</Note>
+
+### Writing values from PHP
+
+```php
+use Option\Application\Commands\SaveOptionCommand;
+
+$this->dispatcher->dispatch(new SaveOptionCommand(
+    'hello',
+    json_encode(['sync' => ['status' => 'processing']])
+));
+```
+
+## Link the page from the admin panel
+
+Add a navigation item in `boot()` so administrators can find the page, and set `extra.default_url` in your manifest so the plugins list links to it:
+
+```php
+$item = new Item('/admin/settings/hello', p__('nav', 'Hello'), 'confetti');
+$item->description = p__('nav', 'Connect your Acme account');
+$item->isBuiltIn = false;
+
+$this->nav->item('admin.settings.common', $item);
+```
+
+See [Navigation](/development/plugins/navigation) for the available sections.
+
+<Info>
+  Extension points that the core lists for administrators follow a URL convention: the key you register the implementation under becomes the settings URL, such as `/admin/settings/payments/{key}`, `/admin/settings/tax-engines/{key}`, `/admin/settings/cdn/{key}` and `/admin/settings/vector-databases/{key}`. Declare a route at that exact path, and point `default_url` at it.
+</Info>
+
+## Handling secrets
+
+- Use `type="password"` with `autocomplete="new-password"`.
+- Never echo a secret into JavaScript or a data attribute.
+- Show connection state, such as "key configured", rather than the value itself, where you can.
+
+## Test and live credentials
+
+A common pattern is one `mode` select plus two credential sets, with hidden inputs mirroring the selected set into the flat keys your PHP reads:
+
+```twig
+<form @submit.prevent="submit" x-ref="form"
+	x-data='{
+		mode: "{{ option.hello.mode|default("test") }}",
+		test_key: "{{ option.hello.test.api_key|default("") }}",
+		live_key: "{{ option.hello.live.api_key|default("") }}"
+	}'>
+
+	<select name="hello[mode]" x-model="mode" class="input">
+		<option value="test">{{ p__('input-value', 'Test') }}</option>
+		<option value="live">{{ p__('input-value', 'Live') }}</option>
+	</select>
+
+	<input type="password" name="hello[test][api_key]" x-model="test_key" x-show="mode === 'test'" class="input">
+	<input type="password" name="hello[live][api_key]" x-model="live_key" x-show="mode === 'live'" class="input">
+
+	<input type="hidden" name="hello[api_key]" :value="mode === 'live' ? live_key : test_key">
+</form>
+```
+
+Your PHP then injects `option.hello.api_key` and doesn't care which mode is active.
+
+## Multi-page settings
+
+For a larger integration, split the pages and redirect until setup is complete:
+
+```php
+#[Route(path: '/plugins/acme/hello', method: RequestMethod::GET)]
+class OverviewRequestHandler extends AbstractAdminViewRequestHandler implements
+    RequestHandlerInterface
+{
+    public function __construct(
+        #[Inject('option.hello.api_key')]
+        private ?string $apiKey = null,
+    ) {}
+
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        if (!$this->apiKey) {
+            return new RedirectResponse('/admin/plugins/acme/hello/keys');
+        }
+
+        return new ViewResponse('@acme-hello/overview.twig');
+    }
+}
+```
+
+Use `{% set active_menu = '/admin/plugins' %}` on those templates so the sidebar highlights **Plugins**.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Saving does nothing, and no toast appears">
+    The form is missing `x-ref="form"` or `@submit.prevent="submit"`, or `xdata` isn't set to `settings`.
+  </Accordion>
+  <Accordion title="The value is saved but the page shows the old one">
+    Options are injected when the handler is constructed. Reload the page. If it still shows stale data, clear the cache.
+  </Accordion>
+  <Accordion title="An unrelated setting was wiped">
+    You saved a top-level key that another page also owns. Keep one top-level key per plugin, and merge rather than replace.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Data and persistence](/development/plugins/data-and-persistence)
+- [Navigation](/development/plugins/navigation)
+- [Frontend integration](/development/plugins/frontend-integration)

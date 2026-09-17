@@ -1,0 +1,181 @@
+---
+title: "Plugin manifest reference"
+sidebarTitle: "Manifest"
+description: "Every composer.json field Aikeedo reads from a plugin or theme package, with validation rules and examples."
+---
+
+A plugin's `composer.json` is both a Composer manifest and Aikeedo's metadata. `Plugin\Domain\Context` parses it at boot, and the `heyaikeedo/composer` installer reads it during installation.
+
+## Complete example
+
+```json composer.json
+{
+  "name": "acme/hello",
+  "description": "A starter plugin for Aikeedo",
+  "version": "1.2.0",
+  "type": "aikeedo-plugin",
+  "homepage": "https://acme.test",
+  "time": "2026-09-15",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Acme",
+      "email": "dev@acme.test",
+      "homepage": "https://acme.test",
+      "role": "Owner"
+    }
+  ],
+  "support": {
+    "docs": "https://docs.acme.test",
+    "email": "support@acme.test",
+    "issues": "https://github.com/acme/hello/issues",
+    "source": "https://github.com/acme/hello"
+  },
+  "require": {
+    "heyaikeedo/composer": "^1.0.0"
+  },
+  "extra": {
+    "entry-class": "Acme\\Hello\\Plugin",
+    "title": "Hello",
+    "tagline": "Say hello to your users",
+    "description": "A starter plugin for Aikeedo",
+    "logo": "https://acme.test/logo.svg",
+    "icon": "https://acme.test/icon.svg",
+    "default_url": "/admin/settings/hello",
+    "compatibility": ">=5.0.0",
+    "status": "inactive",
+    "public": ["assets"]
+  },
+  "autoload": {
+    "psr-4": {
+      "Acme\\Hello\\": "src/"
+    }
+  }
+}
+```
+
+## Required fields
+
+A package that breaks any of these rules is rejected with `InvalidPluginComposerJsonFileException` and never boots.
+
+<ParamField path="type" type="string" required>
+  Either `aikeedo-plugin` or `aikeedo-theme`. It decides where the installer puts the package and how Aikeedo treats it.
+</ParamField>
+
+<ParamField path="name" type="string" required>
+  The Composer package name, `vendor/package`. **It must match the installation directory**, `extra/extensions/{vendor}/{package}`.
+</ParamField>
+
+<ParamField path="require.heyaikeedo/composer" type="string" required>
+  Every plugin and theme must require the installer package, normally `"^1.0.0"`. Use `"^1.2.0"` if you rely on object entries in `extra.public`.
+</ParamField>
+
+<ParamField path="extra.entry-class" type="string" required>
+  Fully qualified name of the class that implements `Plugin\Domain\PluginInterface`. Escape backslashes in JSON: `"Acme\\Hello\\Plugin"`. The legacy spelling `extra.entry_class` is still accepted; prefer `entry-class`. Required for plugins, optional for themes.
+</ParamField>
+
+<ParamField path="autoload.psr-4" type="object" required>
+  Maps your namespace to `src/`, so Composer can load the entry class. Required whenever the package ships PHP.
+</ParamField>
+
+## Metadata
+
+<ParamField path="version" type="string">
+  Semantic version, for example `1.2.0`. Installing from an archive runs `composer require <name>:<version>`, so keep it accurate and raise it with every release.
+</ParamField>
+
+<ParamField path="description" type="string">
+  Shown in the admin plugins list. Aikeedo reads the **top-level** `description`, not `extra.description`.
+</ParamField>
+
+<ParamField path="homepage" type="string">
+  Your product or documentation URL.
+</ParamField>
+
+<ParamField path="time" type="string">
+  Release date, for example `2026-09-15`, parsed as the package's release timestamp.
+</ParamField>
+
+<ParamField path="license" type="string | string[]">
+  SPDX identifier or your own license name.
+</ParamField>
+
+<ParamField path="authors" type="object[]">
+  Each entry may have `name`, `email`, `homepage` and `role`.
+</ParamField>
+
+<ParamField path="support" type="object">
+  Any of `chat`, `docs`, `email`, `forum`, `irc`, `issues`, `rss`, `source` and `wiki`. They're shown as support links.
+</ParamField>
+
+## The `extra` block
+
+<ParamField path="extra.title" type="string">
+  Display name in the admin panel. Falls back to the package name.
+</ParamField>
+
+<ParamField path="extra.tagline" type="string">
+  Short one-line summary.
+</ParamField>
+
+<ParamField path="extra.logo" type="string">
+  URL of a logo image.
+</ParamField>
+
+<ParamField path="extra.icon" type="string">
+  URL of an icon image.
+</ParamField>
+
+<ParamField path="extra.default_url" type="string">
+  Where the plugin's name links to in the admin plugins list, for example `/admin/settings/hello`. The link appears only while the plugin is active. Point it at your settings page.
+</ParamField>
+
+<ParamField path="extra.status" type="string" default="inactive">
+  `active`, `inactive` or `failed`. **Aikeedo owns this value**: installing sets it to `inactive`, and activating or deactivating writes the new value back into this file. Ship your package with `inactive`.
+</ParamField>
+
+<ParamField path="extra.public" type="array">
+  Files and directories to publish to the web root. See [Public assets](/development/plugins/public-assets) for the entry formats.
+</ParamField>
+
+<ParamField path="extra.compatibility" type="string">
+  The Aikeedo versions your plugin supports, for example `">=5.0.0"`. This is informational: the application doesn't enforce it, so check the version yourself if your code depends on it.
+</ParamField>
+
+## Dependencies
+
+Declare third-party libraries in `require` as usual:
+
+```json
+"require": {
+  "heyaikeedo/composer": "^1.0.0",
+  "league/flysystem-aws-s3-v3": "^3.0"
+}
+```
+
+Installing the plugin runs Composer in the installation root, so your dependencies are resolved against the packages Aikeedo already ships.
+
+<Warning>
+  Requiring a library that Aikeedo already depends on at an incompatible version makes the install fail. Keep constraints wide, and prefer libraries that are already present, such as `psr/http-client`, `firebase/php-jwt` and `league/flysystem`.
+</Warning>
+
+## Themes
+
+Themes use the same file with two differences: `type` is `aikeedo-theme`, and `extra.entry-class` is optional, since a theme can be templates only. `extra.status` has no effect for themes, because the active theme is the one selected in the admin panel. See the [theme manifest](/development/themes/manifest).
+
+## Validation checklist
+
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The directory path matches `name`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`type` is `aikeedo-plugin`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`require` includes `heyaikeedo/composer`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`extra.entry-class` points at a class that implements `PluginInterface`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`autoload.psr-4` maps that namespace to `src/`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`version` is set and increases with each release.</span></div>
+</div>
+
+## Related
+
+- [Lifecycle and hooks](/development/plugins/lifecycle-and-hooks)
+- [Public assets](/development/plugins/public-assets)
+- [Packaging and distribution](/development/plugins/packaging-and-distribution)

@@ -1,43 +1,261 @@
 ---
-title: REST API Overview
-sidebarTitle: Overview
-description: A quick look at Aikeedo's REST APIs for users and administrators
+title: "REST API overview"
+sidebarTitle: "Overview"
+description: "Authenticate against the Aikeedo User and Admin REST APIs, choose a workspace, paginate lists, handle errors, and consume streamed chat responses."
 ---
 
-Aikeedo provides two REST APIs to interact with the platform programmatically:
+import DevVersionNote from '/snippets/dev-version-note.mdx';
 
-1. **User API**: For end-users and client applications
-2. **Admin API**: For system administrators and advanced integrations
+Aikeedo includes two JSON REST APIs. Use them to connect your own applications, automations and back-office tools to an Aikeedo installation.
 
-## Enabling the APIs
+<DevVersionNote />
 
-Both APIs can be easily toggled on or off from the admin panel:
+| API | Base path | Acts as | Typical use |
+| --- | --- | --- | --- |
+| **User API** | `/api` | A regular user inside one of their workspaces | Generate content, manage conversations, library items, presets and workspace data |
+| **Admin API** | `/admin/api` | An administrator | Manage users, plans, subscriptions, orders, options and other platform data |
 
-1. Go to **Settings > Features > API** in your Aikeedo admin dashboard
-2. Use the switches to enable or disable each API as needed
+Every installation serves its own interactive reference, generated from the OpenAPI specification that ships with that version:
 
-<Note>
-  API changes take effect immediately without requiring a system restart.
-</Note>
+- User API: `https://your-domain.com/app/api-docs`
+- Admin API: `https://your-domain.com/admin/api-docs`
 
-## Accessing API Documentation
-
-Once enabled, you can find the auto-generated API documentation at:
-
-- User API: `https://yourdomain.com/app/api-docs`
-- Admin API: `https://yourdomain.com/admin/api-docs`
-
-Replace `yourdomain.com` with your Aikeedo instance domain.
-
-## Demo API Documentation
-
-To preview the API documentation, you can check out our demo links:
-
-- [User API Demo Docs](https://demo.aikeedo.com/app/api-docs)
-- [Admin API Demo Docs](https://demo.aikeedo.com/admin/api-docs)
+To browse the reference without an installation, see the [User API demo docs](https://demo.aikeedo.com/app/api-docs) and the [Admin API demo docs](https://demo.aikeedo.com/admin/api-docs).
 
 <Warning>
-  The demo links are for reference only. Do not use them for actual API calls.
+  The demo links are for reference only. Always send requests to your own installation.
 </Warning>
 
-For more detailed information on using the APIs, please refer to the specific documentation for your instance after enabling the APIs.
+## Enable the APIs
+
+Both APIs are disabled by default. An administrator enables each one separately.
+
+<Steps>
+  <Step title="Open the API settings">
+    In the admin panel, go to **Settings → Features → REST API**.
+  </Step>
+  <Step title="Turn on the APIs you need">
+    Toggle **User API**, **Admin API**, or both, then select **Save changes**. The change takes effect on the next request.
+  </Step>
+</Steps>
+
+If an API is disabled, API keys are ignored for that base path and requests fail with `401 Unauthorized`.
+
+## Authentication
+
+Send an API key in the `X-Api-Key` header with every request.
+
+```bash
+curl https://your-domain.com/api/presets \
+  -H "X-Api-Key: YOUR_API_KEY"
+```
+
+### Get an API key
+
+Each user manages their own key in the app under **Settings → API keys** (`/app/settings/api-keys`). There they can generate a key, regenerate it, or revoke it. A key belongs to a user, not to a workspace.
+
+- **User API:** any active user's key works while the User API is enabled.
+- **Admin API:** the key must belong to a user with the `admin` role, and the Admin API must be enabled.
+
+<Warning>
+  An API key has the same permissions as its owner. Store keys in a secret manager or an environment variable, never in client-side code, and revoke a key right away if it leaks.
+</Warning>
+
+### How requests are authenticated
+
+`Presentation\Middlewares\UserMiddleware` resolves the caller for every request, in this order:
+
+1. **`Authorization: Bearer <jwt>`**: the session token the Aikeedo web app uses.
+2. **The `user` session cookie**, used only outside `/api/` and `/admin/api/`.
+3. **`X-Api-Key`**: replaces the user above on `/api/*` when the User API is enabled, and on `/admin/api/*` when the Admin API is enabled.
+
+`AuthorizationMiddleware` then rejects requests without an active user. On `/admin` paths it also rejects users who aren't administrators.
+
+<Info>
+  If the installation enforces strict email verification, a user with an unverified email address gets `403 Forbidden` on `/api` endpoints until they verify it.
+</Info>
+
+## Select a workspace
+
+User API requests run in the context of a workspace. Credits, plan limits, library items and members all belong to it. By default Aikeedo uses the user's current workspace, which is the one last selected in the app.
+
+To target a different workspace, send its ID in the `X-Workspace-Id` header:
+
+```bash
+curl https://your-domain.com/api/library/images \
+  -H "X-Api-Key: YOUR_API_KEY" \
+  -H "X-Workspace-Id: 0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5b"
+```
+
+The header applies only if the user is a member of that workspace. If the ID is unknown or the user isn't a member, the request doesn't get a workspace context, and endpoints that need one respond with an error. They don't silently fall back to another workspace.
+
+## Requests and responses
+
+- Send JSON bodies with `Content-Type: application/json`. Endpoints that accept files take `multipart/form-data`.
+- IDs are UUID strings.
+- Timestamps in responses are Unix timestamps in seconds.
+- Money amounts are integers in the currency's minor units; for example, `1999` means 19.99 USD.
+
+### Pagination
+
+List endpoints return a list object:
+
+```json
+{
+  "object": "list",
+  "data": [
+    { "id": "0190a1b2-...", "object": "preset" }
+  ]
+}
+```
+
+Paginate with cursor parameters in the query string:
+
+| Parameter | Description |
+| --- | --- |
+| `limit` | Maximum number of items to return. |
+| `starting_after` | ID of an item. Returns the items that come after it, for the next page. |
+| `ending_before` | ID of an item. Returns the items that come before it, for the previous page. |
+| `sort` | Sort field and direction as `field:direction`, for example `created_at:desc`, on endpoints that support sorting. |
+
+To fetch the next page, pass the `id` of the last item on the current page as `starting_after`. An unknown cursor ID returns a `400` validation error whose `param` is the cursor parameter's name. Most list endpoints also have a matching `/count` endpoint that accepts the same filters.
+
+<Tip>
+  Supported filters and sort fields vary by endpoint. Check each endpoint in your installation's interactive API reference.
+</Tip>
+
+## Errors
+
+Aikeedo uses conventional HTTP status codes. `Presentation\Middlewares\ExceptionMiddleware` converts exceptions into JSON error bodies:
+
+| Status | When | Body |
+| --- | --- | --- |
+| `400 Bad Request` | A parameter failed validation. | `{"code": 0, "message": "...", "param": "field_name"}` |
+| `400 Bad Request` | A value object rejected an input value. | `{"message": "..."}` |
+| `401 Unauthorized` | The caller isn't authenticated, the key is invalid, or that API is disabled. | `{"message": "...", "param": null}` |
+| `403 Forbidden` | Not enough credits, a usage limit was reached, email verification is required, or access to the resource was denied. | `{"message": "..."}` |
+| `404 Not Found` | The resource doesn't exist or isn't visible to the caller. | `{"message": "...", "param": null}` |
+| `422 Unprocessable Entity` | The request is valid but can't be processed, for example a payment gateway rejected a checkout. | `{"message": "...", "param": null}` |
+| `500 Internal Server Error` | An unexpected error occurred. | `{"message": "Internal error", "id": "3f9a1c2b7d4e5a60"}` |
+
+For `500` errors, the `id` is a correlation ID. The same ID appears in the server's error log (`var/log/error-*.log`), so an administrator can find the full stack trace.
+
+<Note>
+  With `DEBUG` enabled, unhandled exceptions aren't converted to a `500` response. Never enable debug mode in production.
+</Note>
+
+## Streaming chat responses
+
+Chat generation streams its output as [Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events). First create a conversation, then post a message to it and read the response body as a stream.
+
+<Steps>
+  <Step title="Create a conversation">
+    ```bash
+    curl -X POST https://your-domain.com/api/ai/conversations \
+      -H "X-Api-Key: YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{}'
+    ```
+
+    The response contains the conversation `id`.
+  </Step>
+  <Step title="Send a message and read the stream">
+    `POST /api/ai/conversations/{id}/messages` requires `model`, a model key that the workspace's plan allows. It usually includes `content` too. Optional fields include `assistant_id`, `parent_id`, `reasoning`, and uploaded `files[]` when you send `multipart/form-data`.
+  </Step>
+</Steps>
+
+Each event has an `event` name, a JSON `data` payload and an `id`:
+
+```text
+event: message
+data: {"id":"0190...","object":"message","role":"user", ...}
+id: 1726480000.1234
+
+event: text-delta
+data: {"type":"text-delta","delta":"Hello","attributes":{}}
+id: 1726480000.2345
+```
+
+| Event | Meaning |
+| --- | --- |
+| `message` | A full message object. Aikeedo sends one for the stored user message and one for the assistant message. |
+| `text-delta` | The next chunk of the assistant's answer, in `delta`. |
+| `reasoning-delta` / `reasoning-section-start` | Reasoning output from models that support it. |
+| `tool-start` / `tool-args` / `tool-call` / `tool-result` | The model calling a tool, such as web search or image generation. |
+| `error` | Generation failed. `data` is the error message as plain text, not JSON. For example, the workspace ran out of credits. |
+
+<CodeGroup>
+
+```bash cURL
+curl -N -X POST https://your-domain.com/api/ai/conversations/CONVERSATION_ID/messages \
+  -H "X-Api-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "gpt-4o", "content": "Write a haiku about the sea."}'
+```
+
+```javascript Node.js
+import { EventSourceParserStream } from 'eventsource-parser/stream';
+
+const res = await fetch(
+  `https://your-domain.com/api/ai/conversations/${conversationId}/messages`,
+  {
+    method: 'POST',
+    headers: {
+      'X-Api-Key': process.env.AIKEEDO_API_KEY,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ model: 'gpt-4o', content: 'Write a haiku about the sea.' }),
+  },
+);
+
+const events = res.body
+  .pipeThrough(new TextDecoderStream())
+  .pipeThrough(new EventSourceParserStream());
+
+for await (const { event, data } of events) {
+  if (event === 'text-delta') process.stdout.write(JSON.parse(data).delta ?? '');
+  if (event === 'error') throw new Error(data);
+}
+```
+
+```python Python
+import json
+import os
+
+import requests
+
+url = f"https://your-domain.com/api/ai/conversations/{conversation_id}/messages"
+headers = {"X-Api-Key": os.environ["AIKEEDO_API_KEY"]}
+payload = {"model": "gpt-4o", "content": "Write a haiku about the sea."}
+
+with requests.post(url, json=payload, headers=headers, stream=True) as res:
+    event = None
+    for line in res.iter_lines(decode_unicode=True):
+        if line.startswith("event: "):
+            event = line[len("event: "):]
+        elif line.startswith("data: ") and event == "text-delta":
+            print(json.loads(line[len("data: "):]).get("delta", ""), end="", flush=True)
+```
+
+</CodeGroup>
+
+<Warning>
+  Reverse proxies can buffer streamed responses. Aikeedo sends `X-Accel-Buffering: no` for nginx. If your proxy or CDN buffers the response anyway, turn off response buffering for `/api/ai/conversations/*/messages`.
+</Warning>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Authentication internals" icon="lock" href="/development/core/authentication-and-authorization">
+    JWTs, cookies, API keys, roles and access control inside the core app.
+  </Card>
+  <Card title="Routing and middleware" icon="route" href="/development/core/routing-and-middleware">
+    How API routes, middleware stacks and error mapping are wired.
+  </Card>
+  <Card title="Build plugin APIs" icon="plug" href="/development/plugins/app-pages-and-apis">
+    Add your own workspace-scoped endpoints under `/api` from a plugin.
+  </Card>
+  <Card title="Streaming responses" icon="activity" href="/development/plugins/streaming-responses">
+    Stream Server-Sent Events from your own plugin endpoints.
+  </Card>
+</CardGroup>

@@ -1,0 +1,146 @@
+---
+title: "Theme manifest"
+sidebarTitle: "Manifest"
+description: "Every composer.json field an Aikeedo theme uses, with validation rules and the fields that behave differently from plugins."
+---
+
+A theme's `composer.json` is both its Composer manifest and the metadata Aikeedo shows in the admin panel.
+
+## Example
+
+```json composer.json
+{
+  "name": "acme/aurora",
+  "description": "A bold landing page theme",
+  "version": "1.2.0",
+  "type": "aikeedo-theme",
+  "homepage": "https://acme.test/themes/aurora",
+  "time": "2026-09-15",
+  "license": "proprietary",
+  "authors": [
+    { "name": "Acme", "email": "hello@acme.test" }
+  ],
+  "support": {
+    "docs": "https://docs.acme.test/aurora",
+    "email": "support@acme.test"
+  },
+  "require": {
+    "heyaikeedo/composer": "^1.0.0"
+  },
+  "extra": {
+    "entry-class": "Acme\\Aurora\\Theme",
+    "title": "Aurora",
+    "tagline": "A bold landing page",
+    "description": "A bold landing page theme",
+    "logo": "https://acme.test/aurora/logo.svg",
+    "icon": "https://acme.test/aurora/icon.svg",
+    "public": ["assets", ".vite"]
+  },
+  "autoload": {
+    "psr-4": {
+      "Acme\\Aurora\\": "src/"
+    }
+  }
+}
+```
+
+## Required
+
+<ParamField path="type" type="string" required>
+  Must be `aikeedo-theme`.
+</ParamField>
+
+<ParamField path="name" type="string" required>
+  The package name, `vendor/package`. It must match the installed directory, `extra/extensions/{vendor}/{package}`.
+</ParamField>
+
+<ParamField path="require.heyaikeedo/composer" type="string" required>
+  The installer package. Use `^1.2.0` if you use object entries in `extra.public`.
+</ParamField>
+
+A manifest that breaks any of these is rejected, and the theme never appears in the admin panel.
+
+## Differences from plugins
+
+| Field | Plugin | Theme |
+| --- | --- | --- |
+| `extra.entry-class` | Required | **Optional.** Only needed for custom pages. |
+| `extra.status` | Aikeedo writes `active` or `inactive` | **Ignored.** The active theme is the one published in the admin panel. |
+| `extra.default_url` | Links from the plugins list | Not used |
+
+## Metadata
+
+<ParamField path="version" type="string">
+  Semantic version. Installing from an archive runs `composer require <name>:<version>`, so keep it accurate and raise it every release.
+</ParamField>
+
+<ParamField path="description" type="string">
+  Shown in the admin panel. The top-level field is used, not `extra.description`.
+</ParamField>
+
+<ParamField path="extra.title" type="string">
+  Display name. Falls back to the package name.
+</ParamField>
+
+<ParamField path="extra.tagline" type="string">
+  A short one-line summary.
+</ParamField>
+
+<ParamField path="extra.logo" type="string">
+  URL of a logo image for listings.
+</ParamField>
+
+<ParamField path="extra.icon" type="string">
+  URL of an icon image.
+</ParamField>
+
+<ParamField path="homepage" type="string">
+  Your product page.
+</ParamField>
+
+<ParamField path="time" type="string">
+  Release date, such as `2026-09-15`.
+</ParamField>
+
+<ParamField path="authors" type="object[]">
+  Entries with `name`, `email`, `homepage` and `role`.
+</ParamField>
+
+<ParamField path="support" type="object">
+  Any of `chat`, `docs`, `email`, `forum`, `irc`, `issues`, `rss`, `source`, `wiki`.
+</ParamField>
+
+## Assets
+
+<ParamField path="extra.public" type="array">
+  Directories and files copied to `public/e/{vendor}/{package}/` when the theme is installed. A built theme normally publishes `["assets", ".vite"]`: the compiled files, and the manifest that maps source paths to their hashed names.
+</ParamField>
+
+Without this, your CSS and JavaScript aren't reachable from the browser. See [Build and assets](/development/themes/build-and-assets).
+
+## PHP
+
+<ParamField path="extra.entry-class" type="string">
+  A class implementing `Plugin\Domain\PluginInterface`. Only needed when the theme registers routes or services. Escape the backslashes: `"Acme\\Aurora\\Theme"`.
+</ParamField>
+
+<ParamField path="autoload.psr-4" type="object">
+  Maps your namespace to `src/`. Required whenever the theme ships PHP, and the package must be installed with Composer for it to take effect.
+</ParamField>
+
+## Checklist
+
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The installed directory matches `name`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`type` is `aikeedo-theme`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`require` includes `heyaikeedo/composer`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`version` is set and raised for the release.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`extra.public` lists everything the browser needs.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>If there's PHP, the entry class and the PSR-4 namespace agree.</span></div>
+</div>
+
+## Related
+
+- [Packaging and publishing](/development/themes/packaging-and-publishing)
+- [Custom pages](/development/themes/custom-pages)
+- [Plugin manifest](/development/plugins/manifest)

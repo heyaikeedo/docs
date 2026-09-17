@@ -1,0 +1,35 @@
+export const OfficialPlugins = ({ skus }) => {
+  const officialPlugins = {
+    'chatbots': { name: 'Chatbots', icon: 'message-chatbot', description: 'Customers build AI chatbots trained on their content and embed them on their own websites.' },
+    'migration': { name: 'Migration', icon: 'transfer-in', description: 'Imports conversation history from ChatGPT, Claude and Grok.' },
+    'loops': { name: 'Loops', icon: 'mail', description: 'Syncs users to Loops as contacts, including a background bulk sync.' },
+    'brevo': { name: 'Brevo', icon: 'mail', description: 'Syncs users to Brevo as contacts, including a background bulk sync.' },
+    'mailchimp': { name: 'Mailchimp', icon: 'mail', description: 'Syncs users to a Mailchimp audience with tags and merge fields.' },
+    'manual-tax': { name: 'Manual Tax Engine', icon: 'receipt-tax', description: 'Flat, country and state tax rates you define yourself.' },
+    'stripe-tax': { name: 'Stripe Tax Engine', icon: 'brand-stripe', description: 'Calculates tax with Stripe Tax from the billing address.' },
+    'cloud-storage': { name: 'Cloud Storage', icon: 'cloud', description: 'Stores files on AWS S3, Wasabi, DigitalOcean Spaces, Cloudflare R2 or MinIO.' },
+    'paystack': { name: 'Paystack', icon: 'credit-card', description: 'Payments across Africa, with one-time checkout, recurring billing and trials.' },
+    'razorpay': { name: 'Razorpay', icon: 'credit-card', description: 'Hosted checkout for one-time orders and subscriptions in India.' },
+    'yookassa': { name: 'YooKassa', icon: 'credit-card', description: 'Payments in Russia, with VAT-ready receipts and recurring charges.' },
+    'iyzico': { name: 'Iyzico', icon: 'credit-card', description: 'Embedded checkout for one-time and recurring payments in Turkey.' },
+    'mercadopago': { name: 'Mercado Pago', icon: 'credit-card', description: 'Payments across Latin America, with subscriptions and trials.' },
+    'xendit': { name: 'Xendit', icon: 'credit-card', description: 'Payment links and recurring plans for Indonesia, the Philippines and Southeast Asia.' },
+    'cryptomus': { name: 'Cryptomus', icon: 'currency-bitcoin', description: 'Cryptocurrency payments for one-time purchases and subscriptions.' },
+    'pulse': { name: 'Pulse Theme', icon: 'palette', description: 'A marketing theme with landing sections, pricing tables and dark mode.' },
+  };
+
+  return (
+    <CardGroup cols={skus.length === 1 ? 1 : 2}>
+      {skus.map((sku) => (
+        <Card
+          key={sku}
+          title={officialPlugins[sku].name}
+          icon={officialPlugins[sku].icon}
+          href={`https://aikeedo.com/marketplace/${sku}/`}
+        >
+          {officialPlugins[sku].description}
+        </Card>
+      ))}
+    </CardGroup>
+  );
+};

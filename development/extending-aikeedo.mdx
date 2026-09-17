@@ -1,0 +1,118 @@
+---
+title: "Extending Aikeedo"
+sidebarTitle: "Extending Aikeedo"
+description: "Choose between a plugin, a theme and a view override, and learn which customizations survive Aikeedo updates."
+---
+
+Aikeedo gives you several ways to change its behavior and appearance. They differ in what they can change, how you ship them, and whether an update keeps them. Pick the least invasive option that does what you need.
+
+## Extension mechanisms
+
+| Mechanism | Changes | Lives in | Survives updates |
+| --- | --- | --- | --- |
+| **Plugin** | Backend and frontend functionality: routes, admin and app pages, API endpoints, event listeners, cron jobs, navigation items, payment gateways, tax engines, storage adapters, vector stores, AI services and more | `extra/extensions/{vendor}/{name}` | Yes |
+| **Theme** | The public landing page, plus any public pages the theme registers itself | `extra/extensions/{vendor}/{name}` | Yes, if the theme uses your own vendor name |
+| **View override** | Any core Twig template, such as the login, signup, app or admin pages | `resources/views/overrides/` | Yes, but you must re-check it after each update |
+| **Core modification** | Anything | `src/`, `resources/`, `config/`… | No, the next update overwrites it |
+
+<Warning>
+  Don't edit core files unless you're willing to maintain a fork. An update extracts the new release over the installation root, which replaces every core file it contains.
+</Warning>
+
+## When to use a plugin
+
+Use a plugin when you need to **add or change behavior**. A plugin is a Composer package of type `aikeedo-plugin`. Aikeedo loads it at boot and calls its entry class, which registers routes, templates, listeners and services with the core.
+
+Typical plugins:
+
+- Integrate a payment provider, tax service, CRM or email marketing tool
+- Add a storage backend, vector database or AI provider
+- Add pages to the app or admin panel, with their own API endpoints
+- React to domain events such as a user signing up or an order being fulfilled
+- Run scheduled work on every cron tick
+
+Plugins can't add Doctrine entities, database migrations or console commands. See [Data and persistence](/development/plugins/data-and-persistence) for alternatives.
+
+<Card title="Plugin overview" icon="puzzle" href="/development/plugins/overview">
+  How plugins are discovered, booted and extended.
+</Card>
+
+## When to use a theme
+
+Use a theme when you need to **change the public website**. A theme is a Composer package of type `aikeedo-theme`. The active theme renders the landing page from its `templates/index.twig`, and it can register additional public pages through an optional PHP entry class.
+
+A theme doesn't control the app, the admin panel, authentication pages, policy pages or error pages. Those templates belong to the core.
+
+<Card title="Theme overview" icon="palette" href="/development/themes/overview">
+  What a theme controls and how rendering works.
+</Card>
+
+## When to use a view override
+
+Use a view override when you need to **change a core template** that no plugin or theme controls, such as the login page layout.
+
+Twig looks for templates in `resources/views/overrides/` before `resources/views/`. That directory doesn't exist by default. To override a template, copy it to the same relative path under `overrides/` and edit the copy:
+
+```bash
+mkdir -p resources/views/overrides/templates/auth
+cp resources/views/templates/auth/login.twig resources/views/overrides/templates/auth/login.twig
+```
+
+The release archive doesn't include `resources/views/overrides/`, so an update keeps your overrides. It still updates the originals, though, and your copy doesn't pick up those changes, such as new variables, fixes or markup that JavaScript depends on.
+
+<Tip>
+  Keep overrides small and few. After each update, compare every override with its updated original, for example with `diff -u resources/views/templates/auth/login.twig resources/views/overrides/templates/auth/login.twig`.
+</Tip>
+
+<Note>
+  If template caching is enabled (`CACHE=true` with `DEBUG=false`), clear the cache after you add or change an override. Use **Status → Clear cache** in the admin panel.
+</Note>
+
+## What an update replaces
+
+An update extracts the new release archive over the installation root, runs database migrations, then reinstalls every installed plugin and theme through Composer. The table shows how each location is affected.
+
+| Location | During an update |
+| --- | --- |
+| `src/`, `resources/views/` (except `overrides/`), `resources/assets/`, `bootstrap/`, `config/*.php`, `migrations/`, `public/assets/` | Replaced with the new release |
+| `vendor/` | Replaced, then plugin dependencies are reinstalled |
+| `config/registry/base.json` | Replaced. Model customizations live in `config/registry/registry.json`, which the release doesn't include |
+| `extra/extensions/heyaikeedo/default`, `public/e/heyaikeedo/default` | Replaced with the new default theme |
+| `extra/extensions/{your-vendor}/*` | Kept, and reinstalled from its package |
+| `resources/views/overrides/` | Kept |
+| `locale/` | Your translations are backed up and merged back into the new catalogs |
+| `.env`, `public/uploads/`, `var/` | Kept |
+
+<Warning>
+  Never customize the bundled `heyaikeedo/default` theme in place, because the next update overwrites it. Copy it under your own vendor name first. See [Customizing existing themes](/development/themes/customizing-existing-themes).
+</Warning>
+
+## Decision checklist
+
+<AccordionGroup>
+  <Accordion title="I want to add a payment method">
+    Build a plugin that registers a payment gateway. Start with [Payment gateways](/development/plugins/guides/payments/overview).
+  </Accordion>
+  <Accordion title="I want a custom landing page and an extra public page">
+    Build a theme. Add the extra page with a theme entry class, as described in [Custom pages](/development/themes/custom-pages).
+  </Accordion>
+  <Accordion title="I want to add a page inside the app for signed-in users">
+    Build a plugin with a request handler that extends `Presentation\RequestHandlers\App\AppView`. See [App pages and APIs](/development/plugins/app-pages-and-apis).
+  </Accordion>
+  <Accordion title="I want to change the signup page markup">
+    Use a view override for `templates/auth/signup.twig`, and re-check it after each update.
+  </Accordion>
+  <Accordion title="I want to send users to my CRM when they sign up">
+    Build a plugin that listens to `User\Domain\Events\UserCreatedEvent`. See [Event-driven integrations](/development/plugins/guides/event-driven-integration).
+  </Accordion>
+  <Accordion title="I want to call Aikeedo from another application">
+    Use the [REST API](/development/api/overview). You don't need to change Aikeedo itself.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Plugin quickstart](/development/plugins/quickstart)
+- [Theme quickstart](/development/themes/quickstart)
+- [Views and frontend](/development/core/views-and-frontend)
+- [How to update](/versioning/how-to-update)

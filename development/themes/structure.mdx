@@ -1,0 +1,115 @@
+---
+title: "Theme structure"
+sidebarTitle: "Structure"
+description: "How an Aikeedo theme project is laid out, which files the application requires, and what the build produces."
+---
+
+The starter kit separates **source** from **package**. You edit both, but only the package is installed.
+
+```text
+aurora/
+├── package.json            # build scripts and dependencies
+├── vite.config.mjs         # dev server and build configuration
+├── tailwind.config.js
+├── postcss.config.js
+├── .env                    # committed defaults: AIKEEDO_SERVER, BUILD_DIR
+├── scripts/
+│   ├── pack.mjs            # builds and zips the installable theme
+│   └── release.mjs         # wraps theme.zip into a versioned archive
+├── release/
+│   └── README.md           # shipped alongside theme.zip in the release archive
+├── src/                    # compiled sources: not shipped as-is
+│   ├── css/
+│   │   ├── index.css       # CSS entry
+│   │   ├── base.css
+│   │   ├── button.css
+│   │   ├── typography.css
+│   │   └── avatar.css
+│   └── js/
+│       ├── index.js        # JS entry
+│       ├── translate.js
+│       └── components/     # custom elements
+└── static/                 # the package: copied as-is into the build
+    ├── composer.json
+    ├── layouts/theme.twig
+    ├── templates/
+    │   ├── index.twig
+    │   └── custom.twig
+    ├── sections/header.twig
+    ├── snippets/
+    │   ├── css.twig
+    │   ├── js.twig
+    │   └── script-tags/{head,body,end}.twig
+    ├── assets/             # static images, logos
+    ├── src/                # optional PHP
+    │   ├── Theme.php
+    │   └── CustomView.php
+    └── locale/{code}/LC_MESSAGES/theme.po
+```
+
+## What ends up installed
+
+Building copies everything in `static/` to `BUILD_DIR`, adds the compiled CSS and JS under `assets/`, and writes `.vite/manifest.json`. The installed theme looks like this:
+
+```text
+extra/extensions/acme/aurora/
+├── composer.json
+├── layouts/  templates/  sections/  snippets/  locale/  src/
+├── assets/
+│   ├── css-a1b2c3.css
+│   ├── js-d4e5f6.js
+│   └── logo.svg
+└── .vite/manifest.json
+```
+
+Files listed in `extra.public` are then copied to `public/e/acme/aurora/`, which is what the browser actually loads.
+
+## What each part does
+
+| Path | Purpose |
+| --- | --- |
+| `static/composer.json` | The theme manifest. See [Theme manifest](/development/themes/manifest). |
+| `static/layouts/theme.twig` | The HTML shell: head, meta, assets, `{% block template %}` |
+| `static/templates/index.twig` | **Required.** The landing page. |
+| `static/templates/*.twig` | Pages your entry class routes to |
+| `static/sections/*.twig` | Large reusable blocks, such as a hero or pricing table |
+| `static/snippets/*.twig` | Small partials: CSS variables, inline scripts, analytics tags |
+| `static/assets/` | Images and other static files served as-is |
+| `static/src/` | Optional PHP: the entry class and page handlers |
+| `static/locale/` | Translation catalogs in the `theme` domain |
+| `src/css`, `src/js` | Sources Vite compiles into `assets/` |
+| `scripts/` | Packaging helpers |
+
+<Note>
+  Only `composer.json` and `templates/index.twig` are required by the application. Layouts, sections and snippets are conventions that make a theme easier to maintain.
+</Note>
+
+## Naming conventions
+
+- **Templates** are pages: one file per route.
+- **Sections** are page-sized blocks, included from a template: `{% include "@theme/sections/hero.twig" %}`.
+- **Snippets** are fragments used in several places, often with variables: `{% include "@theme/snippets/plan.twig" with { plan } %}`.
+- **Layouts** are extended, not included: `{% extends "@theme/layouts/theme.twig" %}`.
+
+Every path starts with `@theme/`, which points at the active theme's installed directory.
+
+## PHP inside a theme
+
+A theme that only renders the landing page needs no PHP. Add `static/src/` when you want extra pages:
+
+| File | Role |
+| --- | --- |
+| `Theme.php` | The entry class named in `extra.entry-class`. It implements `Plugin\Domain\PluginInterface` and registers routes in `boot()`. |
+| `CustomView.php` | A request handler with a `#[Route]` attribute, rendering one of your templates |
+
+Anything under `static/src/` must be covered by the PSR-4 map in `composer.json`, and the package must be installed with Composer so the classes autoload. See [Custom pages](/development/themes/custom-pages).
+
+## Translations
+
+Catalogs live at `static/locale/{code}/LC_MESSAGES/theme.po`, in the `theme` domain. The starter ships catalogs for the locales Aikeedo supports. See [Theme localization](/development/themes/localization).
+
+## Related
+
+- [Build and assets](/development/themes/build-and-assets)
+- [Templates and layouts](/development/themes/templates-and-layouts)
+- [Theme manifest](/development/themes/manifest)

@@ -1,0 +1,84 @@
+---
+title: "Customizing an existing theme"
+sidebarTitle: "Customizing themes"
+description: "Adapt the default or a marketplace Aikeedo theme without losing your changes when the platform updates."
+---
+
+Starting from a theme that already works is often faster than building one. The rule that matters: **always work on a copy under your own vendor name**, because an update replaces the bundled theme's files.
+
+<Warning>
+  Editing `extra/extensions/heyaikeedo/default` directly means the next Aikeedo update overwrites your work. Copy it first.
+</Warning>
+
+## Option 1: Copy, no build step
+
+Good for text, colors and layout tweaks in the existing templates.
+
+<Steps>
+  <Step title="Copy the theme">
+    ```bash
+    cp -r extra/extensions/heyaikeedo/default extra/extensions/acme/aurora
+    ```
+  </Step>
+  <Step title="Rename the package">
+    In `extra/extensions/acme/aurora/composer.json`, change `name` to `acme/aurora` and `extra.title` to your theme's name. The directory path must match the name.
+  </Step>
+  <Step title="Copy the published assets">
+    ```bash
+    cp -r public/e/heyaikeedo/default public/e/acme/aurora
+    ```
+
+    The originals were published when the bundled theme was installed. Copying them gives your theme the same CSS, JavaScript and images.
+  </Step>
+  <Step title="Publish it">
+    In the admin panel, open **Themes** and publish your copy. Preview it first at `/preview?theme=acme/aurora`.
+  </Step>
+  <Step title="Edit the templates">
+    Change the Twig files in `extra/extensions/acme/aurora/`. With `CACHE=false` the changes appear immediately; otherwise clear the cache.
+
+    <Check>
+      Your theme survives Aikeedo updates, because nothing ships a package under your vendor name.
+    </Check>
+  </Step>
+</Steps>
+
+**Limits of this approach:** the CSS is already compiled, so you can't add Tailwind classes that weren't used before, and there's no hot reloading. Restyling is easier from source.
+
+## Option 2: Rebuild from source
+
+Good for real design work: new sections, new classes, changed JavaScript.
+
+```bash
+git clone https://github.com/heyaikeedo/themes-default.git aurora
+cd aurora
+npm install
+```
+
+Then follow the [quickstart](/development/themes/quickstart) from the renaming step: change `static/composer.json`, set `BUILD_DIR` to `extra/extensions/acme/aurora`, and run `npm run dev`.
+
+You get the default theme's markup as a starting point, plus the full build pipeline.
+
+## Option 3: Start from the starter kit
+
+If you're replacing the design anyway, the [starter kit](https://github.com/heyaikeedo/themes-starter) is a smaller base: a layout, a header, the script-tag snippets and the custom elements, with no marketing sections to delete.
+
+## Marketplace themes
+
+A purchased theme is installed like any other package. To customize it, copy it under your own vendor name first, exactly as in option 1. Keep a copy of the original archive: when the author ships an update, you'll want to compare their changes against yours.
+
+## Keeping changes maintainable
+
+- **Track it in git**, even a private repository. A theme is source code.
+- **Keep a change log** of what you altered relative to the original, so a future update is a diff rather than an archaeology exercise.
+- **Prefer adding files over editing them.** A new section you include is easier to carry forward than a rewritten one.
+- **Don't fork what you can configure.** Logos, colors, policies and social links are admin settings; read them instead of hardcoding.
+
+## What you can't change in a theme
+
+Auth pages, the app, the admin panel and error pages are core templates. Use `resources/views/overrides/` for those, and see [Extending Aikeedo](/development/extending-aikeedo).
+
+## Related
+
+- [Theme quickstart](/development/themes/quickstart)
+- [Landing page settings](/website-basics/landing-page)
+- [Packaging and publishing](/development/themes/packaging-and-publishing)

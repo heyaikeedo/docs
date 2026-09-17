@@ -1,0 +1,124 @@
+---
+title: "Views and frontend"
+sidebarTitle: "Views and frontend"
+description: "How Aikeedo renders Twig templates, what globals every view receives, how the Vite-built frontend is wired, and how to override a core template."
+---
+
+Pages are server-rendered Twig, made interactive with Alpine.js. There's no separate single-page application: each page ships the markup it needs plus a small bundle.
+
+## The Twig environment
+
+The loader is set up with these paths, in order:
+
+| Path | Namespace |
+| --- | --- |
+| `resources/views/overrides` | main, when the directory exists |
+| `resources/views` | main |
+| `resources/emails` | `@emails` |
+| The active theme's directory | `@theme` |
+| Directories plugins register | Whatever the plugin chooses |
+
+Because `overrides` is first, a template placed there wins over the original of the same path.
+
+| Setting | Behavior |
+| --- | --- |
+| `cache` | On only when caching is enabled and debug is off |
+| `debug` | Follows `DEBUG` |
+| `strict_variables` | Follows `DEBUG`, so undefined variables raise errors in development |
+
+Extensions: Intl, gettext, Markdown, plus the application's own functions and the theme asset filter. The environment also exposes an `env` global holding the raw environment.
+
+<Warning>
+  `env` contains credentials. A template may read one key from it, but it must never be dumped or serialized into the page.
+</Warning>
+
+## Rendering a view
+
+A handler returns a `ViewResponse`, which `ViewMiddleware` renders:
+
+```php
+return new ViewResponse('/templates/admin/plans.twig', ['plans' => $plans]);
+```
+
+The middleware merges the handler's data with a set of globals, so every view has the same context:
+
+| Global | Contents |
+| --- | --- |
+| `option` | Every setting, as a nested map |
+| `config` | Application configuration |
+| `version`, `license` | Version and license |
+| `theme`, `environment` | Active theme, and environment name |
+| `nav` | The navigation registry |
+| `view_namespace` | `app` or `admin`, which decides which JavaScript bundle loads |
+| `currency` | The billing currency |
+| `locales`, `locale` | Languages, and the resolved one |
+| `user`, `workspace` | Present when someone is signed in |
+
+Theme templates receive the same set. See [Template objects](/development/themes/template-objects).
+
+## Layouts
+
+| Layout | Used for |
+| --- | --- |
+| `layouts/base.twig` | The HTML shell: head, assets, blocks |
+| `layouts/main.twig` | App and admin chrome: sidebar, header, content blocks |
+| `layouts/minimal.twig` | Standalone pages, such as errors |
+
+`main.twig` defines the blocks pages fill in, including `template` for content, `layout` for full-screen pages, and `styles` and `scripts` for extra assets. Plugin pages extend it. See [Frontend integration](/development/plugins/frontend-integration).
+
+## The frontend build
+
+Vite builds several entry points:
+
+| Entry | Loaded on |
+| --- | --- |
+| `base` | Every page: web components, modal controller, toasts |
+| `app` | `/app` pages |
+| `admin` | `/admin` pages |
+| `auth` | Sign-in and sign-up |
+| `style`, `icons` | Stylesheets |
+| `install` | The installer, when present |
+
+Output goes to `public/` with a manifest at `public/.vite/manifest.json`, and `resources/static` is copied to the web root as-is. Templates resolve built files with the `asset` filter, which reads that manifest, or points at the dev server when `HMR` is enabled.
+
+```twig
+<script type="module" src="{{ ('/resources/assets/js/' ~ view_namespace ~ '/index.js')|asset }}"></script>
+```
+
+## Interactivity
+
+Alpine.js provides component behavior:
+
+```twig
+{% set xdata = 'settings' %}
+```
+
+`main.twig` binds the page to the named Alpine component, which is registered in the relevant bundle. Shared behavior is packaged as custom elements, such as `x-form`, `x-money`, `x-avatar`, `x-copy` and `modal-element`, and as globals: an API client, a modal controller and a toast service.
+
+The client talks to the JSON API rather than posting forms, which is why most admin pages are a Twig shell plus an Alpine component calling `/admin/api/...`.
+
+## Overriding a core template
+
+`resources/views/overrides/` doesn't exist by default. Create it, mirror the path of the template you want to change, and edit the copy:
+
+```bash
+mkdir -p resources/views/overrides/templates/auth
+cp resources/views/templates/auth/login.twig resources/views/overrides/templates/auth/login.twig
+```
+
+The directory isn't part of the release archive, so updates keep it. They do update the originals, though, and your copy won't pick up those changes.
+
+<Warning>
+  Every override is a fork of one file. Keep them few, and compare each one against the updated original after every release.
+</Warning>
+
+## Emails
+
+Email templates live in `resources/emails` under the `@emails` namespace, and are rendered by the mail service. See [Email](/development/core/email).
+
+## Related
+
+- [Routing and middleware](/development/core/routing-and-middleware)
+- [Theme development](/development/themes/overview)
+- [Frontend integration](/development/plugins/frontend-integration)
+- [Localization internals](/development/core/localization-internals)

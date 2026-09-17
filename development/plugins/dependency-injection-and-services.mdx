@@ -1,0 +1,241 @@
+---
+title: "Dependency injection and core services"
+sidebarTitle: "Dependency injection"
+description: "How an Aikeedo plugin receives core services through constructor injection, which services are available, and how to use the command bus."
+---
+
+Aikeedo resolves your entry class, request handlers, listeners and command handlers from its dependency injection container. Anything you type-hint in a constructor is built and injected for you, and that is how a plugin reaches the application.
+
+## Constructor injection
+
+```php src/Plugin.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Hello;
+
+use Easy\Router\Mapper\AttributeMapper;
+use Override;
+use Plugin\Domain\Context;
+use Plugin\Domain\PluginInterface;
+use Psr\Log\LoggerInterface;
+use Shared\Infrastructure\CommandBus\Dispatcher;
+use Twig\Loader\FilesystemLoader;
+
+class Plugin implements PluginInterface
+{
+    public function __construct(
+        private FilesystemLoader $loader,
+        private AttributeMapper $mapper,
+        private Dispatcher $dispatcher,
+        private LoggerInterface $logger,
+    ) {}
+
+    #[Override]
+    public function boot(Context $context): void
+    {
+        $this->loader->addPath(__DIR__ . '/../templates', 'acme-hello');
+        $this->mapper->addPath(__DIR__);
+    }
+}
+```
+
+The container autowires concrete classes and any interface the core has bound to an implementation. Your own classes are autowired too, so a service of yours can depend on another service of yours without registration.
+
+## Injecting configuration and settings
+
+Scalar values come from the container by ID, using the `#[Inject]` attribute:
+
+```php
+use Easy\Container\Attributes\Inject;
+
+public function __construct(
+    #[Inject('option.hello.greeting')]
+    private ?string $greeting = null,
+
+    #[Inject('option.hello.is_enabled')]
+    private ?bool $isEnabled = false,
+
+    #[Inject('config.dirs.uploads')]
+    private ?string $uploadsDir = null,
+) {}
+```
+
+| ID prefix | Resolves to |
+| --- | --- |
+| `option.*` | A stored setting, by dot path, cast to `int`, `float` or `bool` where possible |
+| `config.dirs.*` | Absolute paths: `root`, `webroot`, `cache`, `log`, `src`, `views`, `uploads`, `locale`, `extensions`, `artifacts` |
+| `config.enable_debugging`, `config.enable_caching` | The effective debug and cache flags |
+| `version`, `license` | The application version and license string |
+| `option.theme` | The active theme's package name |
+
+<Warning>
+  Always give injected options a default and a nullable type. An option that was never saved resolves to `null`, and settings pages are often empty on a fresh installation.
+</Warning>
+
+Inside `boot()` you can also read a value imperatively:
+
+```php
+use Application;
+
+if (Application::make('option.features.hello.is_enabled', false)) {
+    // register optional pieces
+}
+```
+
+## Services a plugin commonly injects
+
+| Service | Use it for |
+| --- | --- |
+| `Twig\Loader\FilesystemLoader` | Register a template namespace with `addPath($dir, 'acme-hello')` |
+| `Easy\Router\Mapper\AttributeMapper` | Register routes with `addPath($dir)` |
+| `Easy\EventDispatcher\Mapper\ArrayMapper` | Subscribe listeners to domain events |
+| `Shared\Infrastructure\Navigation\Registry` | Add menu entries |
+| `Shared\Infrastructure\Collections\ServiceCollectionInterface` | Register implementations of an extension-point interface |
+| `Shared\Infrastructure\CommandBus\Dispatcher` | Dispatch core and your own commands |
+| `Psr\EventDispatcher\EventDispatcherInterface` | Dispatch events |
+| `Psr\Http\Client\ClientInterface` | Call external HTTP APIs |
+| `Psr\Http\Message\RequestFactoryInterface`, `StreamFactoryInterface`, `UriFactoryInterface` | Build PSR-7 requests |
+| `Psr\Log\LoggerInterface` | Write to `var/log` |
+| `Psr\Cache\CacheItemPoolInterface` | Cache expensive lookups |
+| `Shared\Infrastructure\FileSystem\CdnInterface` | Store and serve user-visible files |
+| `Shared\Infrastructure\FileSystem\FileSystemInterface` | Work with local files under the installation root |
+| `Billing\Domain\Services\BillingService` | Check and consume credits |
+| `Ai\Domain\Services\AiServiceFactoryInterface` | Resolve an AI service for a model |
+| `Presentation\Validation\Validator` | Validate request payloads |
+| `Doctrine\ORM\EntityManagerInterface` | Flush mid-request, for example while streaming |
+
+## Calling an external API
+
+Use the PSR-18 client the application already configures, instead of bundling your own HTTP library:
+
+```php src/Client.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Hello;
+
+use Easy\Container\Attributes\Inject;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\StreamFactoryInterface;
+use RuntimeException;
+
+class Client
+{
+    private const BASE_URL = 'https://api.acme.test';
+
+    public function __construct(
+        private ClientInterface $client,
+        private RequestFactoryInterface $requestFactory,
+        private StreamFactoryInterface $streamFactory,
+
+        #[Inject('option.hello.api_key')]
+        private ?string $apiKey = null,
+    ) {}
+
+    /** @param array<string,mixed> $payload */
+    public function post(string $path, array $payload): object
+    {
+        if (!$this->apiKey) {
+            throw new RuntimeException('Acme API key is not configured.');
+        }
+
+        $request = $this->requestFactory
+            ->createRequest('POST', self::BASE_URL . $path)
+            ->withHeader('Authorization', 'Bearer ' . $this->apiKey)
+            ->withHeader('Content-Type', 'application/json')
+            ->withBody($this->streamFactory->createStream(
+                safe_json_encode($payload)
+            ));
+
+        $response = $this->client->sendRequest($request);
+
+        if ($response->getStatusCode() >= 300) {
+            throw new RuntimeException(
+                'Acme API error: ' . $response->getStatusCode()
+            );
+        }
+
+        return json_decode((string) $response->getBody());
+    }
+}
+```
+
+<Tip>
+  `safe_json_encode()` is a global helper the application autoloads. It encodes without throwing on invalid UTF-8.
+</Tip>
+
+## The command bus
+
+Aikeedo separates intent from execution. A command is a data object tagged with the handler that executes it, and `Dispatcher::dispatch()` resolves the handler from the container and runs it synchronously.
+
+### Dispatching core commands
+
+```php
+use Shared\Infrastructure\CommandBus\Dispatcher;
+use User\Application\Commands\ReadUserCommand;
+use Workspace\Application\Commands\ReadWorkspaceCommand;
+
+$user = $this->dispatcher->dispatch(new ReadUserCommand($userId));
+$workspace = $this->dispatcher->dispatch(new ReadWorkspaceCommand($workspaceId));
+```
+
+### Defining your own
+
+```php src/Application/Commands/SendGreetingCommand.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Hello\Application\Commands;
+
+use Acme\Hello\Application\CommandHandlers\SendGreetingCommandHandler;
+use Shared\Infrastructure\CommandBus\Attributes\Handler;
+
+#[Handler(SendGreetingCommandHandler::class)]
+class SendGreetingCommand
+{
+    public function __construct(
+        public readonly string $email,
+    ) {}
+}
+```
+
+```php src/Application/CommandHandlers/SendGreetingCommandHandler.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Hello\Application\CommandHandlers;
+
+use Acme\Hello\Application\Commands\SendGreetingCommand;
+use Acme\Hello\Client;
+
+class SendGreetingCommandHandler
+{
+    public function __construct(
+        private Client $client,
+    ) {}
+
+    public function handle(SendGreetingCommand $cmd): void
+    {
+        $this->client->post('/greetings', ['email' => $cmd->email]);
+    }
+}
+```
+
+Dispatching an unhandled command throws `Shared\Infrastructure\CommandBus\Exception\NoHandlerFoundException`. There is no queue: handlers run in the current request.
+
+## Registering your own services
+
+You rarely need to register anything, because the container autowires concrete classes. Register explicitly when you want to bind an interface to an implementation that other plugins can swap, or when you're publishing an extension point. See [Custom extension points](/development/plugins/custom-extension-points).
+
+## Related
+
+- [Routes and request handlers](/development/plugins/routes-and-request-handlers)
+- [Data and persistence](/development/plugins/data-and-persistence)
+- [Command bus internals](/development/core/command-bus)
+- [Dependency injection internals](/development/core/dependency-injection)

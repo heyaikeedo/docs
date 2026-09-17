@@ -1,0 +1,317 @@
+---
+title: "Build an event-driven integration"
+sidebarTitle: "Event-driven integrations"
+description: "Sync Aikeedo users to an external service using domain event listeners, a cron backfill with cursors, and a multi-page admin area."
+---
+
+import { OfficialPlugins } from '/snippets/official-plugins.mdx';
+
+Integrations with CRMs, email platforms and analytics tools share one shape: react to events as they happen, and backfill everything else in the background. This guide builds `acme/crm` against a fictional "Acme CRM".
+
+## The design
+
+| Piece | Job |
+| --- | --- |
+| Event listeners | Push a contact when a user signs up or changes |
+| A cron listener | Backfill existing users in batches, tracked by a cursor |
+| An admin area | Store the API key, map fields, and start or stop a sync |
+| An HTTP client | Talk to the external API through the PSR-18 client |
+
+## Listen to user events
+
+```php src/Plugin.php
+use Acme\Crm\Listeners\PushContact;
+use Acme\Crm\Listeners\SyncContacts;
+use Cron\Domain\Events\CronEvent;
+use Easy\EventDispatcher\Mapper\ArrayMapper;
+use User\Domain\Events\UserCreatedEvent;
+use User\Domain\Events\UserUpdatedEvent;
+
+public function boot(Context $context): void
+{
+    $this->loader->addPath(__DIR__ . '/../templates', 'acme-crm');
+    $this->mapper->addPath(__DIR__);
+
+    $this->events->addEventListener(UserCreatedEvent::class, PushContact::class);
+    $this->events->addEventListener(UserUpdatedEvent::class, PushContact::class);
+    $this->events->addEventListener(CronEvent::class, SyncContacts::class);
+}
+```
+
+<Warning>
+  Listeners match by `instanceof`, and `EmailVerifiedEvent` and `UserEmailUpdatedEvent` both extend `UserUpdatedEvent`. Subscribing to the parent already covers them. Subscribing to both the parent and a child makes your listener run twice for the same change, which usually means two API calls and, on some platforms, a duplicated contact.
+</Warning>
+
+## The listener
+
+```php src/Listeners/PushContact.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Crm\Listeners;
+
+use Acme\Crm\Client;
+use Acme\Crm\ContactMapper;
+use Easy\Container\Attributes\Inject;
+use Psr\Log\LoggerInterface;
+use Throwable;
+use User\Domain\Events\AbstractUserEvent;
+
+class PushContact
+{
+    public function __construct(
+        private Client $client,
+        private ContactMapper $mapper,
+        private LoggerInterface $logger,
+
+        #[Inject('option.crm.auto_sync')]
+        private ?bool $autoSync = false,
+
+        #[Inject('option.crm.only_verified')]
+        private ?bool $onlyVerified = false,
+    ) {}
+
+    public function __invoke(AbstractUserEvent $event): void
+    {
+        if (!$this->autoSync) {
+            return;
+        }
+
+        $user = $event->user;
+
+        if ($this->onlyVerified && !$user->isEmailVerified()) {
+            return;
+        }
+
+        try {
+            $this->client->upsertContact($this->mapper->toContact($user));
+        } catch (Throwable $th) {
+            // A CRM outage must never break signup.
+            $this->logger->error('Acme CRM push failed', [
+                'exception' => $th,
+                'user' => (string) $user->getId()->getValue(),
+            ]);
+        }
+    }
+}
+```
+
+### Map the fields
+
+Keep mapping in one class, so the listener and the backfill can't drift apart:
+
+```php src/ContactMapper.php
+public function toContact(UserEntity $user): array
+{
+    return [
+        'external_id' => (string) $user->getId()->getValue(),
+        'email' => (string) $user->getEmail()->value,
+        'first_name' => (string) $user->getFirstName()->value,
+        'last_name' => (string) $user->getLastName()->value,
+        'subscribed' => (bool) $user->getPreferences()->marketing,
+    ];
+}
+```
+
+<Warning>
+  Respect marketing consent. `getPreferences()->marketing` says whether the user agreed to marketing contact, and pushing an unsubscribed contact into a marketing list is a compliance problem, not just a bug.
+</Warning>
+
+## The backfill
+
+Existing users don't fire events, so give administrators a sync they can start. Keep its state in an option: a status, a cursor and counters.
+
+```php src/Listeners/SyncContacts.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Crm\Listeners;
+
+use Acme\Crm\Client;
+use Acme\Crm\ContactMapper;
+use Cron\Domain\Events\CronEvent;
+use Easy\Container\Attributes\Inject;
+use Option\Application\Commands\SaveOptionCommand;
+use Shared\Infrastructure\CommandBus\Dispatcher;
+use Throwable;
+use User\Application\Commands\ListUsersCommand;
+
+class SyncContacts
+{
+    private const BATCH_SIZE = 50;
+
+    public function __construct(
+        private Client $client,
+        private ContactMapper $mapper,
+        private Dispatcher $dispatcher,
+
+        #[Inject('option.crm.sync')]
+        private ?array $state = null,
+    ) {}
+
+    public function __invoke(CronEvent $event): void
+    {
+        $state = $this->state ?? [];
+
+        if (($state['status'] ?? null) !== 'processing') {
+            return;
+        }
+
+        $cmd = new ListUsersCommand();
+        $cmd->setLimit(self::BATCH_SIZE);
+        $cmd->setOrderBy('created_at', 'asc');
+
+        if (!empty($state['cursor_id'])) {
+            $cmd->setCursor($state['cursor_id'], 'starting_after');
+        }
+
+        $synced = (int) ($state['synced'] ?? 0);
+        $failed = (int) ($state['failed'] ?? 0);
+        $cursor = $state['cursor_id'] ?? null;
+        $seen = 0;
+
+        foreach ($this->dispatcher->dispatch($cmd) as $user) {
+            $seen++;
+            $cursor = (string) $user->getId()->getValue();
+
+            try {
+                $this->client->upsertContact($this->mapper->toContact($user));
+                $synced++;
+            } catch (Throwable) {
+                $failed++;
+            }
+        }
+
+        $this->save([
+            'status' => $seen === 0 ? 'completed' : 'processing',
+            'cursor_id' => $cursor,
+            'synced' => $synced,
+            'failed' => $failed,
+        ]);
+    }
+
+    private function save(array $sync): void
+    {
+        $this->dispatcher->dispatch(
+            new SaveOptionCommand('crm', json_encode(['sync' => $sync]))
+        );
+    }
+}
+```
+
+Because option writes merge, saving `sync` leaves the API key and the field mapping untouched.
+
+## The admin area
+
+Split the pages so the flow guides an administrator through setup:
+
+| Route | Page |
+| --- | --- |
+| `/admin/plugins/acme/crm` | Overview: connection status, sync progress, start and stop buttons |
+| `/admin/plugins/acme/crm/keys` | API key |
+| `/admin/plugins/acme/crm/config` | Field mapping, and whether to sync unverified users |
+
+Redirect to the keys page until a key exists:
+
+```php
+public function handle(ServerRequestInterface $request): ResponseInterface
+{
+    if (!$this->apiKey) {
+        return new RedirectResponse('/admin/plugins/acme/crm/keys');
+    }
+
+    return new ViewResponse('@acme-crm/overview.twig', [
+        'sync' => $this->sync ?? [],
+    ]);
+}
+```
+
+Set `{% set active_menu = '/admin/plugins' %}` in these templates, and point `extra.default_url` at the overview.
+
+### Sync controls
+
+```php
+#[Route(path: '/plugins/acme/crm/sync/[start|stop|pause|resume:action]', method: RequestMethod::POST)]
+class SyncRequestHandler extends AdminApi implements RequestHandlerInterface
+{
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        $action = $request->getAttribute('action');
+
+        match ($action) {
+            'start' => $this->dispatcher->dispatch(new SaveOptionCommand('crm', json_encode([
+                'sync' => ['status' => 'processing', 'cursor_id' => null, 'synced' => 0, 'failed' => 0],
+            ]))),
+            'pause' => $this->setStatus('paused'),
+            'resume' => $this->setStatus('processing'),
+            'stop' => $this->dispatcher->dispatch(new DeleteOptionCommand('crm.sync')),
+        };
+
+        return new EmptyResponse(StatusCode::NO_CONTENT);
+    }
+}
+```
+
+<Note>
+  Nothing runs until the next cron tick. Say so on the page, and show the counters so administrators can see progress instead of wondering whether it worked.
+</Note>
+
+## The HTTP client
+
+```php src/Client.php
+public function upsertContact(array $contact): void
+{
+    $request = $this->requestFactory
+        ->createRequest('POST', self::BASE_URL . '/contacts')
+        ->withHeader('Authorization', 'Bearer ' . $this->apiKey)
+        ->withHeader('Content-Type', 'application/json')
+        ->withBody($this->streamFactory->createStream(safe_json_encode($contact)));
+
+    $response = $this->client->sendRequest($request);
+
+    if ($response->getStatusCode() >= 300) {
+        throw new RuntimeException('Acme CRM error: ' . $response->getStatusCode());
+    }
+}
+```
+
+Cache read-only lookups, such as the list of available audiences, with the PSR-6 pool so your settings page doesn't call the API on every render.
+
+## Rate limits and daily jobs
+
+For work that should run at most once a day, store a timestamp and return early:
+
+```php
+$lastRun = (int) ($this->state['last_run'] ?? 0);
+
+if ($lastRun + 86400 > time()) {
+    return;
+}
+```
+
+For providers with strict rate limits, lower the batch size and use a bulk endpoint where one exists.
+
+## Testing
+
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Creating a user pushes exactly one contact, not two.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Updating a user's name updates the contact.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>With auto-sync off, nothing is pushed.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>A backfill processes in batches across ticks, and resumes after a pause.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Stopping a sync clears its state, and starting again begins from the top.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>With the API unreachable, signup still works and the failure is logged.</span></div>
+</div>
+
+## Official integrations
+
+For email platforms, these official integrations are available on the [Aikeedo Marketplace](https://aikeedo.com/marketplace/):
+
+<OfficialPlugins skus={['loops', 'brevo', 'mailchimp']} />
+
+## Related
+
+- [Events and cron](/development/plugins/events-and-cron)
+- [Admin settings pages](/development/plugins/admin-settings-pages)
+- [Core event catalog](/development/core/events)

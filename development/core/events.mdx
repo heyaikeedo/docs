@@ -1,0 +1,197 @@
+---
+title: "Events"
+sidebarTitle: "Events"
+description: "Aikeedo's PSR-14 event system: how listeners are registered, how matching works, and the full catalog of domain events."
+---
+
+Domain events are how one part of the application reacts to another without depending on it. They're also the main extension point for plugins that need to act when something happens.
+
+## Dispatching
+
+```php
+use Psr\EventDispatcher\EventDispatcherInterface;
+
+public function __construct(
+    private EventDispatcherInterface $dispatcher,
+) {}
+
+$this->dispatcher->dispatch(new CategoryCreatedEvent($category));
+```
+
+Dispatch is synchronous: listeners run in order, in the current request, before the call returns.
+
+## Registering listeners
+
+Three mechanisms feed the listener provider.
+
+### On the event class
+
+The core uses attributes on the event itself:
+
+```php
+#[Listener(CreateSignupPlanSubscription::class)]
+#[Listener(SendWelcomeEmail::class)]
+#[Listener(SendVerificationEmail::class)]
+#[Listener(TrackSignup::class)]
+class UserCreatedEvent extends AbstractUserEvent {}
+```
+
+### Programmatically
+
+Bootstrappers and plugins use the [array mapper](https://github.com/iziphp/event-dispatcher):
+
+```php
+use Easy\EventDispatcher\Mapper\ArrayMapper;
+use Easy\EventDispatcher\Priority;
+
+$mapper->addEventListener(CreditUsageEvent::class, SaveStat::class);
+$mapper->addEventListener(CronEvent::class, SyncContacts::class, Priority::LOW);
+```
+
+### On the listener class
+
+A `#[Subscribe]` attribute on the listener is supported by the provider, though the core registers its own listeners the other two ways.
+
+```php
+use Easy\EventDispatcher\Attributes\Subscribe;
+use Easy\EventDispatcher\Priority;
+
+#[Subscribe(UserCreatedEvent::class)]
+#[Subscribe(UserDeletedEvent::class, Priority::LOW)]
+class SyncCrmContact
+{
+    public function __invoke(AbstractUserEvent $event): void
+    {
+        // ...
+    }
+}
+```
+
+## Listeners
+
+A listener is an invokable class, resolved from the container:
+
+```php
+class SendWelcomeEmail
+{
+    public function __construct(
+        private EmailService $email,
+    ) {}
+
+    public function __invoke(UserCreatedEvent $event): void
+    {
+        $this->email->sendTemplate($event->user, 'welcome');
+    }
+}
+```
+
+| Priority | Value | Runs |
+| --- | --- | --- |
+| `Priority::HIGH` | 100 | First |
+| `Priority::NORMAL` | 50 | Default |
+| `Priority::LOW` | 0 | Last |
+
+## Matching uses instanceof
+
+A listener registered for a class also receives its subclasses. That's deliberate, and it has a sharp edge:
+
+| Event | Extends |
+| --- | --- |
+| `UserUpdatedEvent` | `AbstractUserEvent` |
+| `EmailVerifiedEvent` | `UserUpdatedEvent` |
+| `UserEmailUpdatedEvent` | `UserUpdatedEvent` |
+
+<Warning>
+  Registering one listener for both `UserUpdatedEvent` and `EmailVerifiedEvent` makes it run twice when an email is verified. Subscribe to the most general event you care about, and branch inside the listener if you need to tell them apart.
+</Warning>
+
+## Catalog
+
+All classes live under `{Module}\Domain\Events`.
+
+### User
+
+| Event | Payload | Fires when |
+| --- | --- | --- |
+| `UserCreatedEvent` | `$user` | An account is created |
+| `UserUpdatedEvent` | `$user` | An account changes |
+| `UserDeletedEvent` | `$user` | An account is deleted |
+| `EmailVerifiedEvent` | `$user` | An email address is verified |
+| `UserEmailUpdatedEvent` | `$user` | The email address changes |
+| `UserPasswordUpdatedEvent` | `$user` | The password changes |
+| `PasswordRecoveryCreatedEvent` | `$user` | A recovery request is created |
+
+### Workspace
+
+| Event | Payload |
+| --- | --- |
+| `WorkspaceCreatedEvent`, `WorkspaceUpdatedEvent`, `WorkspaceDeletedEvent` | `$workspace` |
+| `InvitationCreatedEvent` | The invitation |
+
+### Billing
+
+| Event | Payload | Fires when |
+| --- | --- | --- |
+| `OrderCreatedEvent` | `$order` | An order is created at checkout |
+| `OrderFulfilledEvent` | `$order` | Payment is confirmed and the plan is granted |
+| `SubscriptionCreatedEvent` | `$subscription` | A subscription starts |
+| `SubscriptionActivatedEvent` | `$subscription` | A subscription becomes active |
+| `SubscriptionUsageResetEvent` | `$subscription` | Usage resets, every 30 days |
+| `PlanCreatedEvent`, `PlanUpdatedEvent`, `PlanDeletedEvent` | The plan |
+| `CouponCreatedEvent`, `CouponUpdatedEvent`, `CouponDeletedEvent` | The coupon |
+| `CreditUsageEvent` | `$workspace`, `$count` | Credits are consumed |
+
+### Content and configuration
+
+| Event | Payload |
+| --- | --- |
+| `CategoryCreatedEvent`, `CategoryUpdatedEvent`, `CategoryDeletedEvent` | The category |
+| `PresetCreatedEvent`, `PresetUpdatedEvent`, `PresetDeletedEvent` | The template |
+| `OptionCreatedEvent`, `OptionUpdatedEvent`, `OptionDeletedEvent` | The option |
+
+### Chatbot
+
+| Event | Payload |
+| --- | --- |
+| `ChatbotCreatedEvent`, `ChatbotUpdatedEvent`, `ChatbotDeletedEvent` | The chatbot |
+| `ContactCreatedEvent`, `ContactUpdatedEvent`, `ContactDeletedEvent` | The contact |
+| `ConversationCreatedEvent`, `ConversationUpdatedEvent`, `ConversationDeletedEvent` | The conversation |
+| `DataUnitAttachedEvent`, `DataUnitDetachedEvent` | The data unit |
+| `SecretKeyGeneratedEvent` | The chatbot |
+
+### Cron
+
+| Event | Payload |
+| --- | --- |
+| `Cron\Domain\Events\CronEvent` | None. Dispatched by `cron.php`. |
+
+## What the core listens to
+
+| Event | Core listeners |
+| --- | --- |
+| `UserCreatedEvent` | Create the signup plan subscription, send the welcome and verification emails, track the signup, record a statistic |
+| `EmailVerifiedEvent` | Send the welcome email |
+| `UserEmailUpdatedEvent` | Send a verification email |
+| `PasswordRecoveryCreatedEvent` | Send the recovery email |
+| `InvitationCreatedEvent` | Send the invitation email |
+| `OrderFulfilledEvent` | Track an affiliate conversion |
+| `SubscriptionUsageResetEvent` | Track a recurring affiliate conversion |
+| `CreditUsageEvent`, `SubscriptionCreatedEvent`, `OrderCreatedEvent` | Record statistics |
+| `CronEvent` | Renew subscriptions, end cancelled ones, calculate MRR, end failed generations, prune caches, purge expired library items, record the last run |
+
+Most other events have no core listener: they exist so that plugins can react.
+
+## Guidelines
+
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Dispatch after the change, not before, so listeners see the final state.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Keep listeners fast, and catch your own exceptions, since a failure propagates into the request that dispatched the event.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Don't rely on listener order beyond priorities.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Remember entities aren't flushed yet: a listener sees objects in memory, not rows.</span></div>
+</div>
+
+## Related
+
+- [Command bus](/development/core/command-bus)
+- [Background jobs and cron](/development/core/background-jobs-and-cron)
+- [Plugin events and cron](/development/plugins/events-and-cron)

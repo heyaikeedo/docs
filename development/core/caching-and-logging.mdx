@@ -1,0 +1,109 @@
+---
+title: "Caching and logging"
+sidebarTitle: "Caching and logging"
+description: "What Aikeedo caches, how to clear it, where logs are written, and how unhandled errors are recorded."
+---
+
+## Caching
+
+Caching is governed by two flags. Everything below is on only when `CACHE=true` **and** `DEBUG=false`.
+
+| What | Where |
+| --- | --- |
+| Compiled Twig templates | `var/cache` |
+| Route discovery | `var/cache` |
+| Event listener discovery | `var/cache` |
+| Doctrine metadata and proxies | `var/cache` |
+| Application data, through PSR-6 and PSR-16 | `var/cache` |
+
+Debug mode disables all of it, which is why development sees template and route changes immediately.
+
+### The cache pools
+
+A filesystem-backed PSR-6 pool is available to any service, with a PSR-16 wrapper for simpler uses:
+
+```php
+use Psr\Cache\CacheItemPoolInterface;
+
+$item = $this->cache->getItem('acme.rates');
+
+if (!$item->isHit()) {
+    $item->set($this->fetchRates());
+    $item->expiresAfter(3600);
+    $this->cache->save($item);
+}
+
+return $item->get();
+```
+
+<Warning>
+  The cache is disposable. Clearing it, or a deployment, removes everything, so never keep state there that has to survive.
+</Warning>
+
+### Clearing
+
+`Shared\Infrastructure\CacheManager::clearCache()` clears both pools, empties the cache directory, and rebuilds the browser translation catalogs. It's exposed in the admin panel under **Status → Clear cache**, and it runs automatically when a plugin is installed, activated, deactivated or uninstalled.
+
+Clear the cache after:
+
+- Adding or changing a route, in an installation with caching on
+- Changing a template on a cached installation
+- Editing translation catalogs
+- Any manual change inside `extra/extensions/`
+
+<Warning>
+  If clearing reports success but nothing changes, check ownership of `var/cache`. A cron job running as a different user than the web server is the usual cause.
+</Warning>
+
+## Logging
+
+Two rotating handlers write to `var/log`:
+
+| File | Level | Retention |
+| --- | --- | --- |
+| `app-YYYY-MM-DD.log` | Debug and above | `LOG_MAX_FILES`, 14 days by default |
+| `error-YYYY-MM-DD.log` | Error and above | `LOG_ERROR_MAX_FILES`, 30 days by default |
+
+```php
+use Psr\Log\LoggerInterface;
+
+public function __construct(
+    private LoggerInterface $logger,
+) {}
+
+$this->logger->info('Sync started', ['workspace' => (string) $workspace->getId()]);
+$this->logger->error('Provider call failed', ['exception' => $th]);
+```
+
+Pass context as an array rather than interpolating it into the message, so entries stay searchable.
+
+## Unhandled errors
+
+When an exception reaches the exception middleware and isn't one it maps, it generates a correlation ID, logs the exception with the request path and method, and returns:
+
+```json
+{ "message": "Internal error", "id": "3f9a1c2b7d4e5a60" }
+```
+
+Search that ID in `var/log/error-*.log` to find the trace. Non-API requests get an empty `500` instead, with the same log entry.
+
+With `DEBUG=true` the exception is rethrown rather than logged and swallowed, so you see it directly.
+
+## Plugin failures
+
+A plugin that fatals while booting is recorded in `var/plugin-health.json` and skipped afterwards, so one broken plugin can't take the installation down. See [Debugging plugins](/development/plugins/debugging).
+
+## What to watch in production
+
+| Signal | Meaning |
+| --- | --- |
+| Growth in `error-*.log` | Something is failing repeatedly; the correlation IDs group them |
+| `var/plugin-health.json` exists | A plugin crashed and is being skipped |
+| Cache clears that don't take effect | File ownership problem |
+| `var/` growing without bound | Log retention, or temporary files that aren't cleaned up |
+
+## Related
+
+- [Configuration](/development/core/configuration)
+- [Routing and middleware](/development/core/routing-and-middleware)
+- [Debugging plugins](/development/plugins/debugging)

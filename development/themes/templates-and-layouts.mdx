@@ -1,0 +1,177 @@
+---
+title: "Templates and layouts"
+sidebarTitle: "Templates and layouts"
+description: "Compose Aikeedo theme pages with Twig layouts, sections and snippets, and wire them to the site settings administrators control."
+---
+
+Theme templates are plain Twig. The application renders `@theme/templates/index.twig` for the landing page and hands it a set of globals; how you organize everything below that is up to you.
+
+## The layout
+
+A layout owns the HTML shell and declares the blocks pages fill in:
+
+```twig layouts/theme.twig
+<!DOCTYPE html>
+<html lang="{{ locale.code|default('en-US') }}">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<meta name="description" content="{{ option.site.description ?? '' }}">
+		<meta name="keywords" content="{{ option.site.keywords ?? '' }}">
+
+		<link rel="icon" href="{{ option.brand.favicon ?? ('favicon.ico'|asset_url) }}">
+
+		{% if env.THEME_ASSETS_SERVER is defined and env.THEME_ASSETS_SERVER %}
+			<script type="module" src="{{ env.THEME_ASSETS_SERVER }}/@vite/client"></script>
+		{% endif %}
+
+		{% include "@theme/snippets/css.twig" %}
+		<link rel="stylesheet" href="{{ '/src/css/index.css'|asset_url }}">
+
+		{%- include "@theme/snippets/script-tags/head.twig" -%}
+
+		<title>
+			{% block title %}{% endblock %}
+			{{- block('title') is empty ? '' : ' | ' -}}
+			{{- option.site.name ?? '' -}}
+		</title>
+	</head>
+
+	<body class="antialiased bg-main text-content" x-data>
+		{%- include "@theme/snippets/script-tags/body.twig" -%}
+
+		{% block template %}{% endblock %}
+
+		<script type="module" src="{{ '/src/js/index.js'|asset_url }}"></script>
+		{%- include "@theme/snippets/script-tags/end.twig" -%}
+	</body>
+</html>
+```
+
+The Vite client tag is what makes hot reloading work, and it only appears while `THEME_ASSETS_SERVER` is set.
+
+## Pages
+
+```twig templates/index.twig
+{% extends "@theme/layouts/theme.twig" %}
+
+{% block title %}{{ dp__('theme', 'title', 'AI tools for teams') }}{% endblock %}
+
+{% block template %}
+	{% include "@theme/sections/header.twig" %}
+	{% include "@theme/sections/hero.twig" %}
+	{% include "@theme/sections/features.twig" %}
+	{% include "@theme/sections/pricing.twig" %}
+	{% include "@theme/sections/footer.twig" %}
+{% endblock %}
+```
+
+Everything resolves through `@theme`, which points at the active theme's directory.
+
+## Sections and snippets
+
+Sections are page-sized blocks. Snippets are fragments you pass data to:
+
+```twig sections/pricing.twig
+<section id="pricing" class="container py-20">
+	<h2>{{ dp__('theme', 'heading', 'Pricing') }}</h2>
+
+	<div class="grid gap-6 md:grid-cols-3">
+		{% for plan in plans|default([]) %}
+			{% include "@theme/snippets/plan.twig" with { plan } %}
+		{% endfor %}
+	</div>
+</section>
+```
+
+Dynamic includes work too, which is handy for icon sets or per-feature blocks:
+
+```twig
+{% include "@theme/snippets/logos/" ~ provider ~ ".twig" ignore missing %}
+```
+
+## Strict variables
+
+In debug mode Twig runs with strict variables: reading something undefined raises an error instead of rendering nothing. Most globals are conditional, so guard them.
+
+```twig
+{% if user is defined %}
+	<a href="/app">{{ dp__('theme', 'button', 'Open app') }}</a>
+{% endif %}
+
+{{ option.site.name ?? '' }}
+{{ plans|default([]) }}
+{{ locale.code|default('en-US') }}
+```
+
+| Variable | Defined when |
+| --- | --- |
+| `user`, `workspace` | A visitor is signed in |
+| `plans` | The template is the landing page |
+| `locale` | The theme has a catalog for the resolved language |
+| `option.*` | The setting has been saved at least once |
+
+<Tip>
+  Test with debug mode on. A template that only breaks in production is usually a missing `is defined`.
+</Tip>
+
+## Honoring admin settings
+
+The point of a theme is that it stays configurable. Read the settings administrators expect to control:
+
+| Setting | Use |
+| --- | --- |
+| `option.site.name`, `.description`, `.keywords` | Title and meta tags |
+| `option.brand.logo`, `.logo_dark`, `.favicon` | Header and favicon |
+| `option.policies.tos`, `.privacy`, `.refund` | Footer links to `/policies/terms`, `/policies/privacy`, `/policies/refund` |
+| `option.links.*` | Social links |
+| `option.features.*.is_enabled` | Which product sections to show |
+| `option.pwa.is_enabled` | Whether to link the web manifest |
+| `option.color_scheme.*` | Light and dark mode, see [Dark mode and colors](/development/themes/dark-mode-and-colors) |
+| `option.script_tags.*` | Analytics, see [Script tags](/development/themes/script-tags-and-analytics) |
+
+```twig
+{% if option.brand.logo is defined and option.brand.logo %}
+	<img src="{{ option.brand.logo }}" alt="{{ option.site.name ?? '' }}">
+{% else %}
+	<img src="{{ '/assets/logo.svg'|asset_url }}" alt="{{ option.site.name ?? '' }}">
+{% endif %}
+
+<footer>
+	{% if option.policies.tos is defined and option.policies.tos %}
+		<a href="/policies/terms">{{ d__('theme', 'Terms') }}</a>
+	{% endif %}
+</footer>
+```
+
+## Translating
+
+Theme strings belong to the `theme` domain:
+
+```twig
+{{ d__('theme', 'Get started') }}
+{{ dp__('theme', 'heading', 'Pricing') }}
+```
+
+A plain `__()` resolves against the application's catalog, not yours. See [Theme localization](/development/themes/localization).
+
+## Markdown and formatting
+
+Twig's Intl and Markdown extensions are available, which is useful for settings that hold rich text:
+
+```twig
+{{ option.site.description|default('')|markdown_to_html }}
+{{ plan.created_at|format_date(locale=locale.code|default('en-US')) }}
+```
+
+## Caching
+
+Template caching is on when `CACHE=true` and `DEBUG=false`. During development keep caching off, and after deploying a template change on a cached installation, clear the cache from **Status → Clear cache**.
+
+## Related
+
+- [Template objects](/development/themes/template-objects)
+- [Twig reference](/development/themes/twig-reference)
+- [Pricing and plans](/development/themes/pricing-and-plans)
+- [Custom pages](/development/themes/custom-pages)

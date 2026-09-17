@@ -1,0 +1,111 @@
+---
+title: "Packaging and publishing"
+sidebarTitle: "Packaging"
+description: "Build an installable Aikeedo theme archive, version it, and distribute it to customers."
+---
+
+A theme ships as a ZIP whose root holds `composer.json`. The starter kit's scripts produce that for you.
+
+## Build commands
+
+| Command | Result |
+| --- | --- |
+| `npm run build` | Production build into `BUILD_DIR` |
+| `npm run pack` | Builds into a temporary directory, then zips it into `theme.zip` |
+| `npm run release` | Runs `pack`, then wraps `theme.zip` and the `release/` folder into a versioned archive |
+
+```bash
+npm run pack              # theme.zip
+npm run pack -- aurora.zip # a name of your choosing
+npm run release            # aurora-v1.2.0-a1b2c3d.zip
+```
+
+The release name comes from the package name, the latest git tag and the short commit hash, so tag your releases before running it.
+
+## What's inside
+
+`theme.zip` has no wrapper folder. Its root is the package:
+
+```text
+theme.zip
+├── composer.json
+├── .vite/manifest.json
+├── assets/
+│   ├── css-a1b2c3.css
+│   ├── js-d4e5f6.js
+│   └── logo.svg
+├── layouts/  templates/  sections/  snippets/
+├── locale/
+└── src/            # only if the theme ships PHP
+```
+
+The release archive adds the contents of `release/`, normally an installation README, alongside `theme.zip`.
+
+## Before you package
+
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`version` in `static/composer.json` is raised.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`extra.public` lists `assets` and `.vite`, so the built files reach the web root.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Translation catalogs are extracted and up to date.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The entry class namespace matches the PSR-4 map, if the theme ships PHP.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`THEME_ASSETS_SERVER` is unset in the installation you tested against, so you tested the built assets.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Nothing private is in `static/`: no `.env`, keys or customer data.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The theme is renamed if it started as a copy, so an update can't overwrite it.</span></div>
+</div>
+
+## Installing a packaged theme
+
+<Steps>
+  <Step title="Upload">
+    In the admin panel, go to **Themes → Install theme** and upload `theme.zip`. The archive is validated, stored, and installed with Composer.
+  </Step>
+  <Step title="Publish">
+    Find the theme in the list and select **Publish**. Preview it first at `/preview?theme=vendor/name`.
+  </Step>
+  <Step title="Verify">
+    Load the site with caching on, and check that CSS, JavaScript, images and translations all work.
+  </Step>
+</Steps>
+
+Installing over an existing copy backs up the previous version first, and restores it if the install fails.
+
+## Versioning
+
+- Use semantic versioning, and raise `version` for every release: the installer runs `composer require <name>:<version>`, so a stale version installs the wrong code.
+- Note which Aikeedo versions the theme supports in your README. A theme that reads a newer template object won't work on an older installation.
+- Keep previous archives available for customers who haven't updated Aikeedo yet.
+
+## Writing the README
+
+Ship one in `release/`, and cover:
+
+- What the theme looks like, and which Aikeedo versions it supports
+- How to install and publish it
+- Which admin settings it reads, such as brand logos, colors, policies and social links
+- Which sections can be turned on and off, and how
+- How to translate it
+- A changelog
+
+## Distribution
+
+| Option | Notes |
+| --- | --- |
+| Direct download | Send the ZIP; customers upload it. Updates are manual. |
+| Private Composer repository | Customers run `composer require`, which suits teams managing installs from the CLI. |
+
+<Card title="Get your add-on listed" icon="sparkles" href="/development/community-add-ons">
+  We're looking for community-built themes to list on aikeedo.com, linking to your own page. See what to send us.
+</Card>
+
+## Updating a released theme
+
+A customer updates by uploading the newer archive, which replaces the package and republishes its assets. Two things to keep in mind:
+
+- **Customers may have edited your templates.** Say so in the README: changes made inside `extra/extensions/` are replaced on update.
+- **Don't rename template files casually.** A customer who overrode `sections/hero.twig` loses the override when it disappears.
+
+## Related
+
+- [Build and assets](/development/themes/build-and-assets)
+- [Theme manifest](/development/themes/manifest)
+- [Customizing an existing theme](/development/themes/customizing-existing-themes)

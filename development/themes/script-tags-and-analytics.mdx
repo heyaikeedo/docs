@@ -1,0 +1,134 @@
+---
+title: "Script tags and analytics"
+sidebarTitle: "Script tags"
+description: "Render the custom scripts, Google Tag Manager, Google Analytics and Intercom tags that Aikeedo administrators configure."
+---
+
+Administrators configure tracking and support widgets in the admin panel, but nothing injects them into your theme automatically. Your templates render them, which means a theme that skips this silently breaks features the site owner configured and paid for.
+
+<Warning>
+  If your theme doesn't include these snippets, the analytics and support codes set in the admin panel never load on the public site. Include them, even in a minimal theme.
+</Warning>
+
+## Three insertion points
+
+The convention is one snippet per position, included by the layout:
+
+```twig layouts/theme.twig
+<head>
+	…
+	{%- include "@theme/snippets/script-tags/head.twig" -%}
+</head>
+<body>
+	{%- include "@theme/snippets/script-tags/body.twig" -%}
+
+	{% block template %}{% endblock %}
+
+	{%- include "@theme/snippets/script-tags/end.twig" -%}
+</body>
+```
+
+| Snippet | Position | Typical contents |
+| --- | --- | --- |
+| `head.twig` | End of `<head>` | Custom head code, Tag Manager, Analytics, Intercom |
+| `body.twig` | Right after `<body>` | Custom body code, the Tag Manager `noscript` frame |
+| `end.twig` | Before `</body>` | Custom end-of-body code |
+
+## Custom code blocks
+
+Administrators can paste arbitrary markup, which may itself contain Twig-style placeholders. Compile it with the `template()` function before including it:
+
+```twig snippets/script-tags/head.twig
+{% if option.script_tags.custom.head is defined and option.script_tags.custom.head %}
+	{{ include(template(option.script_tags.custom.head))|raw }}
+{% endif %}
+```
+
+`template()` compiles a string into a template with strict variables disabled, so a typo in the pasted snippet doesn't take the page down.
+
+## Google Tag Manager
+
+```twig
+{% if option.script_tags.gtm is defined and option.script_tags.gtm.is_enabled and option.script_tags.gtm.container_id %}
+	<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+		new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+		j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+		'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+		})(window,document,'script','dataLayer','{{ option.script_tags.gtm.container_id }}');</script>
+{% endif %}
+```
+
+The matching `noscript` iframe belongs in `body.twig`:
+
+```twig
+{% if option.script_tags.gtm is defined and option.script_tags.gtm.is_enabled and option.script_tags.gtm.container_id %}
+	<noscript><iframe
+		src="https://www.googletagmanager.com/ns.html?id={{ option.script_tags.gtm.container_id }}"
+		height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+{% endif %}
+```
+
+## Google Analytics
+
+```twig
+{% if option.script_tags.ga.is_enabled|default(false) and option.script_tags.ga.measurement_id|default(false) %}
+	<script async src="https://www.googletagmanager.com/gtag/js?id={{ option.script_tags.ga.measurement_id }}"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag() { dataLayer.push(arguments); }
+		gtag('js', new Date());
+		gtag('config', '{{ option.script_tags.ga.measurement_id }}');
+	</script>
+{% endif %}
+```
+
+## Intercom
+
+Intercom needs visitor details when someone is signed in, and a signed hash when identity verification is on:
+
+```twig
+{% if option.script_tags.intercom.is_enabled|default(false) and option.script_tags.intercom.app_id|default(false) %}
+	<script>
+		window.intercomSettings = {
+			api_base: "https://api-iam.intercom.io",
+			app_id: "{{ option.script_tags.intercom.app_id }}",
+
+			{% if user is defined %}
+			name: `{{ user.first_name }} {{ user.last_name }}`,
+			user_id: `{{ user.id }}`,
+			email: `{{ user.email }}`,
+			created_at: {{ user.created_at }},
+			company: {
+				id: `{{ workspace.id }}`,
+				name: `{{ workspace.name }}`,
+				created_at: {{ workspace.created_at }},
+			},
+
+			{% if option.script_tags.intercom.verification_is_enabled|default(false) and option.script_tags.intercom.secret_key|default(false) %}
+			user_hash: "{{ hash_hmac('sha256', user.id, option.script_tags.intercom.secret_key) }}",
+			{% endif %}
+			{% endif %}
+		};
+	</script>
+{% endif %}
+```
+
+`hash_hmac()` is available in templates precisely for this. It runs server-side, so the secret never reaches the browser.
+
+<Warning>
+  Never print `option.script_tags.intercom.secret_key`, or any other secret, into the page. Only the computed hash belongs in the output.
+</Warning>
+
+## Guard everything
+
+Every block above is wrapped in a check, for two reasons: debug mode raises errors on undefined variables, and an enabled integration with a missing ID emits a broken tag. Check both the toggle and the identifier.
+
+## Copying the snippets
+
+The fastest way to get this right is to copy the three snippets from the starter kit into your theme unchanged, then include them from your layout. They're plain Twig with no dependency on the rest of the starter.
+
+## Related
+
+- [Templates and layouts](/development/themes/templates-and-layouts)
+- [Twig reference](/development/themes/twig-reference)
+- [Custom scripts settings](/integrations/custom-scripts)

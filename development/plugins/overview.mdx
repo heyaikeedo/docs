@@ -1,161 +1,141 @@
 ---
-title: Plugins and Themes Overview
-sidebarTitle: Overview
-description: Discover how to enhance your Aikeedo platform's functionality by enabling and configuring plugins, and learn about the difference between plugins and themes.
+title: "Aikeedo plugins"
+sidebarTitle: "Overview"
+description: "How Aikeedo plugins are packaged, discovered and booted, what they can extend, and what they cannot do."
 ---
 
-import Support from '/snippets/support.mdx';
+import DevVersionNote from '/snippets/dev-version-note.mdx';
 
-# Understanding Aikeedo Plugins
+A plugin is a Composer package that Aikeedo loads at boot. It can add pages, API endpoints, settings screens, navigation items, scheduled work and integrations, and it can plug new implementations into the core's extension points, without you editing a single core file.
 
-Plugins are powerful tools that allow you to extend and customize the functionality of your Aikeedo platform. By leveraging plugins, you can tailor your platform to meet specific requirements and provide an enhanced user experience.
+<DevVersionNote />
 
-<Note>
-This guide reflects the Aikeedo v5.x structure. Since v3.0, plugins and themes are located in `/extra/extensions/` with assets in `/public/e/`.
-</Note>
+## Anatomy of a plugin
 
-## What are Aikeedo Plugins?
-
-Aikeedo plugins are specialized Composer packages designed to integrate seamlessly with your platform. They offer a wide range of capabilities, including:
-
-- Adding new features and functionality
-- Modifying existing functionality
-- Integrating with third-party services
-- Adding payment gateways, currency providers, and more
-
-## Directory Structure
-
-Plugins and themes use a standardized directory structure:
-
-- **Plugin/Theme files**: `/extra/extensions/yourorganization/name/`
-- **Public assets**: `/public/e/yourorganization/name/` (CSS, JS, images)
-
-## Plugins vs. Themes
-
-While both extend Aikeedo's capabilities, they serve different purposes:
-
-### Plugins
-
-Plugins enhance functionality throughout your platform:
-
-- Add new features to the application
-- Integrate with third-party services (payment gateways, AI providers, etc.)
-- Extend existing functionality
-- Modify backend and admin functionality
-
-**Example plugins:**
-- Currency rate providers (CurrencyAPI, Currency Beacon)
-- Payment gateways
-- Analytics integrations
-- Custom AI model providers
-
-### Themes
-
-Themes customize the visual appearance of your landing page:
-
-- Modify landing page layout and design
-- Customize colors, fonts, and styling
-- Create unique user experiences
-- Do not affect the app or admin dashboard appearance
-
-**Key differences:**
-
-| Aspect | Plugin | Theme |
-|--------|--------|-------|
-| Type in composer.json | `aikeedo-plugin` | `aikeedo-theme` |
-| Purpose | Functionality | Visual design |
-| Affects | Entire platform | Landing page only |
-| Requires assets | Optional | Usually yes |
-
-<Info>
-Both plugins and themes are installed in `/extra/extensions/` and follow the same Composer package structure.
-</Info>
-
-## Installing Plugins and Themes
-
-You have multiple options for installing plugins and themes on your Aikeedo platform:
-
-### 1. Via Composer (Recommended)
-
-For published packages on Packagist or private repositories:
-
-```bash
-composer require vendor/package-name
+```text
+extra/extensions/acme/hello/
+├── composer.json          # package metadata; type: aikeedo-plugin
+├── src/
+│   └── Plugin.php         # entry class; implements PluginInterface
+├── templates/             # Twig templates (any layout you like)
+└── locale/                # translation catalogs
 ```
 
-### 2. Local Development
+Two things make it a plugin:
 
-For custom or in-development plugins:
+1. `composer.json` declares `"type": "aikeedo-plugin"`, requires `heyaikeedo/composer`, and names an entry class in `extra.entry-class`.
+2. The entry class implements `Plugin\Domain\PluginInterface`:
 
-1. Place your plugin/theme in `/extra/extensions/yourorganization/name/`
-2. Add to your root `composer.json`:
+```php src/Plugin.php
+<?php
 
-```json
+declare(strict_types=1);
+
+namespace Acme\Hello;
+
+use Override;
+use Plugin\Domain\Context;
+use Plugin\Domain\PluginInterface;
+use Twig\Loader\FilesystemLoader;
+
+class Plugin implements PluginInterface
 {
-  "repositories": [
+    public function __construct(
+        private FilesystemLoader $loader,
+    ) {}
+
+    #[Override]
+    public function boot(Context $context): void
     {
-      "type": "path",
-      "url": "./extra/extensions/yourorganization/name"
+        $this->loader->addPath(__DIR__ . '/../templates', 'acme-hello');
     }
-  ]
 }
 ```
 
-3. Install with Composer:
+The entry class is resolved from the dependency injection container, so **anything you type-hint in the constructor is injected**. That is how a plugin reaches the core: you ask for a registry, a collection or a mapper, and you register your own implementations inside `boot()`.
 
-```bash
-composer require yourorganization/name
+<Note>
+  `Context` is read-only metadata about your package, built from its `composer.json`. It has no container or event dispatcher on it. Use constructor injection instead.
+</Note>
+
+## How a plugin is loaded
+
+```mermaid
+flowchart TD
+    A[Application boots] --> B[Core service providers and module bootstrappers]
+    B --> C[PluginModuleBootstrapper]
+    C --> D[PluginFinder scans extra/extensions for composer.json]
+    D --> E[Context built and validated per package]
+    E --> F{Active and healthy?}
+    F -- no --> G[Skipped]
+    F -- yes --> H[PluginLoader resolves the entry class from the container]
+    H --> I["boot(Context) registers routes, templates, services, listeners"]
+    I --> J[HTTP request is handled]
 ```
 
-### 3. Aikeedo Dashboard
+Key points:
 
-Use the web interface to:
-- Browse available plugins and themes
-- Install with one click
-- Manage installed extensions
+- Plugins boot **after** every core module, so all core registries exist by the time `boot()` runs.
+- `boot()` runs on every request, including console and cron runs. Keep it cheap: register things, don't do work.
+- Only plugins whose status is `active` boot. Themes are a special case: a theme is active when it's the selected theme.
+- If a plugin crashes while booting, Aikeedo records the failure in `var/plugin-health.json` and skips the plugin on later requests, so one broken plugin can't take the site down. With `DEBUG` on, the error is raised instead. See [Debugging](/development/plugins/debugging).
 
-## Managing Plugins
+## What plugins can extend
 
-Once installed, you can easily manage your plugins directly from the Aikeedo dashboard:
+| Capability | Where to start |
+| --- | --- |
+| Admin settings pages | [Admin settings pages](/development/plugins/admin-settings-pages) |
+| Pages and JSON endpoints for signed-in users | [App pages and APIs](/development/plugins/app-pages-and-apis) |
+| Public pages, forms, endpoints and webhooks | [Public pages and endpoints](/development/plugins/public-endpoints-and-embeds) |
+| Menu entries in the app and admin panel | [Navigation](/development/plugins/navigation) |
+| Reactions to domain events, and scheduled work | [Events and cron](/development/plugins/events-and-cron) |
+| Payment gateways | [Payment gateways](/development/plugins/guides/payments/overview) |
+| Tax engines | [Tax engines](/development/plugins/guides/tax-engine) |
+| Storage backends | [Storage adapters](/development/plugins/guides/storage-adapter) |
+| Vector databases | [Vector stores](/development/plugins/guides/vector-store) |
+| AI providers and models | [AI providers](/development/plugins/guides/ai-provider) |
+| Chat tools | [AI tools](/development/plugins/guides/ai-tool) |
+| Currency exchange rates | [Currency rate providers](/development/plugins/guides/currency-rate-provider) |
+| Per-plan settings | [Plan config extensions](/development/plugins/guides/plan-config-extension) |
+| Conversation import sources | [Import adapters](/development/plugins/guides/import-adapter) |
+| Your own extension points, for other plugins to implement | [Custom extension points](/development/plugins/custom-extension-points) |
 
-- Enable or disable plugins
-- Configure plugin settings
-- Update plugins to their latest versions
+## What plugins cannot do
 
-<Tip>
-  Regularly check for plugin updates to ensure you have the latest features and security improvements.
-</Tip>
+| Limitation | Why | What to do instead |
+| --- | --- | --- |
+| Add Doctrine entities | Doctrine maps only the core `src/` directory | Store data in options, reuse core entities, or use your own external store. See [Data and persistence](/development/plugins/data-and-persistence) |
+| Add database migrations | Migration paths are fixed in `config/migrations.php` | Create any schema you need from an install hook against your own connection, or avoid extra tables |
+| Add console commands | The command map in `config/commands.php` is static | Expose the action as an admin endpoint, or run it from cron |
+| Replace core templates | Themes and plugins add namespaces, they don't override core paths | Use `resources/views/overrides/`. See [Extending Aikeedo](/development/extending-aikeedo) |
 
-## Best Practices for Using Plugins
+## Where plugins live
 
-To get the most out of Aikeedo plugins, consider the following best practices:
+| Path | Contents |
+| --- | --- |
+| `extra/extensions/{vendor}/{name}` | The installed package, where Composer puts it |
+| `extra/artifacts/` | Uploaded plugin archives, used as a Composer artifact repository |
+| `public/e/{vendor}/{name}` | Public assets copied from `extra.public`. See [Public assets](/development/plugins/public-assets) |
+| `var/plugin-backup/` | Backups taken before a reinstall |
+| `var/plugin-health.json` | Recorded boot failures |
 
-1. **Research before installing**: Ensure the plugin is compatible with your version of Aikeedo and meets your specific needs.
-2. **Test in a staging environment**: Before applying plugins to your live site, test them in a controlled environment to avoid potential conflicts.
-3. **Keep plugins updated**: Regularly update your plugins to benefit from new features and security patches.
-4. **Monitor performance**: Keep an eye on your platform's performance after installing new plugins to ensure they don't negatively impact speed or functionality.
-
-## Developing Plugins and Themes
-
-Want to create your own plugins or themes? Check out these comprehensive guides:
+## Next steps
 
 <CardGroup cols={2}>
-<Card title="Plugin Development Guide" icon="plug" href="/development/plugins/development-guide">
-  Learn to build custom plugins with step-by-step instructions and best practices
-</Card>
-
-<Card title="Theme Development Guide" icon="palette" href="/development/themes/development-guide">
-  Create custom themes to personalize your landing page appearance
-</Card>
+  <Card title="Build your first plugin" icon="rocket" href="/development/plugins/quickstart">
+    A working plugin with a settings page and a menu item, step by step.
+  </Card>
+  <Card title="Manifest reference" icon="file-code" href="/development/plugins/manifest">
+    Every `composer.json` field Aikeedo reads.
+  </Card>
+  <Card title="Lifecycle and hooks" icon="refresh" href="/development/plugins/lifecycle-and-hooks">
+    Install, activate, deactivate, uninstall and update.
+  </Card>
+  <Card title="Services you can inject" icon="vaccine" href="/development/plugins/dependency-injection-and-services">
+    The core services a plugin reaches through its constructor.
+  </Card>
 </CardGroup>
 
-## Example Implementations
-
-Learn from real-world examples:
-
-- [Currency Beacon Plugin](https://github.com/heyaikeedo/plugins-currency-beacon) - Currency rate provider integration
-- [Default Theme](https://github.com/heyaikeedo/themes-default) - Reference theme implementation
+import Support from '/snippets/support.mdx';
 
 <Support />
-
-By leveraging the power of plugins and themes, you can create a truly unique and feature-rich experience for your Aikeedo platform users.

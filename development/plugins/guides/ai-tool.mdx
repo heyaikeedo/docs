@@ -1,0 +1,218 @@
+---
+title: "Add an AI tool"
+sidebarTitle: "AI tools"
+description: "Implement a chat tool in an Aikeedo plugin, understand how the core decides which tools a model may call, and know the current limits."
+---
+
+Tools are what a chat model can call while answering: search the web, read a page, generate an image, look something up in a knowledge base. A tool is a small class with a JSON schema and a `call()` method.
+
+<Warning>
+  Read [what the core will and won't offer](#what-the-core-offers-to-models) before you build. A brand-new tool key can be registered, but the built-in chat flow only offers tools whose key appears in the plan configuration, and that list is fixed. Your options are to replace an existing tool's implementation, or to call your tool from your own plugin's flows.
+</Warning>
+
+## The interface
+
+```php
+namespace Ai\Infrastructure\Services\Tools;
+
+interface ToolInterface
+{
+    public function isEnabled(): bool;
+    public function getDescription(): string;
+    public function getDefinitions(): array;
+
+    public function call(
+        ConversationEntity $conversation,
+        WorkspaceEntity $workspace,
+        UserEntity $user,
+        ?AssistantEntity $assistant = null,
+        ?array $params = null,
+    ): CallResponse;
+
+    public function getSystemInstructions(?MessageEntity $message = null): ?string;
+}
+```
+
+| Method | Purpose |
+| --- | --- |
+| `isEnabled()` | Whether the tool is configured and switched on |
+| `getDescription()` | What the tool does, sent to the model so it knows when to call it |
+| `getDefinitions()` | JSON Schema for the arguments |
+| `call()` | Runs the tool and returns its result and cost |
+| `getSystemInstructions()` | Extra system prompt text, or `null` |
+
+## Implementation
+
+```php src/Tools/WeatherTool.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Weather\Tools;
+
+use Acme\Weather\Client;
+use Ai\Domain\Entities\ConversationEntity;
+use Ai\Domain\Entities\MessageEntity;
+use Ai\Infrastructure\Services\Tools\CallException;
+use Ai\Infrastructure\Services\Tools\CallResponse;
+use Ai\Infrastructure\Services\Tools\ToolInterface;
+use Assistant\Domain\Entities\AssistantEntity;
+use Billing\Domain\ValueObjects\CreditCount;
+use Easy\Container\Attributes\Inject;
+use Override;
+use Throwable;
+use User\Domain\Entities\UserEntity;
+use Workspace\Domain\Entities\WorkspaceEntity;
+
+class WeatherTool implements ToolInterface
+{
+    public const LOOKUP_KEY = 'acme_weather';
+
+    public function __construct(
+        private Client $client,
+
+        #[Inject('option.acme_weather.api_key')]
+        private ?string $apiKey = null,
+    ) {}
+
+    #[Override]
+    public function isEnabled(): bool
+    {
+        return (bool) $this->apiKey;
+    }
+
+    #[Override]
+    public function getDescription(): string
+    {
+        return 'Look up the current weather for a city.';
+    }
+
+    #[Override]
+    public function getDefinitions(): array
+    {
+        return [
+            'type' => 'object',
+            'properties' => [
+                'city' => [
+                    'type' => 'string',
+                    'description' => 'City name, optionally with a country code.',
+                ],
+            ],
+            'required' => ['city'],
+        ];
+    }
+
+    #[Override]
+    public function getSystemInstructions(?MessageEntity $message = null): ?string
+    {
+        return 'Use the weather tool whenever the user asks about current conditions.';
+    }
+
+    #[Override]
+    public function call(
+        ConversationEntity $conversation,
+        WorkspaceEntity $workspace,
+        UserEntity $user,
+        ?AssistantEntity $assistant = null,
+        ?array $params = null,
+    ): CallResponse {
+        $city = $params['city'] ?? null;
+
+        if (!$city) {
+            throw new CallException('No city was provided.');
+        }
+
+        try {
+            $weather = $this->client->current($city);
+        } catch (Throwable $th) {
+            throw new CallException('Weather lookup failed.', previous: $th);
+        }
+
+        // Return text the model can read, plus what the call cost.
+        return new CallResponse(
+            content: sprintf('%s: %s, %d°C', $city, $weather->summary, $weather->temp),
+            cost: new CreditCount(0),
+        );
+    }
+}
+```
+
+`CallResponse` takes the text result, the cost in credits, and optionally a library item when your tool produced something like an image.
+
+### Writing a good tool
+
+- **Describe it for a model, not a human.** Say when to use it and what it returns.
+- **Keep the schema small.** Few parameters, clear names, explicit `required`.
+- **Return text.** The content goes back into the conversation, so make it readable and compact.
+- **Be fast, and time out.** A slow tool stalls the whole answer.
+- **Throw `CallException`** for failures, so the model sees an error instead of a broken stream.
+- **Charge for expensive work** with `CostCalculator`, and return the amount in the response.
+
+## Register the tool
+
+```php src/Plugin.php
+use Acme\Weather\Tools\WeatherTool;
+use Ai\Infrastructure\Services\Tools\ToolCollection;
+
+public function __construct(
+    private ToolCollection $tools,
+) {}
+
+public function boot(Context $context): void
+{
+    $this->tools->add(WeatherTool::LOOKUP_KEY, WeatherTool::class);
+}
+```
+
+## What the core offers to models
+
+When a message is generated, the tool collection decides which tools to expose. It checks, in order:
+
+1. `isEnabled()` on the tool.
+2. Whether the conversation is temporary, which disables context tools such as memory and canvas.
+3. **Whether the plan's tool configuration has the tool's key enabled.**
+4. Whether the user disabled that capability in their preferences.
+
+Step 3 is the limit: `Billing\Domain\ValueObjects\PlanConfig` builds its `tools` map from a fixed list of keys.
+
+| Key | Capability |
+| --- | --- |
+| `embedding_search` | Search uploaded files |
+| `google_search` | Web search |
+| `youtube` | YouTube lookups |
+| `web_scrap` | Fetch a web page |
+| `generate_media` | Images, video, speech and transcription |
+| `memory` | Memories and chat history |
+| `canvas` | Canvas documents |
+| `ask_questions` | Interactive follow-up questions |
+
+A key outside that list is never enabled on a plan, so the collection never yields it to the model.
+
+### What you can do instead
+
+<AccordionGroup>
+  <Accordion title="Replace a built-in tool's implementation">
+    Register your class under an existing key, such as `google_search`, to swap the provider behind a capability administrators already control. Keep the same argument schema so existing prompts keep working.
+  </Accordion>
+  <Accordion title="Call the tool from your own flow">
+    If your plugin runs its own AI flow, for example an assistant of your own, you own the tool loop: build the definitions, call your tool when the model asks for it, and feed the result back. Nothing restricts which tools you offer there.
+  </Accordion>
+  <Accordion title="Do the work before the model runs">
+    Some "tools" are better as context. Fetch what's needed and add it to the system instructions rather than waiting for the model to ask.
+  </Accordion>
+</AccordionGroup>
+
+## Testing
+
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>With the capability enabled on the plan, the model calls your tool when it should.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The tool's result appears in the answer, and the tool call is shown in the transcript.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>A failure produces a graceful message rather than a broken response.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Credits are charged when the tool costs money.</span></div>
+</div>
+
+## Related
+
+- [AI models and credits](/development/plugins/ai-models-and-credits)
+- [AI providers](/development/plugins/guides/ai-provider)
+- [AI subsystem internals](/development/core/ai-subsystem)

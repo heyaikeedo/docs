@@ -1,0 +1,291 @@
+---
+title: "Routes and request handlers"
+sidebarTitle: "Routes and handlers"
+description: "Declare routes from a plugin with PHP attributes, pick the right base class and middleware stack, validate input, and return JSON or rendered views."
+---
+
+Aikeedo discovers routes by scanning classes for attributes. A plugin adds its own directory to that scan, then declares handlers the same way the core does.
+
+## Register your routes
+
+Add the directory that contains your request handlers in `boot()`:
+
+```php src/Plugin.php
+use Easy\Router\Mapper\AttributeMapper;
+
+public function __construct(
+    private AttributeMapper $mapper,
+) {}
+
+public function boot(Context $context): void
+{
+    $this->mapper->addPath(__DIR__);
+}
+```
+
+The mapper scans recursively, so pointing it at your `src/` directory is usually enough. Point it at a subdirectory, such as `__DIR__ . '/RequestHandlers'`, if you want to limit the scan.
+
+<Warning>
+  Route discovery is cached when `CACHE=true` and `DEBUG=false`. After adding or changing a route on a cached installation, clear the cache from **Status → Clear cache**.
+</Warning>
+
+## Anatomy of a handler
+
+```php src/RequestHandlers/HelloRequestHandler.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Hello\RequestHandlers;
+
+use Easy\Http\Message\RequestMethod;
+use Easy\Router\Attributes\Route;
+use Presentation\RequestHandlers\Admin\AbstractAdminViewRequestHandler;
+use Presentation\Response\ViewResponse;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+
+#[Route(path: '/settings/hello', method: RequestMethod::GET)]
+class HelloRequestHandler extends AbstractAdminViewRequestHandler implements
+    RequestHandlerInterface
+{
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        return new ViewResponse('@acme-hello/settings.twig');
+    }
+}
+```
+
+Every handler is a PSR-15 `RequestHandlerInterface`. The base class supplies the path prefix and the middleware stack; the `#[Route]` attribute supplies the rest of the path and the HTTP method.
+
+## Choose a base class
+
+| Base class | Prefix | Middleware it adds | Use for |
+| --- | --- | --- | --- |
+| `Presentation\RequestHandlers\AbstractRequestHandler` | none | Exception, Install, RequestBodyParser, User, Locale | Public pages and endpoints that still need the standard stack |
+| `…\Admin\AbstractAdminRequestHandler` | `/admin` | + Authorization (admin only) | Admin endpoints that aren't pages |
+| `…\Admin\AbstractAdminViewRequestHandler` | `/admin` | + DemoEnvironment, View | Admin pages rendered with Twig |
+| `…\Admin\Api\AdminApi` | `/admin/api` | + DemoEnvironment | Admin JSON endpoints |
+| `…\App\AppView` | `/app` | + Authorization, EmailVerification, View | Pages for signed-in users |
+| `…\Api\Api` | `/api` | + Authorization, EmailVerification, Byok | Workspace-scoped JSON endpoints |
+| No base class | none | none | Public endpoints with a stack you assemble yourself |
+
+Prefixes and middleware are inherited, so `#[Route(path: '/settings/hello')]` on an admin view handler becomes `GET /admin/settings/hello`.
+
+<Warning>
+  A handler that extends no base class gets no middleware at all: no body parsing, no user resolution and no error handling. Only do that when you need a minimal stack, such as for a webhook receiver, and add middleware explicitly. For ordinary public pages and endpoints, extend `AbstractRequestHandler`. See [Public pages and endpoints](/development/plugins/public-endpoints-and-embeds).
+</Warning>
+
+## Route attributes
+
+```php
+#[Path('/notes')]                                   // class-level prefix, inherited
+#[Route(path: '/', method: RequestMethod::GET)]     // GET /notes
+#[Route(path: '/[uuid:id]', method: RequestMethod::PATCH, priority: Priority::HIGH)]
+#[Middleware(MyMiddleware::class)]                  // extra middleware for this handler
+```
+
+| Attribute | Purpose |
+| --- | --- |
+| `Easy\Router\Attributes\Route` | Declares `path`, `method` and optional `priority`. Repeat it to bind several routes to one handler. |
+| `Easy\Router\Attributes\Path` | A path prefix for the class and everything that extends it. |
+| `Easy\Router\Attributes\Middleware` | Adds PSR-15 middleware, outermost first. |
+
+### Path syntax
+
+| Pattern | Matches |
+| --- | --- |
+| `/notes` | An exact path |
+| `/[:slug]` | Any single segment, exposed as the `slug` attribute |
+| `/[uuid:id]` | A UUID segment |
+| `/[images\|videos:type]` | One of the listed values |
+| `/[locale:locale]?/welcome` | An optional locale prefix such as `/de-DE` |
+
+Route parameters arrive as request attributes:
+
+```php
+$id = $request->getAttribute('id');
+```
+
+Give a route `priority: Priority::HIGH` when it would otherwise be shadowed by a more generic pattern.
+
+## Read the request
+
+```php
+use Presentation\Validation\Validator;
+use User\Domain\Entities\UserEntity;
+use Workspace\Domain\Entities\WorkspaceEntity;
+
+public function __construct(
+    private Validator $validator,
+) {}
+
+public function handle(ServerRequestInterface $request): ResponseInterface
+{
+    // Authenticated user and workspace, set by UserMiddleware
+    $user = $request->getAttribute(UserEntity::class);
+    $workspace = $request->getAttribute(WorkspaceEntity::class);
+
+    // Validate the parsed body; throws ValidationException (400) on failure
+    $this->validator->validateRequest($request, [
+        'title' => 'required|string|max:255',
+        'category_id' => 'sometimes|uuid',
+    ]);
+
+    $payload = $request->getParsedBody();
+    $title = $payload->title;
+
+    // Query string
+    $query = (object) $request->getQueryParams();
+
+    // Uploads
+    $file = $request->getUploadedFiles()['file'] ?? null;
+}
+```
+
+`RequestBodyParserMiddleware` decodes JSON and form bodies into a `stdClass`, so use `property_exists()` before reading optional fields.
+
+## Return a response
+
+| Response | Use for |
+| --- | --- |
+| `Presentation\Response\JsonResponse` | JSON payloads, with an optional `StatusCode` |
+| `Presentation\Response\ViewResponse` | A Twig template plus data, rendered by `ViewMiddleware` |
+| `Presentation\Response\RedirectResponse` | Redirects |
+| `Presentation\Response\EmptyResponse` | An empty body, for example `204` or after a webhook |
+| `Presentation\Response\Response` | A PSR-7 response you build yourself, for example a stream |
+
+```php
+use Easy\Http\Message\StatusCode;
+use Presentation\Resources\ListResource;
+use Presentation\Response\JsonResponse;
+
+return new JsonResponse($resource, StatusCode::CREATED);
+```
+
+### Shape your JSON with resources
+
+Return a `JsonSerializable` resource rather than raw arrays, so your API matches the rest of Aikeedo:
+
+```php src/Presentation/Resources/NoteResource.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Notes\Presentation\Resources;
+
+use Acme\Notes\Domain\Entities\NoteEntity;
+use JsonSerializable;
+use Presentation\Resources\DateTimeResource;
+
+class NoteResource implements JsonSerializable
+{
+    public function __construct(
+        private NoteEntity $note,
+    ) {}
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'id' => (string) $this->note->getId()->getValue(),
+            'object' => 'note',
+            'title' => $this->note->getTitle()->value,
+            'created_at' => new DateTimeResource($this->note->getCreatedAt()),
+        ];
+    }
+}
+```
+
+`Presentation\Resources\ListResource` wraps collections as `{"object": "list", "data": [...]}`, and `CountResource` wraps counts, which keeps your endpoints consistent with the core API.
+
+## Errors
+
+Throw, and let `ExceptionMiddleware` translate the exception into a response:
+
+| Exception | Result |
+| --- | --- |
+| `Presentation\Validation\ValidationException` | `400` with `code`, `message` and `param` |
+| `Presentation\Exceptions\NotFoundException` | `404` |
+| `Presentation\Exceptions\UnauthorizedException` | `401` for API paths, a redirect to `/login` for pages |
+| `Presentation\Exceptions\HttpException` | The status code you pass; defaults to `422` |
+| Anything else | `500`, logged with a correlation ID, or rethrown when `DEBUG` is on |
+
+```php
+use Easy\Http\Message\StatusCode;
+use Presentation\Exceptions\HttpException;
+use Presentation\Exceptions\NotFoundException;
+
+throw new NotFoundException('Note not found');
+throw new HttpException('Provider rejected the request', StatusCode::BAD_GATEWAY);
+```
+
+## Custom middleware
+
+Middleware is a plain PSR-15 class, so you can autowire dependencies into it:
+
+```php src/Middlewares/RequireFeatureMiddleware.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Hello\Middlewares;
+
+use Easy\Container\Attributes\Inject;
+use Override;
+use Presentation\Exceptions\NotFoundException;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+
+class RequireFeatureMiddleware implements MiddlewareInterface
+{
+    public function __construct(
+        #[Inject('option.features.hello.is_enabled')]
+        private ?bool $isEnabled = false,
+    ) {}
+
+    #[Override]
+    public function process(
+        ServerRequestInterface $request,
+        RequestHandlerInterface $handler
+    ): ResponseInterface {
+        if (!$this->isEnabled) {
+            throw new NotFoundException();
+        }
+
+        return $handler->handle($request);
+    }
+}
+```
+
+Attach it with `#[Middleware(RequireFeatureMiddleware::class)]` on the handler or on a base class of your own.
+
+## Group routes with your own base class
+
+```php src/RequestHandlers/NotesApi.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Notes\RequestHandlers;
+
+use Acme\Notes\Middlewares\RequireFeatureMiddleware;
+use Easy\Router\Attributes\Middleware;
+use Easy\Router\Attributes\Path;
+use Presentation\RequestHandlers\Api\Api;
+
+#[Middleware(RequireFeatureMiddleware::class)]
+#[Path('/notes')]
+abstract class NotesApi extends Api {}
+```
+
+Handlers that extend `NotesApi` are served under `/api/notes`, with the standard API middleware plus your feature check.
+
+## Related
+
+- [Admin settings pages](/development/plugins/admin-settings-pages)
+- [App pages and APIs](/development/plugins/app-pages-and-apis)
+- [Public pages and endpoints](/development/plugins/public-endpoints-and-embeds)
+- [Routing internals](/development/core/routing-and-middleware)

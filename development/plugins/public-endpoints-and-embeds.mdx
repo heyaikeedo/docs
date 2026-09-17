@@ -1,0 +1,265 @@
+---
+title: "Public pages and endpoints"
+sidebarTitle: "Public endpoints"
+description: "Add Aikeedo plugin routes that visitors can reach without signing in: public pages, forms, JSON endpoints and webhook receivers, and how to keep them safe."
+---
+
+Not every route a plugin adds is for signed-in users. A landing page, a contact form, a status endpoint or a webhook receiver has to answer anyone who asks. Those routes skip the authorization step, so the checks it normally provides become your responsibility.
+
+<Warning>
+  Read the [security checklist](#security-checklist) before you ship a public route. Most serious plugin vulnerabilities come from public routes that trust their input.
+</Warning>
+
+## What makes a route public
+
+Authentication is applied by `AuthorizationMiddleware`, and only the base classes for signed-in areas add it. A handler is public when neither it nor its base class carries that middleware.
+
+| Base class | Signed-in user required | Use for |
+| --- | --- | --- |
+| `Presentation\RequestHandlers\AbstractRequestHandler` | No | Public pages, forms and JSON endpoints |
+| No base class | No | Webhook receivers and other routes that need a minimal stack |
+| `…\App\AppView`, `…\Api\Api` | Yes | [App pages and APIs](/development/plugins/app-pages-and-apis) |
+| `…\Admin\AbstractAdminRequestHandler` and its view variant | Yes, admin only | [Admin settings pages](/development/plugins/admin-settings-pages) |
+
+`AbstractRequestHandler` is the right starting point for almost every public route. It's what the core's login, signup and policy pages extend, and it adds:
+
+| Middleware | What it does |
+| --- | --- |
+| `ExceptionMiddleware` | Turns exceptions into responses. See [Errors](#errors). |
+| `InstallMiddleware` | Redirects to the installer until Aikeedo is installed |
+| `RequestBodyParserMiddleware` | Decodes JSON and form bodies into a `stdClass` |
+| `UserMiddleware` | Attaches the signed-in user when there is one, and does nothing otherwise |
+| `LocaleMiddleware` | Resolves the locale and loads translations |
+
+## A public page
+
+Add `ViewMiddleware` to render a Twig template:
+
+```php src/RequestHandlers/PricingView.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Pricing\RequestHandlers;
+
+use Easy\Http\Message\RequestMethod;
+use Easy\Router\Attributes\Middleware;
+use Easy\Router\Attributes\Route;
+use Presentation\Middlewares\ViewMiddleware;
+use Presentation\RequestHandlers\AbstractRequestHandler;
+use Presentation\Response\ViewResponse;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use User\Domain\Entities\UserEntity;
+
+#[Middleware(ViewMiddleware::class)]
+#[Route(path: '/[locale:locale]?/compare', method: RequestMethod::GET)]
+class PricingView extends AbstractRequestHandler implements RequestHandlerInterface
+{
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        /** @var UserEntity|null $user */
+        $user = $request->getAttribute(UserEntity::class);
+
+        return new ViewResponse('@acme-pricing/templates/compare.twig', [
+            'is_signed_in' => $user !== null,
+        ]);
+    }
+}
+```
+
+| Piece | Why |
+| --- | --- |
+| `ViewMiddleware` | Renders the `ViewResponse` and adds the template globals, such as `option`, `user` and `locale` |
+| `[locale:locale]?` | Makes the page work under a language prefix such as `/de-DE/compare` |
+| `UserEntity` attribute | Set when a signed-in user visits, `null` otherwise. Use it to adapt the page, never to protect it. |
+| `@acme-pricing/...` | Your plugin's template namespace, registered in `boot()`. See [Dependency injection and services](/development/plugins/dependency-injection-and-services). |
+
+The template can extend the same minimal layout the core's public pages use, so it works with any theme:
+
+```twig templates/compare.twig
+{% extends "/layouts/minimal.twig" %}
+
+{% block title p__('title', 'Compare plans') %}
+
+{% block template %}
+	<h1>{{ p__('heading', 'Compare plans') }}</h1>
+
+	{% if not is_signed_in %}
+		<a href="/signup">{{ p__('button', 'Get started') }}</a>
+	{% endif %}
+{% endblock %}
+```
+
+To build a page into the active theme's own design instead, see [Theme custom pages](/development/themes/custom-pages).
+
+## A public form or JSON endpoint
+
+A form posts to a handler of its own. Validate everything, and add `CaptchaMiddleware` to anything that creates records or sends email:
+
+```php src/RequestHandlers/SubmitInquiry.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Pricing\RequestHandlers;
+
+use Acme\Pricing\Commands\CreateInquiryCommand;
+use Easy\Http\Message\RequestMethod;
+use Easy\Http\Message\StatusCode;
+use Easy\Router\Attributes\Middleware;
+use Easy\Router\Attributes\Route;
+use Presentation\Middlewares\CaptchaMiddleware;
+use Presentation\Middlewares\ClientIpMiddleware;
+use Presentation\RequestHandlers\AbstractRequestHandler;
+use Presentation\Response\JsonResponse;
+use Presentation\Validation\ValidationException;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use Shared\Infrastructure\CommandBus\Dispatcher;
+
+#[Middleware(ClientIpMiddleware::class)]
+#[Middleware(CaptchaMiddleware::class)]
+#[Route(path: '/acme-pricing/inquiries', method: RequestMethod::POST)]
+class SubmitInquiry extends AbstractRequestHandler implements RequestHandlerInterface
+{
+    public function __construct(
+        private Dispatcher $dispatcher,
+    ) {}
+
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        $body = $request->getParsedBody();
+        $email = $body->email ?? null;
+
+        if (!is_string($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new ValidationException('Enter a valid email address', 'email');
+        }
+
+        $this->dispatcher->dispatch(new CreateInquiryCommand(
+            email: $email,
+            ip: $request->getAttribute(ClientIpMiddleware::class),
+        ));
+
+        return new JsonResponse(['ok' => true], StatusCode::CREATED);
+    }
+}
+```
+
+| Middleware | Why you'd add it |
+| --- | --- |
+| `CaptchaMiddleware` | When reCAPTCHA is enabled in the admin panel, rejects requests without a valid `captcha-token` body field. When it's disabled, it lets every request through. |
+| `ClientIpMiddleware` | Resolves the visitor's IP behind proxies and stores it on the request under `ClientIpMiddleware::class` |
+
+To send a captcha token, include the core snippet inside your form. It renders nothing when reCAPTCHA is off, and otherwise fills a `captcha-token` field for you:
+
+```twig
+<form>
+	{# your fields #}
+	{% include "/snippets/captcha.twig" %}
+	<button type="submit">{{ p__('button', 'Send') }}</button>
+</form>
+```
+
+<Note>
+  Keep public endpoints outside `/api` and `/admin`, which belong to the core. Under `/api` and `/admin/api`, `UserMiddleware` also ignores the session cookie and only accepts an API key or a bearer token.
+</Note>
+
+## Errors
+
+`ExceptionMiddleware` decides what a failed request returns:
+
+| Thrown | Response |
+| --- | --- |
+| `Presentation\Validation\ValidationException` | `400` JSON with `message` and `param` |
+| `Presentation\Exceptions\HttpException` and its subclasses, such as `NotFoundException` | JSON with the exception's status code |
+| `UnauthorizedException` | JSON under `/api` and `/admin/api`. Anywhere else, a redirect to `/login`. |
+| Anything else | Rethrown when `DEBUG=true`. Otherwise it's logged, and the response is an empty `500`, or a JSON body with a correlation ID under `/api` and `/admin/api`. |
+
+A public page that should show "not found" can return a `ViewResponse` with `StatusCode::NOT_FOUND` rather than throw, since a thrown `NotFoundException` becomes JSON.
+
+## Routes without a base class
+
+A handler that extends no base class gets no middleware at all: no error handling, no body parsing, no user and no locale. Use it when the standard stack gets in the way, such as for a webhook receiver that must read the raw body. Then add back only what you need, and always start with `ExceptionMiddleware`:
+
+```php
+#[Middleware(ExceptionMiddleware::class)]
+#[Route(path: '/acme-pricing/webhooks/crm', method: RequestMethod::POST)]
+class CrmWebhook implements RequestHandlerInterface
+```
+
+## Receiving webhooks
+
+Providers post to an endpoint you publish, so verify every request:
+
+```php
+$signature = $request->getHeaderLine('X-Acme-Signature');
+$body = (string) $request->getBody();
+
+if (!$this->secret) {
+    // Fail closed: an unconfigured secret means you cannot verify anything.
+    throw new HttpException('Webhook secret is not configured', StatusCode::BAD_REQUEST);
+}
+
+$expected = hash_hmac('sha256', $body, $this->secret);
+
+if (!hash_equals($expected, $signature)) {
+    throw new HttpException('Invalid signature', StatusCode::BAD_REQUEST);
+}
+```
+
+Read the raw body for the signature, not the parsed one, and make handling idempotent: providers retry, and the same event can arrive twice.
+
+Payment gateways have a dedicated webhook route and interface. See [Payment webhooks](/development/plugins/guides/payments/webhooks).
+
+## Identifying visitors who aren't users
+
+Some public features need to recognize the same visitor across requests without an Aikeedo account, such as a guest's saved progress. Aikeedo has no built-in visitor identity for this, so issue your own token:
+
+- Sign it with a secret your plugin owns, scope it to your feature, and give it a short lifetime. The app ships `firebase/php-jwt` if you want JWTs.
+- Verify it in your own middleware, and attach what it proves to the request.
+- Only issue a token for something the caller proved. Creating a fresh identity is safe; returning a token for an identifier the caller merely supplied lets anyone impersonate anyone.
+
+## Embeds
+
+A page meant to be framed on other sites, such as a chat or feedback widget, is a public page with a few extra requirements: a loader script, a `frame-ancestors` policy, `postMessage` between the frames, and per-site visitor tokens. The [embeddable widget guide](/development/plugins/guides/embeddable-widget) walks through all of it.
+
+## Security checklist
+
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Validate every input.** Public bodies, query strings and route parameters are attacker-controlled. Check types, lengths and formats before using them.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Verify ownership of every ID.** When a route loads a record by ID, confirm the caller is allowed to see it. Loading by ID alone lets anyone read other people's data by guessing.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Don't rely on the optional user for access.** A missing `UserEntity` on a public route is normal, not an error. If a route needs a user, it isn't public: extend an authenticated base class.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Protect writes.** Add `CaptchaMiddleware` to forms and to anything that creates records or sends email.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Limit abuse.** Aikeedo has no built-in rate limiter. Cap requests per IP in your plugin or at the web server, and reject oversized payloads early.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Guard paid work.** Anything that spends AI credits must name the workspace that pays and check its balance first. Never let an anonymous request spend credits without an owner.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Treat headers as hints.** `Origin`, `Referer` and custom headers can be forged by any client. Enforce access with tokens, signatures and server-side allowlists.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Respond in constant shapes.** Don't reveal whether a record or email exists through different messages or timings.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Return the minimum.** Never expose internal IDs, workspace details or configuration from a public route.</span></div>
+</div>
+
+## CORS
+
+Browsers only need CORS headers when another site's page calls your endpoint directly. Forms and pages on your own domain don't. When you do need them, reflect only origins you've allowlisted, for example from a plugin setting:
+
+```php
+$origin = $request->getHeaderLine('Origin');
+
+if (in_array($origin, $this->allowedOrigins, true)) {
+    $response = $response
+        ->withHeader('Access-Control-Allow-Origin', $origin)
+        ->withHeader('Vary', 'Origin');
+}
+```
+
+Never reflect an arbitrary origin, and never combine `Access-Control-Allow-Origin: *` with credentials.
+
+## Related
+
+- [Routes and request handlers](/development/plugins/routes-and-request-handlers)
+- [Authentication and authorization](/development/core/authentication-and-authorization)
+- [Embeddable widget guide](/development/plugins/guides/embeddable-widget)
+- [Theme custom pages](/development/themes/custom-pages)
+- [Public assets](/development/plugins/public-assets)

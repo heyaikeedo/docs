@@ -1,0 +1,175 @@
+---
+title: "Build your first theme"
+sidebarTitle: "Quickstart"
+description: "Clone the Aikeedo theme starter kit, connect it to a local installation with hot reloading, and publish your theme."
+---
+
+The [theme starter kit](https://github.com/heyaikeedo/themes-starter) gives you a working theme with Vite, Tailwind CSS, Alpine.js, translation catalogs and an optional PHP entry class. This guide takes it from clone to published.
+
+## Prerequisites
+
+- A local Aikeedo installation with `DEBUG=true` and `CACHE=false`. See [Local development](/development/local-development).
+- Node.js 18 or newer, and Composer.
+- Administrator access to the admin panel.
+
+## Step 1: Clone the starter
+
+```bash
+git clone https://github.com/heyaikeedo/themes-starter.git aurora
+cd aurora
+npm install
+```
+
+## Step 2: Rename the package
+
+Edit `static/composer.json`. Three things must agree: the package name, the entry class namespace and the autoload map.
+
+```json static/composer.json
+{
+  "name": "acme/aurora",
+  "description": "Aurora theme for Aikeedo",
+  "version": "1.0.0",
+  "type": "aikeedo-theme",
+  "require": {
+    "heyaikeedo/composer": "^1.0.0"
+  },
+  "extra": {
+    "entry-class": "Acme\\Aurora\\Theme",
+    "title": "Aurora",
+    "description": "Aurora theme for Aikeedo",
+    "status": "active",
+    "public": ["assets", ".vite"]
+  },
+  "autoload": {
+    "psr-4": {
+      "Acme\\Aurora\\": "src/"
+    }
+  }
+}
+```
+
+Then update the namespace in `static/src/Theme.php` and `static/src/CustomView.php` to match.
+
+<Warning>
+  The installed directory path must equal the package name. `acme/aurora` installs to `extra/extensions/acme/aurora`, and nothing loads if the two disagree.
+</Warning>
+
+## Step 3: Point the build at your installation
+
+The starter reads `BUILD_DIR` and `AIKEEDO_SERVER` from its environment. Copy the committed defaults into a local file and set your own paths:
+
+```bash
+cp .env .env.local
+```
+
+```ini .env.local
+# Where the built theme is written: the installed package directory
+BUILD_DIR=/path/to/aikeedo/extra/extensions/acme/aurora
+
+# Where the dev server proxies everything that isn't a theme asset
+AIKEEDO_SERVER=http://localhost:8000
+```
+
+<Warning>
+  `BUILD_DIR` is emptied on every production build. Point it at the theme's own directory, never at the installation root or a directory holding anything else.
+</Warning>
+
+## Step 4: Tell Aikeedo to load assets from Vite
+
+In the Aikeedo installation's `.env`:
+
+```ini .env
+THEME_ASSETS_SERVER=http://localhost:5174
+DEBUG=true
+CACHE=false
+```
+
+## Step 5: Start the dev server
+
+```bash
+npm run dev
+```
+
+Vite serves on port 5174 and proxies everything that isn't a theme asset to `AIKEEDO_SERVER`, so you can browse the whole site through it. It also copies `static/` into `BUILD_DIR` as you edit.
+
+Open `http://localhost:5174`.
+
+## Step 6: Install the theme
+
+The starter ships a PHP entry class, which Composer has to autoload. From the installation root:
+
+```bash
+composer require acme/aurora
+```
+
+<Note>
+  A theme without PHP doesn't strictly need this: Aikeedo discovers any valid package directory under `extra/extensions/`. Installing with Composer is still the tidier path, and it's required as soon as you add an entry class.
+</Note>
+
+## Step 7: Publish it
+
+<Steps>
+  <Step title="Preview">
+    Visit `/preview?theme=acme/aurora` to see the theme without switching the live site.
+  </Step>
+  <Step title="Publish">
+    In the admin panel, open **Themes**, find **Aurora**, and select **Publish**.
+  </Step>
+  <Step title="Verify">
+    Load the home page. You should see the starter's landing page.
+
+    <Check>
+      Editing `static/templates/index.twig` reloads the page, and editing `src/css/index.css` updates styles without a reload.
+    </Check>
+  </Step>
+</Steps>
+
+## Step 8: Make it yours
+
+| To change | Edit |
+| --- | --- |
+| The page itself | `static/templates/index.twig` |
+| The HTML shell, meta tags, scripts | `static/layouts/theme.twig` |
+| Reusable blocks | `static/sections/*.twig` |
+| Colors and fonts | `static/snippets/css.twig` and `tailwind.config.js` |
+| Interactivity | `src/js/index.js` |
+| Extra pages | `static/src/`, see [Custom pages](/development/themes/custom-pages) |
+
+Add a pricing section next: the landing template receives `plans`, and [Pricing and plans](/development/themes/pricing-and-plans) shows how to render them.
+
+## Step 9: Package a release
+
+```bash
+npm run build     # production build into BUILD_DIR
+npm run pack      # theme.zip, installable through the admin panel
+npm run release   # versioned archive including the release/ folder
+```
+
+See [Packaging and publishing](/development/themes/packaging-and-publishing).
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="The theme isn't listed in the admin panel">
+    Check that the directory path matches the package name, that `type` is `aikeedo-theme`, and that `require` includes `heyaikeedo/composer`.
+  </Accordion>
+  <Accordion title="Styles are missing, or assets 404">
+    `THEME_ASSETS_SERVER` must match the Vite port, and `npm run dev` must be running. Without the dev server, build once so the files exist in `BUILD_DIR`.
+  </Accordion>
+  <Accordion title="Class Acme\Aurora\Theme not found">
+    Run `composer require acme/aurora`, and check that the namespace in `composer.json`, `Theme.php` and the autoload map all agree.
+  </Accordion>
+  <Accordion title="/custom returns 404">
+    Routes are cached when `CACHE=true`. Set `CACHE=false`, or clear the cache from **Status → Clear cache**.
+  </Accordion>
+  <Accordion title="Twig errors about undefined variables">
+    Debug mode enables strict variables. Guard optional values, for example `{% if user is defined %}`.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Theme structure](/development/themes/structure)
+- [Build and assets](/development/themes/build-and-assets)
+- [Template objects](/development/themes/template-objects)
+- [Default theme source](https://github.com/heyaikeedo/themes-default)

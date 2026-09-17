@@ -1,0 +1,172 @@
+---
+title: "Data and persistence"
+sidebarTitle: "Data and persistence"
+description: "Where an Aikeedo plugin can store data: options, core entities and external stores, and why plugins cannot ship their own database migrations."
+---
+
+Plugins can't add their own Doctrine entities or migrations, because the ORM maps only the core `src/` directory and the migration paths are fixed. That's less limiting than it sounds: most plugins need settings and a little state, and both have a home.
+
+## Choose a storage strategy
+
+| You need to store | Use |
+| --- | --- |
+| Settings, credentials, feature flags | Options |
+| Job state, cursors, counters | Options |
+| Data that belongs to an existing concept, such as a note on a user | Core entity metadata |
+| Records that belong to a workspace and grow without bound | Your own external store, or a table you create and manage yourself |
+| Files | The CDN or the local filesystem, see [Files and storage](/development/plugins/files-and-storage) |
+
+## Options
+
+Options are key-value rows holding JSON. They're loaded once per request and exposed to the container, so reading one is free after boot.
+
+### Reading
+
+```php
+use Easy\Container\Attributes\Inject;
+
+public function __construct(
+    #[Inject('option.crm.api_key')]
+    private ?string $apiKey = null,
+
+    #[Inject('option.crm.sync')]
+    private ?array $sync = null,
+) {}
+```
+
+In Twig, the same values are under `option`:
+
+```twig
+{{ option.crm.api_key ?? '' }}
+```
+
+### Writing
+
+```php
+use Option\Application\Commands\SaveOptionCommand;
+use Shared\Infrastructure\CommandBus\Dispatcher;
+
+$this->dispatcher->dispatch(new SaveOptionCommand(
+    'crm',
+    json_encode([
+        'sync' => ['status' => 'processing', 'cursor_id' => null],
+    ])
+));
+```
+
+Writes **merge**, they don't replace. Associative arrays are merged recursively, so the call above leaves `option.crm.api_key` untouched. Lists are replaced wholesale, which is what you want for an array of configured items.
+
+```php
+use Option\Application\Commands\DeleteOptionCommand;
+
+$this->dispatcher->dispatch(new DeleteOptionCommand('crm'));
+```
+
+<Warning>
+  One top-level key per plugin. Two pages writing different subtrees of the same key is fine, but two plugins sharing a key will overwrite each other's structure.
+</Warning>
+
+<Note>
+  Options are global to the installation, not per workspace or per user. For per-workspace state, key the data inside the option by workspace ID, or store it on a core entity.
+</Note>
+
+## Core entities
+
+Your plugin can read and write the core's own data through its commands and repositories, which keeps validation and events intact:
+
+```php
+use Shared\Infrastructure\CommandBus\Dispatcher;
+use Workspace\Application\Commands\ReadWorkspaceCommand;
+
+$workspace = $this->dispatcher->dispatch(new ReadWorkspaceCommand($workspaceId));
+```
+
+Entities are persisted at the end of the request: the application flushes the entity manager once, after the response is emitted. Call the entity's methods and let the flush happen.
+
+```php
+use Doctrine\ORM\EntityManagerInterface;
+
+public function __construct(
+    private EntityManagerInterface $em,
+) {}
+
+// Only when you must persist before the request ends, such as mid-stream.
+$this->em->flush();
+```
+
+<Tip>
+  Several core entities support metadata, which is a practical place for a small amount of plugin-owned data attached to an existing record. Check the entity for an `addMeta()` or `setMeta()` method before inventing storage of your own.
+</Tip>
+
+## When you really need tables
+
+If your plugin genuinely needs its own tables, own them end to end:
+
+- Create the schema from an `install()` hook, using the DBAL connection from the entity manager, and drop it in `uninstall()`.
+- Query with DBAL rather than the ORM, since Doctrine won't map your entities.
+- Namespace table names with your vendor, such as `acme_notes`, so you never collide with a future core table.
+
+```php
+use Doctrine\ORM\EntityManagerInterface;
+
+public function install(Context $context): void
+{
+    $this->em->getConnection()->executeStatement(<<<'SQL'
+        CREATE TABLE IF NOT EXISTS acme_notes (
+            id BINARY(16) NOT NULL PRIMARY KEY,
+            workspace_id BINARY(16) NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            created_at DATETIME NOT NULL
+        ) DEFAULT CHARACTER SET utf8mb4
+    SQL);
+}
+```
+
+<Warning>
+  Aikeedo won't migrate, back up or delete tables you create, and nothing validates them against a future release. Prefer options or an external service unless you're prepared to maintain the schema yourself.
+</Warning>
+
+## Caching
+
+For values that are expensive to compute or fetch, use the PSR-6 cache pool instead of a new option:
+
+```php
+use Psr\Cache\CacheItemPoolInterface;
+
+public function __construct(
+    private CacheItemPoolInterface $cache,
+) {}
+
+public function lists(): array
+{
+    $item = $this->cache->getItem('acme_crm.lists');
+
+    if (!$item->isHit()) {
+        $item->set($this->client->fetchLists());
+        $item->expiresAfter(60);
+        $this->cache->save($item);
+    }
+
+    return $item->get();
+}
+```
+
+Clearing the application cache also clears this pool, so never treat it as durable storage.
+
+## Cleaning up
+
+Uninstalling a plugin removes its files, but not its data. Delete what you own in the `uninstall()` hook:
+
+```php
+public function uninstall(Context $context): void
+{
+    $this->dispatcher->dispatch(new DeleteOptionCommand('crm'));
+}
+```
+
+## Related
+
+- [Lifecycle and hooks](/development/plugins/lifecycle-and-hooks)
+- [Files and storage](/development/plugins/files-and-storage)
+- [Events and cron](/development/plugins/events-and-cron)
+- [Database internals](/development/core/database-and-migrations)

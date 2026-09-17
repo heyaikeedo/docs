@@ -1,0 +1,306 @@
+---
+title: "Build your first plugin"
+sidebarTitle: "Quickstart"
+description: "Create, install and activate an Aikeedo plugin with an admin settings page, a saved option and a navigation entry."
+---
+
+In this guide you build `acme/hello`, a plugin that adds a settings page to the admin panel, stores a setting, and links to itself from the settings index. It takes about 15 minutes and touches every part of the plugin system you'll use again later.
+
+## Prerequisites
+
+- A local Aikeedo installation with `DEBUG=true` and `CACHE=false`. See [Local development](/development/local-development).
+- Composer 2 and terminal access to the installation root.
+- Administrator access to the admin panel.
+
+## Step 1: Create the package
+
+Plugins live in `extra/extensions/{vendor}/{name}`, and the directory path must match the package name.
+
+```bash
+mkdir -p extra/extensions/acme/hello/src
+mkdir -p extra/extensions/acme/hello/templates
+```
+
+## Step 2: Write the manifest
+
+```json extra/extensions/acme/hello/composer.json
+{
+  "name": "acme/hello",
+  "description": "A starter plugin for Aikeedo",
+  "version": "1.0.0",
+  "type": "aikeedo-plugin",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Acme",
+      "email": "dev@acme.test"
+    }
+  ],
+  "require": {
+    "heyaikeedo/composer": "^1.0.0"
+  },
+  "extra": {
+    "entry-class": "Acme\\Hello\\Plugin",
+    "title": "Hello",
+    "description": "A starter plugin for Aikeedo",
+    "default_url": "/admin/settings/hello",
+    "status": "inactive"
+  },
+  "autoload": {
+    "psr-4": {
+      "Acme\\Hello\\": "src/"
+    }
+  }
+}
+```
+
+| Field | Why it matters |
+| --- | --- |
+| `name` | Must match the directory path, `acme/hello` |
+| `type` | `aikeedo-plugin` tells the installer where to put the package |
+| `version` | Composer needs it when the plugin is installed from an archive |
+| `require` | `heyaikeedo/composer` provides the installer; it's mandatory |
+| `extra.entry-class` | The class Aikeedo boots |
+| `extra.default_url` | Where the admin plugins list links when the plugin is active |
+
+See the [manifest reference](/development/plugins/manifest) for every supported field.
+
+## Step 3: Write the entry class
+
+The entry class is resolved from the container, so declare the core services you need as constructor parameters.
+
+```php extra/extensions/acme/hello/src/Plugin.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Hello;
+
+use Easy\Router\Mapper\AttributeMapper;
+use Override;
+use Plugin\Domain\Context;
+use Plugin\Domain\PluginInterface;
+use Shared\Infrastructure\Navigation\Item;
+use Shared\Infrastructure\Navigation\Registry;
+use Twig\Loader\FilesystemLoader;
+
+class Plugin implements PluginInterface
+{
+    public function __construct(
+        private FilesystemLoader $loader,
+        private AttributeMapper $mapper,
+        private Registry $nav,
+    ) {}
+
+    #[Override]
+    public function boot(Context $context): void
+    {
+        // Templates become available as @acme-hello/<file>.twig
+        $this->loader->addPath(__DIR__ . '/../templates', 'acme-hello');
+
+        // Scan this directory for request handlers with #[Route] attributes
+        $this->mapper->addPath(__DIR__);
+
+        // Link the settings page from Settings in the admin panel
+        $item = new Item(
+            '/admin/settings/hello',
+            p__('nav', 'Hello'),
+            'confetti'
+        );
+
+        $item->description = p__('nav', 'Settings for the Hello plugin');
+        $item->isBuiltIn = false;
+
+        $this->nav->item('admin.settings.common', $item);
+    }
+}
+```
+
+<Note>
+  `p__('nav', '...')` is a gettext call with a context. Wrapping strings this way lets you translate the plugin later. See [Localization](/development/plugins/localization).
+</Note>
+
+## Step 4: Add a settings page
+
+Routes are declared with attributes on a request handler. Extending `AbstractAdminViewRequestHandler` puts the route under `/admin` and applies the admin middleware, so only administrators reach it.
+
+```php extra/extensions/acme/hello/src/SettingsRequestHandler.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Hello;
+
+use Easy\Container\Attributes\Inject;
+use Easy\Http\Message\RequestMethod;
+use Easy\Router\Attributes\Route;
+use Presentation\RequestHandlers\Admin\AbstractAdminViewRequestHandler;
+use Presentation\Response\ViewResponse;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+
+#[Route(path: '/settings/hello', method: RequestMethod::GET)]
+class SettingsRequestHandler extends AbstractAdminViewRequestHandler implements
+    RequestHandlerInterface
+{
+    public function __construct(
+        #[Inject('option.hello.greeting')]
+        private ?string $greeting = null,
+    ) {}
+
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        return new ViewResponse('@acme-hello/settings.twig', [
+            'greeting' => $this->greeting ?? 'Hello',
+        ]);
+    }
+}
+```
+
+The `#[Inject('option.hello.greeting')]` attribute reads a stored option by dot path. It resolves to `null` until the option exists.
+
+## Step 5: Add the template
+
+Admin pages extend the core layout. Setting `xdata` to `settings` binds the page to Aikeedo's settings component, which submits the form to the options API for you.
+
+```twig extra/extensions/acme/hello/templates/settings.twig
+{% extends "/layouts/main.twig" %}
+{% set active_menu = 'settings' %}
+{% set xdata = 'settings' %}
+
+{% block title p__('title', 'Hello settings')|title %}
+
+{% block template %}
+	<div class="flex flex-col items-start gap-2">
+		<a href="admin/settings" class="flex items-center text-xs font-semibold text-content-dimmed hover:text-content">
+			<span>{{ p__('button', 'Settings') }}</span>
+			<i class="ti ti-chevron-right"></i>
+		</a>
+
+		<h1>{{ p__('heading', 'Hello settings') }}</h1>
+	</div>
+
+	<x-form>
+		<form @submit.prevent="submit" x-ref="form">
+			<section class="grid grid-cols-1 gap-6 box" data-density="comfortable">
+				<h2>{{ p__('heading', 'Greeting') }}</h2>
+
+				<div>
+					<label for="hello.greeting">
+						{{ p__('label', 'Greeting text') }}
+					</label>
+
+					<input
+						type="text"
+						id="hello.greeting"
+						name="hello[greeting]"
+						class="mt-2 input"
+						value="{{ option.hello.greeting ?? '' }}"
+						placeholder="{{ __('Hello') }}"
+					/>
+				</div>
+			</section>
+
+			<div class="flex justify-end gap-2 mt-8">
+				<button type="submit" class="button button-accent" :processing="isProcessing">
+					{{ p__('button', 'Save changes') }}
+				</button>
+			</div>
+		</form>
+	</x-form>
+{% endblock %}
+```
+
+The field name `hello[greeting]` decides where the value is stored: the top-level key becomes the option `hello`, and the value is merged into its JSON, so the template and your handler both read it as `option.hello.greeting`.
+
+## Step 6: Install the plugin
+
+The installation's `composer.json` already treats `extra/extensions/*/*` as a path repository, so Composer finds your package by name. From the installation root:
+
+```bash
+composer require acme/hello
+```
+
+Composer registers the package's autoloader, which is what makes `Acme\Hello\Plugin` loadable.
+
+## Step 7: Activate and verify
+
+<Steps>
+  <Step title="Activate the plugin">
+    In the admin panel, open **Plugins**, find **Hello**, and activate it. Activation writes `extra.status` back to your `composer.json` and clears the cache.
+  </Step>
+  <Step title="Open the settings page">
+    Go to **Settings**. Your entry appears in the list, marked as a plugin addition. Open it, or go straight to `/admin/settings/hello`.
+  </Step>
+  <Step title="Save a value">
+    Type a greeting and select **Save changes**. A toast confirms the save.
+  </Step>
+  <Step title="Confirm it was stored">
+    Reload the page. The input keeps its value, which means the option was written and injected back into the handler.
+
+    <Check>
+      Your plugin registers templates, a route, a menu entry and a setting.
+    </Check>
+  </Step>
+</Steps>
+
+## Step 8: Use the setting
+
+Anywhere else in your plugin, read the option the same way:
+
+```php
+use Easy\Container\Attributes\Inject;
+
+public function __construct(
+    #[Inject('option.hello.greeting')]
+    private ?string $greeting = null,
+) {}
+```
+
+Or dispatch a command to write one:
+
+```php
+use Option\Application\Commands\SaveOptionCommand;
+use Shared\Infrastructure\CommandBus\Dispatcher;
+
+$this->dispatcher->dispatch(
+    new SaveOptionCommand('hello', json_encode(['greeting' => 'Hi there']))
+);
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="The plugin doesn't appear in the admin panel">
+    Check that the directory path matches the package `name`, that `type` is `aikeedo-plugin`, and that `require` includes `heyaikeedo/composer`. An invalid manifest is skipped.
+  </Accordion>
+  <Accordion title="Class Acme\Hello\Plugin not found">
+    The package isn't registered with Composer's autoloader. Run `composer require acme/hello`, or `composer dump-autoload` if it's already required.
+  </Accordion>
+  <Accordion title="The route returns 404">
+    Routes are scanned from the directories you pass to `AttributeMapper::addPath()`, and the result is cached when `CACHE=true`. Set `CACHE=false`, or clear the cache from **Status → Clear cache**.
+  </Accordion>
+  <Accordion title="Template not found">
+    The namespace in `addPath(__DIR__ . '/../templates', 'acme-hello')` must match the `@acme-hello/...` reference, and `boot()` must have run, which means the plugin has to be active.
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Routes and request handlers" icon="route" href="/development/plugins/routes-and-request-handlers">
+    Base classes, middleware, responses and validation.
+  </Card>
+  <Card title="Admin settings pages" icon="adjustments-horizontal" href="/development/plugins/admin-settings-pages">
+    Forms, option storage and secrets.
+  </Card>
+  <Card title="Events and cron" icon="clock" href="/development/plugins/events-and-cron">
+    React to domain events and run scheduled work.
+  </Card>
+  <Card title="Packaging" icon="box" href="/development/plugins/packaging-and-distribution">
+    Ship your plugin as an installable archive.
+  </Card>
+</CardGroup>
+
+For a complete public example, see the [Currency Beacon plugin](https://github.com/heyaikeedo/plugins-currency-beacon).

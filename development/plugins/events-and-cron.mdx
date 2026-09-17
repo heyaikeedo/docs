@@ -1,0 +1,261 @@
+---
+title: "Events and scheduled work"
+sidebarTitle: "Events and cron"
+description: "React to Aikeedo domain events from a plugin, dispatch your own, and run batched background work on the cron tick."
+---
+
+Aikeedo dispatches domain events whenever something meaningful happens: a user signs up, an order is fulfilled, credits are consumed. Plugins subscribe to those events, and use the cron event for scheduled work.
+
+## Subscribe to an event
+
+Register listeners in `boot()` through the event mapper:
+
+```php src/Plugin.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Crm;
+
+use Acme\Crm\Listeners\PushContact;
+use Acme\Crm\Listeners\SyncContacts;
+use Cron\Domain\Events\CronEvent;
+use Easy\EventDispatcher\Mapper\ArrayMapper;
+use Override;
+use Plugin\Domain\Context;
+use Plugin\Domain\PluginInterface;
+use User\Domain\Events\UserCreatedEvent;
+use User\Domain\Events\UserUpdatedEvent;
+
+class Plugin implements PluginInterface
+{
+    public function __construct(
+        private ArrayMapper $mapper,
+    ) {}
+
+    #[Override]
+    public function boot(Context $context): void
+    {
+        $this->mapper->addEventListener(UserCreatedEvent::class, PushContact::class);
+        $this->mapper->addEventListener(UserUpdatedEvent::class, PushContact::class);
+        $this->mapper->addEventListener(CronEvent::class, SyncContacts::class);
+    }
+}
+```
+
+## Write a listener
+
+A listener is an invokable class. It's resolved from the container, so it can depend on any service:
+
+```php src/Listeners/PushContact.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Crm\Listeners;
+
+use Acme\Crm\Client;
+use Easy\Container\Attributes\Inject;
+use Psr\Log\LoggerInterface;
+use Throwable;
+use User\Domain\Events\AbstractUserEvent;
+
+class PushContact
+{
+    public function __construct(
+        private Client $client,
+        private LoggerInterface $logger,
+
+        #[Inject('option.crm.auto_sync')]
+        private ?bool $autoSync = false,
+    ) {}
+
+    public function __invoke(AbstractUserEvent $event): void
+    {
+        if (!$this->autoSync) {
+            return;
+        }
+
+        $user = $event->user;
+
+        try {
+            $this->client->upsertContact([
+                'email' => (string) $user->getEmail()->value,
+                'first_name' => (string) $user->getFirstName()->value,
+            ]);
+        } catch (Throwable $th) {
+            // Never let an integration break the user's request.
+            $this->logger->error('CRM sync failed', ['exception' => $th]);
+        }
+    }
+}
+```
+
+<Warning>
+  Listeners run synchronously inside the request that dispatched the event. Keep them fast, and catch your own exceptions, or a failing third-party API will break signup. Log failures instead of swallowing them silently, and reconcile later from cron.
+</Warning>
+
+### Priorities
+
+```php
+use Easy\EventDispatcher\Priority;
+
+$this->mapper->addEventListener(UserCreatedEvent::class, Welcome::class, Priority::HIGH);
+```
+
+`Priority::HIGH` (100) runs before `Priority::NORMAL` (50), which runs before `Priority::LOW` (0).
+
+### Inheritance matters
+
+Listeners match with `instanceof`, so a listener on a parent class also receives its subclasses.
+
+| Event | Extends |
+| --- | --- |
+| `UserUpdatedEvent` | `AbstractUserEvent` |
+| `EmailVerifiedEvent` | `UserUpdatedEvent` |
+| `UserEmailUpdatedEvent` | `UserUpdatedEvent` |
+
+<Warning>
+  Registering the same listener on both `UserUpdatedEvent` and `EmailVerifiedEvent` makes it run **twice** when an email is verified. Subscribe to the most general event you care about, and branch inside the listener with `instanceof` if you need to tell them apart.
+</Warning>
+
+## Events you can subscribe to
+
+| Module | Events | Payload |
+| --- | --- | --- |
+| User | `UserCreatedEvent`, `UserUpdatedEvent`, `UserDeletedEvent`, `EmailVerifiedEvent`, `UserEmailUpdatedEvent`, `UserPasswordUpdatedEvent`, `PasswordRecoveryCreatedEvent` | `$event->user` |
+| Workspace | `WorkspaceCreatedEvent`, `WorkspaceUpdatedEvent`, `WorkspaceDeletedEvent`, `InvitationCreatedEvent` | `$event->workspace`, or the invitation |
+| Billing | `OrderCreatedEvent`, `OrderFulfilledEvent` | `$event->order` |
+| Billing | `SubscriptionCreatedEvent`, `SubscriptionActivatedEvent`, `SubscriptionUsageResetEvent` | `$event->subscription` |
+| Billing | `PlanCreatedEvent`, `PlanUpdatedEvent`, `PlanDeletedEvent`, `CouponCreatedEvent`, `CouponUpdatedEvent`, `CouponDeletedEvent` | The plan or coupon |
+| Billing | `CreditUsageEvent` | `$event->workspace`, `$event->count` |
+| Option | `OptionCreatedEvent`, `OptionUpdatedEvent`, `OptionDeletedEvent` | The option |
+| Preset | `PresetCreatedEvent`, `PresetUpdatedEvent`, `PresetDeletedEvent` | The preset |
+| Category | `CategoryCreatedEvent`, `CategoryUpdatedEvent`, `CategoryDeletedEvent` | The category |
+| Cron | `CronEvent` | none |
+
+Class names are under `<Module>\Domain\Events\`. See the [event catalog](/development/core/events) for the full list, including who listens in core.
+
+## Dispatch your own events
+
+```php
+use Psr\EventDispatcher\EventDispatcherInterface;
+
+public function __construct(
+    private EventDispatcherInterface $dispatcher,
+) {}
+
+$this->dispatcher->dispatch(new NoteCreatedEvent($note));
+```
+
+Other plugins can then subscribe to your event, which is how you make your plugin extensible.
+
+## Scheduled work
+
+There's no queue. Recurring work runs when `cron.php` executes, which dispatches `Cron\Domain\Events\CronEvent`. Subscribe to it like any other event.
+
+```php
+$this->mapper->addEventListener(CronEvent::class, SyncContacts::class);
+```
+
+A cron listener should process a bounded batch and remember where it stopped, because the next tick may be a minute away:
+
+```php src/Listeners/SyncContacts.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Crm\Listeners;
+
+use Acme\Crm\Client;
+use Cron\Domain\Events\CronEvent;
+use Easy\Container\Attributes\Inject;
+use Option\Application\Commands\SaveOptionCommand;
+use Shared\Infrastructure\CommandBus\Dispatcher;
+use Throwable;
+use User\Application\Commands\ListUsersCommand;
+
+class SyncContacts
+{
+    private const BATCH_SIZE = 50;
+
+    public function __construct(
+        private Client $client,
+        private Dispatcher $dispatcher,
+
+        #[Inject('option.crm.sync')]
+        private ?array $sync = null,
+    ) {}
+
+    public function __invoke(CronEvent $event): void
+    {
+        $state = $this->sync ?? [];
+
+        // Only run while an administrator has started a sync.
+        if (($state['status'] ?? null) !== 'processing') {
+            return;
+        }
+
+        $cmd = new ListUsersCommand();
+        $cmd->setLimit(self::BATCH_SIZE);
+
+        if (!empty($state['cursor_id'])) {
+            $cmd->setCursor($state['cursor_id'], 'starting_after');
+        }
+
+        $synced = (int) ($state['synced'] ?? 0);
+        $failed = (int) ($state['failed'] ?? 0);
+        $cursor = $state['cursor_id'] ?? null;
+        $processed = 0;
+
+        foreach ($this->dispatcher->dispatch($cmd) as $user) {
+            $processed++;
+            $cursor = (string) $user->getId()->getValue();
+
+            try {
+                $this->client->upsertContact([
+                    'email' => (string) $user->getEmail()->value,
+                ]);
+
+                $synced++;
+            } catch (Throwable) {
+                $failed++;
+            }
+        }
+
+        $this->dispatcher->dispatch(new SaveOptionCommand('crm', json_encode([
+            'sync' => [
+                'status' => $processed === 0 ? 'completed' : 'processing',
+                'cursor_id' => $cursor,
+                'synced' => $synced,
+                'failed' => $failed,
+            ],
+        ])));
+    }
+}
+```
+
+Points to copy from this pattern:
+
+- **Opt in.** Do nothing unless an administrator started the job, so an idle installation pays nothing for your plugin.
+- **Batch.** Process a fixed number of records per tick.
+- **Persist a cursor.** Store the last processed ID in an option, so the next tick continues instead of restarting.
+- **Track counters and a status.** `processing`, `paused` and `completed` give the admin page something to show, and stopping is just a status change.
+- **Rate-limit yourself.** For a daily job, store a timestamp and return early until it's due.
+
+<Note>
+  Entity changes made in cron listeners are flushed after the event finishes, the same as in a web request.
+</Note>
+
+## Testing
+
+- Run the cron tick by hand with `php cron.php`.
+- Trigger domain events by doing the thing in the UI, such as creating a user.
+- Watch `var/log/app-*.log`, and log at the start and end of your listener while developing.
+
+## Related
+
+- [Core event catalog](/development/core/events)
+- [Background jobs and cron](/development/core/background-jobs-and-cron)
+- [Event-driven integrations guide](/development/plugins/guides/event-driven-integration)
+- [Data and persistence](/development/plugins/data-and-persistence)

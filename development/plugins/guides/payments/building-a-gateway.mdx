@@ -1,0 +1,302 @@
+---
+title: "Build a payment gateway"
+sidebarTitle: "Build a gateway"
+description: "Implement, register and configure an Aikeedo payment gateway plugin, from the manifest to a working hosted checkout."
+---
+
+import { OfficialPlugins } from '/snippets/official-plugins.mdx';
+
+This guide builds `acme/demo-pay`, a gateway for a fictional provider with a hosted checkout page and HMAC-signed webhooks. It's a complete implementation you can adapt to a real provider.
+
+## Prerequisites
+
+- A working plugin skeleton. Follow the [plugin quickstart](/development/plugins/quickstart) first.
+- An understanding of the [payment lifecycle](/development/plugins/guides/payments/overview).
+
+## Step 1: Register the gateway
+
+```php src/Plugin.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\DemoPay;
+
+use Billing\Infrastructure\Payments\PaymentGatewayFactoryInterface;
+use Easy\Router\Mapper\AttributeMapper;
+use Override;
+use Plugin\Domain\Context;
+use Plugin\Domain\PluginInterface;
+use Twig\Loader\FilesystemLoader;
+
+class Plugin implements PluginInterface
+{
+    public function __construct(
+        private PaymentGatewayFactoryInterface $factory,
+        private FilesystemLoader $loader,
+        private AttributeMapper $mapper,
+    ) {}
+
+    #[Override]
+    public function boot(Context $context): void
+    {
+        $this->loader->addPath(__DIR__ . '/../templates', 'demo-pay');
+        $this->factory->register(DemoPay::LOOKUP_KEY, DemoPay::class);
+        $this->mapper->addPath(__DIR__);
+    }
+}
+```
+
+Set `extra.default_url` in the manifest to `/admin/settings/payments/demo-pay`, which is where the payments list links.
+
+## Step 2: Implement the gateway
+
+```php src/DemoPay.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\DemoPay;
+
+use Billing\Domain\Entities\OrderEntity;
+use Billing\Domain\ValueObjects\ExternalId;
+use Billing\Domain\ValueObjects\PaymentGateway;
+use Billing\Infrastructure\Payments\Exceptions\PaymentException;
+use Billing\Infrastructure\Payments\Helper;
+use Billing\Infrastructure\Payments\OffsitePaymentGatewayInterface;
+use Billing\Infrastructure\Payments\PurchaseToken;
+use Billing\Infrastructure\Payments\WebhookHandlerInterface;
+use Easy\Container\Attributes\Inject;
+use Laminas\Diactoros\Uri;
+use Override;
+use Psr\Http\Message\UriInterface;
+use Symfony\Component\Intl\Currencies;
+use Throwable;
+
+class DemoPay implements OffsitePaymentGatewayInterface
+{
+    public const LOOKUP_KEY = 'demo-pay';
+
+    public function __construct(
+        private Client $client,
+        private Helper $helper,
+
+        #[Inject('option.demo_pay.is_enabled')]
+        private ?bool $isEnabled = false,
+
+        #[Inject('option.demo_pay.secret_key')]
+        private ?string $secretKey = null,
+
+        #[Inject('option.demo_pay.currency')]
+        private ?string $currency = null,
+    ) {}
+
+    #[Override]
+    public function isEnabled(): bool
+    {
+        return (bool) $this->isEnabled && $this->secretKey !== null;
+    }
+
+    #[Override]
+    public function getName(): string
+    {
+        return 'DemoPay';
+    }
+
+    #[Override]
+    public function getLogo(): string
+    {
+        return file_get_contents(__DIR__ . '/../assets/logo.svg');
+    }
+
+    #[Override]
+    public function getButtonBackgroundColor(): string
+    {
+        return '#0f172a';
+    }
+
+    #[Override]
+    public function getButtonTextColor(): string
+    {
+        return '#ffffff';
+    }
+
+    #[Override]
+    public function purchase(OrderEntity $order): UriInterface|PurchaseToken|string
+    {
+        // Convert into the currency the account is configured for.
+        [$price, $currency] = $this->helper->convert(
+            $order->getTotalPrice(),
+            $order->getCurrencyCode(),
+            $this->currency,
+        );
+
+        $fraction = Currencies::getFractionDigits($currency->value);
+
+        try {
+            $session = $this->client->post('/checkout-sessions', [
+                // Minor units, as the provider expects
+                'amount' => $price->value,
+                'currency' => $currency->value,
+                'reference' => (string) $order->getId()->getValue(),
+                'success_url' => $this->helper->generateReturnUrl($order, self::LOOKUP_KEY),
+                'cancel_url' => $this->helper->generateCancelUrl($order, self::LOOKUP_KEY),
+                'webhook_url' => $this->helper->generateWebhookUrl($order, self::LOOKUP_KEY),
+            ]);
+        } catch (Throwable $th) {
+            throw new PaymentException($th->getMessage(), previous: $th);
+        }
+
+        // Remember the provider's id before leaving the site.
+        $order->initiatePayment(
+            new PaymentGateway(self::LOOKUP_KEY),
+            new ExternalId($session->id),
+        );
+
+        return new Uri($session->url);
+    }
+
+    #[Override]
+    public function completePurchase(OrderEntity $order, array $params = []): string
+    {
+        $sessionId = (string) $order->getExternalId()->value;
+
+        if (!$sessionId) {
+            throw new PaymentException('Missing payment reference');
+        }
+
+        $session = $this->client->get('/checkout-sessions/' . $sessionId);
+
+        // Verify: right order, and actually paid.
+        if ($session->reference !== (string) $order->getId()->getValue()) {
+            throw new PaymentException('Payment reference mismatch');
+        }
+
+        if ($session->status !== 'paid') {
+            throw new PaymentException('Payment is not completed');
+        }
+
+        return (string) $session->payment_id;
+    }
+
+    #[Override]
+    public function cancelSubscription(string $id): void
+    {
+        try {
+            $this->client->post('/subscriptions/' . $id . '/cancel', []);
+        } catch (Throwable $th) {
+            // Already cancelled at the provider: nothing to do.
+            throw new PaymentException($th->getMessage(), previous: $th);
+        }
+    }
+
+    #[Override]
+    public function getWebhookHandler(): string|WebhookHandlerInterface
+    {
+        return WebhookHandler::class;
+    }
+}
+```
+
+### Key points
+
+- **`isEnabled()` must check the configuration too.** A gateway that's switched on but missing credentials shouldn't appear at checkout.
+- **Store the provider's reference with `initiatePayment()`** before redirecting, so `completePurchase()` can find the payment even when the provider sends no parameters back.
+- **Verify on the server.** Re-fetch the payment and compare the amount and your order reference. Never trust parameters in the return URL.
+- **Wrap provider failures in `PaymentException`**, so the user gets a readable message instead of a `500`.
+
+## Step 3: Amounts and currency
+
+Aikeedo stores money as an integer in minor units, along with a currency code. Two conversions matter:
+
+```php
+// 1. Exchange rate, only when the gateway bills in a fixed currency
+[$price, $currency] = $this->helper->convert(
+    $order->getTotalPrice(),
+    $order->getCurrencyCode(),
+    $this->currency,
+);
+
+// 2. Minor to major units, when the provider expects a decimal amount
+$fraction = Currencies::getFractionDigits($currency->value);
+$major = number_format($price->value / (10 ** $fraction), $fraction, '.', '');
+```
+
+<Warning>
+  `Helper::convert()` returns the original amount and currency unchanged if the exchange fails, so check the returned currency before you send it to the provider.
+</Warning>
+
+Totals already include tax and any coupon:
+
+| Method | Returns |
+| --- | --- |
+| `getTotalPrice()` | What the customer pays, tax included, honoring a coupon's cycle limit |
+| `getTotalPrice(true)` | The same, but ignoring a coupon's cycle count, for providers that can't express "discount for the first N cycles" |
+| `getSubtotal()` | The plan price before tax and discounts |
+| `getDiscount()` | The coupon amount |
+| `getTaxAmount()`, `getTaxLines()` | Tax total, and the individual lines when the provider wants an itemized breakdown |
+
+## Step 4: The settings page
+
+```php src/SettingsRequestHandler.php
+#[Route(path: '/settings/payments/demo-pay', method: RequestMethod::GET)]
+class SettingsRequestHandler extends AbstractAdminViewRequestHandler implements
+    RequestHandlerInterface
+{
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        return new ViewResponse('@demo-pay/settings.twig', [
+            'currencies' => Currencies::getNames(),
+        ]);
+    }
+}
+```
+
+The template follows the standard settings form, described in [Admin settings pages](/development/plugins/admin-settings-pages). Include:
+
+- An enable toggle, `demo_pay[is_enabled]`
+- API credentials
+- A currency select, or an "inherit from billing settings" option
+- The webhook URL, with `<x-copy>`, so the administrator can paste it into the provider's dashboard:
+
+```twig
+<x-copy data-copy="{{ option.site.url }}/webhooks/demo-pay">
+	<span>{{ option.site.url }}/webhooks/demo-pay</span>
+</x-copy>
+```
+
+For separate test and live credentials, use the mirroring pattern from the settings page guide, so your PHP always injects one flat key.
+
+## Step 5: Test it
+
+<Steps>
+  <Step title="Configure the gateway">
+    Enter sandbox credentials, enable it, and confirm it appears on the checkout page for a paid plan.
+  </Step>
+  <Step title="Complete a payment">
+    Buy a one-time plan in the provider's sandbox. You should land on the receipt page with the order marked paid, and the workspace should receive its credits.
+  </Step>
+  <Step title="Abandon a payment">
+    Start a checkout and cancel at the provider. You should return to the billing page, with the order still unpaid and no credits granted.
+  </Step>
+  <Step title="Force a failure">
+    Use an invalid API key. Checkout should show your error message, not a `500`.
+
+    <Check>
+      Orders are only fulfilled after the provider confirms the payment.
+    </Check>
+  </Step>
+</Steps>
+
+## Official gateways
+
+Before you build a gateway, check whether the provider is already covered by an official one on the [Aikeedo Marketplace](https://aikeedo.com/marketplace/):
+
+<OfficialPlugins skus={['paystack', 'razorpay', 'yookassa', 'iyzico', 'mercadopago', 'xendit', 'cryptomus']} />
+
+## Related
+
+- [Checkout flows](/development/plugins/guides/payments/checkout-flows)
+- [Subscriptions and renewals](/development/plugins/guides/payments/subscriptions-and-renewals)
+- [Webhooks](/development/plugins/guides/payments/webhooks)
+- [Payment gateway settings](/integrations/payment-gateways/overview)
