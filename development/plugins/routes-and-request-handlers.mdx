@@ -74,7 +74,7 @@ Every handler is a PSR-15 `RequestHandlerInterface`. The base class supplies the
 Prefixes and middleware are inherited, so `#[Route(path: '/settings/hello')]` on an admin view handler becomes `GET /admin/settings/hello`.
 
 <Warning>
-  A handler that extends no base class gets no authentication, no body parsing and no error handling. Only do that when you need it, such as for an embeddable widget, and add middleware explicitly. See [Public endpoints and embeds](/development/plugins/public-endpoints-and-embeds).
+  A handler that extends no base class gets no middleware at all: no body parsing, no user resolution and no error handling. Only do that when you need a minimal stack, such as for a webhook receiver, and add middleware explicitly. For ordinary public pages and endpoints, extend `AbstractRequestHandler`. See [Public pages and endpoints](/development/plugins/public-endpoints-and-embeds).
 </Warning>
 
 ## Route attributes
@@ -287,5 +287,5 @@ Handlers that extend `NotesApi` are served under `/api/notes`, with the standard
 
 - [Admin settings pages](/development/plugins/admin-settings-pages)
 - [App pages and APIs](/development/plugins/app-pages-and-apis)
-- [Public endpoints and embeds](/development/plugins/public-endpoints-and-embeds)
+- [Public pages and endpoints](/development/plugins/public-endpoints-and-embeds)
 - [Routing internals](/development/core/routing-and-middleware)
