@@ -56,15 +56,16 @@ class CreateCategoryCommandHandler
 {
     public function __construct(
         private CategoryRepositoryInterface $repo,
-        private EventDispatcherInterface $dispatcher,
+        private EventDispatcherInterface $ed,
     ) {}
 
     public function handle(CreateCategoryCommand $cmd): CategoryEntity
     {
         $category = new CategoryEntity(title: $cmd->title);
-
         $this->repo->add($category);
-        $this->dispatcher->dispatch(new CategoryCreatedEvent($category));
+
+        $event = new CategoryCreatedEvent($category);
+        $this->ed->dispatch($event);
 
         return $category;
     }
@@ -103,9 +104,8 @@ List commands usually expose setters for filters, sorting, limits and cursors, r
 Some commands offer alternative constructors for lookups by something other than an ID:
 
 ```php
-$subscription = $this->dispatcher->dispatch(
-    ReadSubscriptionCommand::createByExternalId('demo-pay', $providerId)
-);
+$cmd = ReadSubscriptionCommand::createByExternalId('demo-pay', $providerId);
+$subscription = $this->dispatcher->dispatch($cmd);
 ```
 
 ## Generators
@@ -118,7 +118,8 @@ Handlers throw domain exceptions rather than returning error values:
 
 ```php
 try {
-    $this->dispatcher->dispatch(new PayOrderCommand($id, $gateway, $reference));
+    $cmd = new PayOrderCommand($id, $gateway, $reference);
+    $this->dispatcher->dispatch($cmd);
 } catch (AlreadyPaidException) {
     // Someone else completed it first.
 }
