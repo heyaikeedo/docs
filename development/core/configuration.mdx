@@ -34,7 +34,6 @@ Configuration comes from three places, with different lifetimes and audiences.
 | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Connection details. |
 | `DB_CHARSET` | Character set, normally `utf8mb4`. |
 | `DB_UNIX_SOCKET` | Socket path, as an alternative to host and port. |
-| `SQLITE_PATH` | SQLite database path, where that driver is used. |
 
 ### Frontend and assets
 
@@ -51,7 +50,6 @@ Configuration comes from three places, with different lifetimes and audiences.
 | `COOKIE_DOMAIN`, `COOKIE_PREFIX` | Cookie scope and naming, for multi-app domains. Misconfiguring these breaks sign-in. |
 | `LOG_MAX_FILES`, `LOG_ERROR_MAX_FILES` | How many rotated log files to keep. |
 | `COMPOSER_HOME` | Composer's home directory, used when installing plugins. |
-| `DEMO_SUPERADMIN_EMAIL`, `DEMO_ACCOUNT_EMAIL`, `DEMO_ACCOUNT_PASSWORD` | Demo-mode accounts. |
 
 Read them with the global helper, which takes a default:
 
