@@ -91,7 +91,7 @@ class SettingsRequestHandler extends AbstractAdminViewRequestHandler implements
 						name="hello[api_key]"
 						class="mt-2 input"
 						autocomplete="new-password"
-						value="{{ environment != 'demo' ? option.hello.api_key ?? '' : 'hidden-in-demo' }}"
+						value="{{ option.hello.api_key ?? '' }}"
 					/>
 				</div>
 			</section>
@@ -189,7 +189,6 @@ See [Navigation](/development/plugins/navigation) for the available sections.
 
 ## Handling secrets
 
-- Render secrets only when the installation isn't a demo: `{{ environment != 'demo' ? option.hello.api_key ?? '' : 'hidden-in-demo' }}`.
 - Use `type="password"` with `autocomplete="new-password"`.
 - Never echo a secret into JavaScript or a data attribute.
 - Show connection state, such as "key configured", rather than the value itself, where you can.
@@ -258,9 +257,6 @@ Use `{% set active_menu = '/admin/plugins' %}` on those templates so the sidebar
   </Accordion>
   <Accordion title="An unrelated setting was wiped">
     You saved a top-level key that another page also owns. Keep one top-level key per plugin, and merge rather than replace.
-  </Accordion>
-  <Accordion title="Nothing saves on a demo installation">
-    Demo installations block write requests through `DemoEnvironmentMiddleware`.
   </Accordion>
 </AccordionGroup>
 

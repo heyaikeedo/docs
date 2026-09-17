@@ -112,7 +112,6 @@ use Easy\Router\Attributes\Middleware;
 use Easy\Router\Attributes\Route;
 use Presentation\Middlewares\CaptchaMiddleware;
 use Presentation\Middlewares\ClientIpMiddleware;
-use Presentation\Middlewares\DemoEnvironmentMiddleware;
 use Presentation\RequestHandlers\AbstractRequestHandler;
 use Presentation\Response\JsonResponse;
 use Presentation\Validation\ValidationException;
@@ -121,7 +120,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Shared\Infrastructure\CommandBus\Dispatcher;
 
-#[Middleware(DemoEnvironmentMiddleware::class)]
 #[Middleware(ClientIpMiddleware::class)]
 #[Middleware(CaptchaMiddleware::class)]
 #[Route(path: '/acme-pricing/inquiries', method: RequestMethod::POST)]
@@ -154,7 +152,6 @@ class SubmitInquiry extends AbstractRequestHandler implements RequestHandlerInte
 | --- | --- |
 | `CaptchaMiddleware` | When reCAPTCHA is enabled in the admin panel, rejects requests without a valid `captcha-token` body field. When it's disabled, it lets every request through. |
 | `ClientIpMiddleware` | Resolves the visitor's IP behind proxies and stores it on the request under `ClientIpMiddleware::class` |
-| `DemoEnvironmentMiddleware` | Rejects writes on a demo installation. Outside `/api`, the rejection is a redirect to `/login`. |
 
 To send a captcha token, include the core snippet inside your form. It renders nothing when reCAPTCHA is off, and otherwise fills a `captcha-token` field for you:
 
@@ -235,7 +232,7 @@ A page meant to be framed on other sites, such as a chat or feedback widget, is 
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Validate every input.** Public bodies, query strings and route parameters are attacker-controlled. Check types, lengths and formats before using them.</span></div>
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Verify ownership of every ID.** When a route loads a record by ID, confirm the caller is allowed to see it. Loading by ID alone lets anyone read other people's data by guessing.</span></div>
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Don't rely on the optional user for access.** A missing `UserEntity` on a public route is normal, not an error. If a route needs a user, it isn't public: extend an authenticated base class.</span></div>
-  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Protect writes.** Add `CaptchaMiddleware` to forms, and `DemoEnvironmentMiddleware` to anything that changes data.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Protect writes.** Add `CaptchaMiddleware` to forms and to anything that creates records or sends email.</span></div>
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Limit abuse.** Aikeedo has no built-in rate limiter. Cap requests per IP in your plugin or at the web server, and reject oversized payloads early.</span></div>
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Guard paid work.** Anything that spends AI credits must name the workspace that pays and check its balance first. Never let an anonymous request spend credits without an owner.</span></div>
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Treat headers as hints.** `Origin`, `Referer` and custom headers can be forged by any client. Enforce access with tokens, signatures and server-side allowlists.</span></div>

@@ -209,7 +209,6 @@ Enforce per-plan limits yourself, reading the plan configuration from the worksp
 ## Write endpoints
 
 - Validate with `Presentation\Validation\Validator::validateRequest()`.
-- Add `#[Middleware(DemoEnvironmentMiddleware::class)]` to writes you want blocked on demo installations.
 - Return `StatusCode::CREATED` with the created resource, or `EmptyResponse` with `StatusCode::NO_CONTENT` for deletes.
 - Changes are flushed at the end of the request, so persist through a repository and return.
 
