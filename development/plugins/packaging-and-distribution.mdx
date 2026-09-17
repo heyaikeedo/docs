@@ -87,13 +87,15 @@ Customers read this before they read your code. Cover:
 
 ## Release checklist
 
-<Check>`version` is raised, and the changelog is updated.</Check>
-<Check>`composer.json` sits at the archive root, and the archive has no wrapper folder.</Check>
-<Check>Development files are excluded, and build output is included.</Check>
-<Check>Translation catalogs are up to date and included.</Check>
-<Check>A clean installation test passes: upload, activate, configure, use, deactivate, uninstall.</Check>
-<Check>No errors in `var/log` with `DEBUG=true`.</Check>
-<Check>Secrets, license keys and customer data are nowhere in the archive.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`version` is raised, and the changelog is updated.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`composer.json` sits at the archive root, and the archive has no wrapper folder.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Development files are excluded, and build output is included.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Translation catalogs are up to date and included.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>A clean installation test passes: upload, activate, configure, use, deactivate, uninstall.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>No errors in `var/log` with `DEBUG=true`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Secrets, license keys and customer data are nowhere in the archive.</span></div>
+</div>
 
 ## Distribution options
 

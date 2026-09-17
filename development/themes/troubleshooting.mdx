@@ -8,10 +8,12 @@ description: "Fix the problems that come up most often when developing or instal
 
 The package failed validation, or it isn't where Aikeedo looks.
 
-<Check>The directory is `extra/extensions/{vendor}/{name}` and matches the `name` field.</Check>
-<Check>`type` is `aikeedo-theme`.</Check>
-<Check>`require` includes `heyaikeedo/composer`.</Check>
-<Check>`composer.json` is valid JSON.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The directory is `extra/extensions/{vendor}/{name}` and matches the `name` field.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`type` is `aikeedo-theme`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`require` includes `heyaikeedo/composer`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`composer.json` is valid JSON.</span></div>
+</div>
 
 Turn on `DEBUG=true` to see the validation error instead of a silently skipped package.
 
@@ -54,17 +56,21 @@ The production build empties `BUILD_DIR` before writing. Point it at the theme's
 
 ## A custom page returns 404
 
-<Check>The theme is published, since a theme's entry class only boots while it's active.</Check>
-<Check>The package was installed with `composer require`, so the class autoloads.</Check>
-<Check>`AttributeMapper::addPath()` covers the handler's directory.</Check>
-<Check>The route cache was cleared, or `CACHE=false`.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The theme is published, since a theme's entry class only boots while it's active.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The package was installed with `composer require`, so the class autoloads.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`AttributeMapper::addPath()` covers the handler's directory.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The route cache was cleared, or `CACHE=false`.</span></div>
+</div>
 
 ## Strings aren't translated
 
-<Check>The string uses `d__('theme', …)` or `dp__('theme', …)`, not a plain `__()`.</Check>
-<Check>A `theme.po` exists for that language, with `X-Domain: theme`.</Check>
-<Check>The language is enabled in **Settings → Languages**.</Check>
-<Check>Extraction was re-run after the last copy change.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The string uses `d__('theme', …)` or `dp__('theme', …)`, not a plain `__()`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>A `theme.po` exists for that language, with `X-Domain: theme`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The language is enabled in **Settings → Languages**.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Extraction was re-run after the last copy change.</span></div>
+</div>
 
 ## The favicon 404s
 

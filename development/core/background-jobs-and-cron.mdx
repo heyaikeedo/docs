@@ -48,10 +48,12 @@ A tick may arrive every minute, so listeners process a bounded batch and remembe
 
 That pattern is worth copying:
 
-<Check>Process a fixed number of records per run.</Check>
-<Check>Persist a cursor, so the next run continues.</Check>
-<Check>Keep a status, so an administrator can start, pause and stop the work.</Check>
-<Check>Return early when there's nothing to do, so an idle installation costs nothing.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Process a fixed number of records per run.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Persist a cursor, so the next run continues.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Keep a status, so an administrator can start, pause and stop the work.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Return early when there's nothing to do, so an idle installation costs nothing.</span></div>
+</div>
 
 ## Import jobs
 

@@ -145,11 +145,13 @@ Both sides are autowired, so a plugin's handler can depend on core services and 
 
 ## Conventions
 
-<Check>One command, one handler, one responsibility.</Check>
-<Check>Commands hold data and convert it into value objects; they contain no logic.</Check>
-<Check>Handlers dispatch a domain event after a change, so other code can react.</Check>
-<Check>Handlers return entities or iterators, not formatted output. Formatting belongs in a resource.</Check>
-<Check>Nothing is flushed inside a handler unless it genuinely must be.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>One command, one handler, one responsibility.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Commands hold data and convert it into value objects; they contain no logic.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Handlers dispatch a domain event after a change, so other code can react.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Handlers return entities or iterators, not formatted output. Formatting belongs in a resource.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Nothing is flushed inside a handler unless it genuinely must be.</span></div>
+</div>
 
 ## Related
 

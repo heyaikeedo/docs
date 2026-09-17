@@ -183,10 +183,12 @@ Most other events have no core listener: they exist so that plugins can react.
 
 ## Guidelines
 
-<Check>Dispatch after the change, not before, so listeners see the final state.</Check>
-<Check>Keep listeners fast, and catch your own exceptions, since a failure propagates into the request that dispatched the event.</Check>
-<Check>Don't rely on listener order beyond priorities.</Check>
-<Check>Remember entities aren't flushed yet: a listener sees objects in memory, not rows.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Dispatch after the change, not before, so listeners see the final state.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Keep listeners fast, and catch your own exceptions, since a failure propagates into the request that dispatched the event.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Don't rely on listener order beyond priorities.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Remember entities aren't flushed yet: a listener sees objects in memory, not rows.</span></div>
+</div>
 
 ## Related
 

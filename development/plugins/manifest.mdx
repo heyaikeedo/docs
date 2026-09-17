@@ -165,12 +165,14 @@ Themes use the same file with two differences: `type` is `aikeedo-theme`, and `e
 
 ## Validation checklist
 
-<Check>The directory path matches `name`.</Check>
-<Check>`type` is `aikeedo-plugin`.</Check>
-<Check>`require` includes `heyaikeedo/composer`.</Check>
-<Check>`extra.entry-class` points at a class that implements `PluginInterface`.</Check>
-<Check>`autoload.psr-4` maps that namespace to `src/`.</Check>
-<Check>`version` is set and increases with each release.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The directory path matches `name`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`type` is `aikeedo-plugin`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`require` includes `heyaikeedo/composer`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`extra.entry-class` points at a class that implements `PluginInterface`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`autoload.psr-4` maps that namespace to `src/`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`version` is set and increases with each release.</span></div>
+</div>
 
 ## Related
 

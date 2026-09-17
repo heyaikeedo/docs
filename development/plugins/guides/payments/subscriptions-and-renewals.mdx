@@ -188,12 +188,14 @@ Use `CancelSubscriptionCommand` for a normal cancellation, and `EndSubscriptionC
 
 ## Testing checklist
 
-<Check>A recurring plan creates a subscription whose external ID is the one your provider knows.</Check>
-<Check>A trial starts without charging, and the first charge lands when the trial ends.</Check>
-<Check>Cancelling in Aikeedo cancels at the provider, and cancelling at the provider cancels in Aikeedo.</Check>
-<Check>Cancelling twice doesn't throw.</Check>
-<Check>A failed renewal ends the subscription instead of leaving free access.</Check>
-<Check>Switching plans cancels the previous subscription exactly once.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>A recurring plan creates a subscription whose external ID is the one your provider knows.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>A trial starts without charging, and the first charge lands when the trial ends.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Cancelling in Aikeedo cancels at the provider, and cancelling at the provider cancels in Aikeedo.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Cancelling twice doesn't throw.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>A failed renewal ends the subscription instead of leaving free access.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Switching plans cancels the previous subscription exactly once.</span></div>
+</div>
 
 ## Related
 

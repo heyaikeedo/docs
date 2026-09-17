@@ -203,11 +203,13 @@ Store the upload with `FileSystemInterface` under `var/`, not the CDN: it's a wo
 
 ## Testing
 
-<Check>A small archive imports completely, and conversations appear in the library.</Check>
-<Check>A large archive imports across several cron ticks without timing out.</Check>
-<Check>Re-importing the same archive skips existing conversations instead of duplicating them.</Check>
-<Check>A corrupt archive fails the job with a readable error, rather than looping forever.</Check>
-<Check>Temporary files are removed when the job finishes.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>A small archive imports completely, and conversations appear in the library.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>A large archive imports across several cron ticks without timing out.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Re-importing the same archive skips existing conversations instead of duplicating them.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>A corrupt archive fails the job with a readable error, rather than looping forever.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Temporary files are removed when the job finishes.</span></div>
+</div>
 
 ## Related
 

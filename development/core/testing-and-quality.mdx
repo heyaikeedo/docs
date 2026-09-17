@@ -70,11 +70,13 @@ class ContactMapperTest extends TestCase
 
 Routes, settings pages, webhooks and payment flows need a running installation. Check them manually against a local install with `DEBUG=true`:
 
-<Check>Install the extension into an installation that never had it.</Check>
-<Check>Exercise every page and endpoint it adds.</Check>
-<Check>Behave as a fresh installation would: no settings saved yet.</Check>
-<Check>Deactivate and uninstall, and confirm nothing is left behind.</Check>
-<Check>Read `var/log` afterwards.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Install the extension into an installation that never had it.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Exercise every page and endpoint it adds.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Behave as a fresh installation would: no settings saved yet.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Deactivate and uninstall, and confirm nothing is left behind.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Read `var/log` afterwards.</span></div>
+</div>
 
 ## Continuous integration
 

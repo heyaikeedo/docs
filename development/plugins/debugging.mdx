@@ -132,11 +132,13 @@ Booting the console exercises the same bootstrap path as a web request, so a plu
 
 ## Before you release
 
-<Check>The plugin installs cleanly into an installation that never had it.</Check>
-<Check>Activating, deactivating and uninstalling all work, and uninstalling leaves nothing behind.</Check>
-<Check>No errors appear in `var/log` with `DEBUG=true`.</Check>
-<Check>Static analysis passes: `vendor/bin/phpstan analyse --level=5 extra/extensions/acme/hello/src`.</Check>
-<Check>The plugin behaves when its settings are empty, since that's the state right after install.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The plugin installs cleanly into an installation that never had it.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Activating, deactivating and uninstalling all work, and uninstalling leaves nothing behind.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>No errors appear in `var/log` with `DEBUG=true`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Static analysis passes: `vendor/bin/phpstan analyse --level=5 extra/extensions/acme/hello/src`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The plugin behaves when its settings are empty, since that's the state right after install.</span></div>
+</div>
 
 ## Related
 

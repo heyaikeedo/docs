@@ -198,11 +198,13 @@ Changing the adapter doesn't move existing files: records keep the storage key t
 
 ## Testing
 
-<Check>Generate an image and confirm the file lands in your bucket.</Check>
-<Check>The image displays in the library, which means `getUrl()` is right.</Check>
-<Check>With URL signing on, URLs expire and are regenerated on the next page load.</Check>
-<Check>Uploading a large file works, and cleanup deletes objects.</Check>
-<Check>Wrong credentials produce a clear error rather than a blank page.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Generate an image and confirm the file lands in your bucket.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The image displays in the library, which means `getUrl()` is right.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>With URL signing on, URLs expire and are regenerated on the next page load.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Uploading a large file works, and cleanup deletes objects.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Wrong credentials produce a clear error rather than a blank page.</span></div>
+</div>
 
 ## Related
 

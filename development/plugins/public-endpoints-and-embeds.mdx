@@ -146,14 +146,16 @@ Payment gateways have a dedicated webhook route and interface. See [Payment webh
 
 ## Security checklist
 
-<Check>**Verify ownership of every nested ID.** On `/feedback/{widgetId}/threads/{threadId}`, confirm the thread belongs to that widget and that the caller's token was issued for it. Loading by ID alone lets anyone read another customer's data by guessing UUIDs.</Check>
-<Check>**Never issue a token for a caller-supplied internal ID.** Tokens are proof of identity, so they can only be created from something the caller proved.</Check>
-<Check>**Treat origin and referer headers as hints.** Enforce with `frame-ancestors`, a server-side allowlist, and token checks.</Check>
-<Check>**Bill the right workspace.** Work triggered by a visitor is paid for by the workspace that owns the widget; check its credits before doing anything expensive.</Check>
-<Check>**Rate-limit.** Public endpoints are abused. Cap requests per visitor and per widget, and reject oversized payloads early.</Check>
-<Check>**Respond in constant shapes.** Don't leak whether a record exists through different error messages or timings.</Check>
-<Check>**Scrub what you return.** A public endpoint should return the minimum: never internal IDs, workspace details or configuration.</Check>
-<Check>**Honor demo mode.** Add `DemoEnvironmentMiddleware` to writes, or check `ENVIRONMENT` yourself.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Verify ownership of every nested ID.** On `/feedback/{widgetId}/threads/{threadId}`, confirm the thread belongs to that widget and that the caller's token was issued for it. Loading by ID alone lets anyone read another customer's data by guessing UUIDs.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Never issue a token for a caller-supplied internal ID.** Tokens are proof of identity, so they can only be created from something the caller proved.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Treat origin and referer headers as hints.** Enforce with `frame-ancestors`, a server-side allowlist, and token checks.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Bill the right workspace.** Work triggered by a visitor is paid for by the workspace that owns the widget; check its credits before doing anything expensive.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Rate-limit.** Public endpoints are abused. Cap requests per visitor and per widget, and reject oversized payloads early.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Respond in constant shapes.** Don't leak whether a record exists through different error messages or timings.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Scrub what you return.** A public endpoint should return the minimum: never internal IDs, workspace details or configuration.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>**Honor demo mode.** Add `DemoEnvironmentMiddleware` to writes, or check `ENVIRONMENT` yourself.</span></div>
+</div>
 
 ## CORS
 

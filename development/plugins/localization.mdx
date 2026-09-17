@@ -125,12 +125,14 @@ Include the `locale/` directory in your release archive. Nothing generates trans
 
 ## Checklist
 
-<Check>Every user-visible string goes through `__()`, `p__()` or `n__()`.</Check>
-<Check>Navigation labels use the `nav` context.</Check>
-<Check>Catalogs live at `locale/{code}/LC_MESSAGES/messages.po`.</Check>
-<Check>Every catalog sets `X-Domain: messages`.</Check>
-<Check>You re-ran extraction after the last wording change.</Check>
-<Check>The `locale/` directory is in your release archive.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Every user-visible string goes through `__()`, `p__()` or `n__()`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Navigation labels use the `nav` context.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Catalogs live at `locale/{code}/LC_MESSAGES/messages.po`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Every catalog sets `X-Domain: messages`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>You re-ran extraction after the last wording change.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The `locale/` directory is in your release archive.</span></div>
+</div>
 
 ## Related
 

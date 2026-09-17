@@ -157,10 +157,12 @@ Show the API key field, and the timestamp of the last successful refresh, so adm
 
 ## Testing
 
-<Check>Set a gateway to a currency other than the platform default and confirm the charge is converted.</Check>
-<Check>The converted amount is plausible, and rounding lands on whole minor units.</Check>
-<Check>Rates are fetched once and reused until they expire.</Check>
-<Check>With an invalid API key, checkout still completes in the default currency.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Set a gateway to a currency other than the platform default and confirm the charge is converted.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The converted amount is plausible, and rounding lands on whole minor units.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Rates are fetched once and reused until they expire.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>With an invalid API key, checkout still completes in the default currency.</span></div>
+</div>
 
 ## A public reference implementation
 

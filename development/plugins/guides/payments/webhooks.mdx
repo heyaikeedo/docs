@@ -180,10 +180,12 @@ $this->dispatcher->dispatch(new FulfillOrderCommand($order->getId()));
 
 Providers retry, deliver out of order, and sometimes deliver twice.
 
-<Check>Look up state before you change it, and make repeated deliveries a no-op.</Check>
-<Check>Rely on the exceptions: `AlreadyPaidException` and `AlreadyFulfilledException` tell you the work is already done.</Check>
-<Check>Never grant credits directly from a webhook. Go through the order commands, which enforce the state machine.</Check>
-<Check>Log the provider's event ID so duplicates are visible while debugging.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Look up state before you change it, and make repeated deliveries a no-op.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Rely on the exceptions: `AlreadyPaidException` and `AlreadyFulfilledException` tell you the work is already done.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Never grant credits directly from a webhook. Go through the order commands, which enforce the state machine.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Log the provider's event ID so duplicates are visible while debugging.</span></div>
+</div>
 
 ## Testing
 

@@ -239,14 +239,16 @@ Test the embed on a separate local origin, not inside the Aikeedo tab, so you ex
 
 ## Launch checklist
 
-<Check>`frame-ancestors` is set, and defaults to `'none'` when nothing is configured.</Check>
-<Check>Tokens are signed per widget, short-lived, and never minted from caller-supplied IDs.</Check>
-<Check>Every nested ID is checked against both the visitor and the widget.</Check>
-<Check>Credits are billed to the widget's workspace, and checked before generation starts.</Check>
-<Check>Requests are rate-limited per visitor and per widget, and payload size is capped.</Check>
-<Check>Responses contain nothing internal: no workspace details, no configuration, no other visitors.</Check>
-<Check>Disabling the feature or deactivating the widget returns `404` for every route.</Check>
-<Check>The loader is small, framework-free, and degrades quietly if the iframe fails to load.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`frame-ancestors` is set, and defaults to `'none'` when nothing is configured.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Tokens are signed per widget, short-lived, and never minted from caller-supplied IDs.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Every nested ID is checked against both the visitor and the widget.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Credits are billed to the widget's workspace, and checked before generation starts.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Requests are rate-limited per visitor and per widget, and payload size is capped.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Responses contain nothing internal: no workspace details, no configuration, no other visitors.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Disabling the feature or deactivating the widget returns `404` for every route.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The loader is small, framework-free, and degrades quietly if the iframe fails to load.</span></div>
+</div>
 
 ## Related
 

@@ -293,12 +293,14 @@ For providers with strict rate limits, lower the batch size and use a bulk endpo
 
 ## Testing
 
-<Check>Creating a user pushes exactly one contact, not two.</Check>
-<Check>Updating a user's name updates the contact.</Check>
-<Check>With auto-sync off, nothing is pushed.</Check>
-<Check>A backfill processes in batches across ticks, and resumes after a pause.</Check>
-<Check>Stopping a sync clears its state, and starting again begins from the top.</Check>
-<Check>With the API unreachable, signup still works and the failure is logged.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Creating a user pushes exactly one contact, not two.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Updating a user's name updates the contact.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>With auto-sync off, nothing is pushed.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>A backfill processes in batches across ticks, and resumes after a pause.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Stopping a sync clears its state, and starting again begins from the top.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>With the API unreachable, signup still works and the failure is logged.</span></div>
+</div>
 
 ## Related
 

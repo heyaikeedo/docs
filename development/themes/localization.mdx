@@ -92,9 +92,11 @@ Point `--path` at your **repository**, not at `extra/extensions/...`. The instal
 
 The theme's language is resolved from the URL prefix, then the user's preference, then the `locale` cookie, then the browser's `Accept-Language`, then the default. Three things must line up:
 
-<Check>The language is enabled in **Settings → Languages**.</Check>
-<Check>Your theme has a `theme.po` for it.</Check>
-<Check>The string uses the `theme` domain.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The language is enabled in **Settings → Languages**.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Your theme has a `theme.po` for it.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The string uses the `theme` domain.</span></div>
+</div>
 
 If the theme has no catalog for the resolved language, the `locale` global is `null`, which is why every template should use `locale.code|default('en-US')`.
 
@@ -112,12 +114,14 @@ Each locale carries a `dir`. Set it on the document and use logical CSS properti
 
 ## Checklist
 
-<Check>Every visible string uses a `d`-prefixed helper with the `theme` domain.</Check>
-<Check>Contexts are used for short strings such as buttons and headings.</Check>
-<Check>Catalogs exist for the languages you support, with `X-Domain: theme`.</Check>
-<Check>Extraction was re-run after the last copy change.</Check>
-<Check>`static/locale/` is included in your release archive.</Check>
-<Check>The layout handles `dir` and a `null` locale.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Every visible string uses a `d`-prefixed helper with the `theme` domain.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Contexts are used for short strings such as buttons and headings.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Catalogs exist for the languages you support, with `X-Domain: theme`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Extraction was re-run after the last copy change.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`static/locale/` is included in your release archive.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The layout handles `dir` and a `null` locale.</span></div>
+</div>
 
 ## Related
 

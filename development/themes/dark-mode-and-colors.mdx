@@ -134,11 +134,13 @@ The accent color is exposed ready to drop into a variable:
 
 ## Checklist
 
-<Check>The mode is applied in the head, before the body renders.</Check>
-<Check>Only the configured modes are reachable, and the switcher hides when there's one.</Check>
-<Check>Both modes are checked for contrast, including borders and dimmed text.</Check>
-<Check>Images and logos have dark variants where they need them, for example `option.brand.logo_dark`.</Check>
-<Check>The choice persists across page loads.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The mode is applied in the head, before the body renders.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Only the configured modes are reachable, and the switcher hides when there's one.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Both modes are checked for contrast, including borders and dimmed text.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Images and logos have dark variants where they need them, for example `option.brand.logo_dark`.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The choice persists across page loads.</span></div>
+</div>
 
 ## Related
 

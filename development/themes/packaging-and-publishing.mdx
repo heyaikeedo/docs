@@ -43,12 +43,14 @@ The release archive adds the contents of `release/`, normally an installation RE
 
 ## Before you package
 
-<Check>`version` in `static/composer.json` is raised.</Check>
-<Check>`extra.public` lists `assets` and `.vite`, so the built files reach the web root.</Check>
-<Check>Translation catalogs are extracted and up to date.</Check>
-<Check>The entry class namespace matches the PSR-4 map, if the theme ships PHP.</Check>
-<Check>`THEME_ASSETS_SERVER` is unset in the installation you tested against, so you tested the built assets.</Check>
-<Check>Nothing private is in `static/`: no `.env`, keys or customer data.</Check>
+<div className="flex flex-col gap-2">
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`version` in `static/composer.json` is raised.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`extra.public` lists `assets` and `.vite`, so the built files reach the web root.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Translation catalogs are extracted and up to date.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The entry class namespace matches the PSR-4 map, if the theme ships PHP.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>`THEME_ASSETS_SERVER` is unset in the installation you tested against, so you tested the built assets.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Nothing private is in `static/`: no `.env`, keys or customer data.</span></div>
+</div>
 
 ## Installing a packaged theme
 
