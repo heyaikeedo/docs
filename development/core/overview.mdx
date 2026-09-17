@@ -71,18 +71,29 @@ Aikeedo is a PHP application assembled from small PSR components rather than a f
 
 ```mermaid
 flowchart LR
-    A[public/index.php] --> B[bootstrap/app.php]
-    B --> C[Container and configuration]
-    C --> D[Service providers]
-    D --> E[Module bootstrappers]
-    E --> F[Plugins boot]
-    F --> G[Route dispatch]
-    G --> H[Middleware pipeline]
-    H --> I[Request handler]
-    I --> J[Command bus]
-    J --> K[Domain and repositories]
-    K --> L[Response emitted]
-    L --> M[EntityManager flush]
+    subgraph Boot
+        direction TB
+        A[public/index.php] --> B[bootstrap/app.php]
+        B --> C[Container and configuration]
+        C --> D[Service providers]
+        D --> E[Module bootstrappers]
+        E --> F[Plugins boot]
+    end
+
+    subgraph Handle
+        direction TB
+        G[Route dispatch] --> H[Middleware pipeline]
+        H --> I[Request handler]
+        I --> J[Command bus]
+        J --> K[Domain and repositories]
+    end
+
+    subgraph Finish
+        direction TB
+        L[Response emitted] --> M[EntityManager flush]
+    end
+
+    Boot --> Handle --> Finish
 ```
 
 Each step is covered in [Bootstrap and lifecycle](/development/core/bootstrap-and-lifecycle) and [Routing and middleware](/development/core/routing-and-middleware).
