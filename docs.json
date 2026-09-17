@@ -13,6 +13,9 @@
     "dark": "/logo/dark.svg"
   },
   "favicon": "/favicon.ico",
+  "icons": {
+    "library": "tabler"
+  },
   "navbar": {
     "links": [
       {
@@ -90,12 +93,12 @@
         {
           "anchor": "Affiliates",
           "href": "https://aikeedo.com/affiliates/",
-          "icon": "dollar-sign"
+          "icon": "coin"
         },
         {
           "anchor": "Changelog",
           "href": "https://aikeedo.com/changelog/",
-          "icon": "arrow-trend-up"
+          "icon": "chart-area-line"
         },
         {
           "anchor": "Feature Requests",

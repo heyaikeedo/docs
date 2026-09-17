@@ -177,7 +177,7 @@ php bin/console app:locale:translate \
 ### What the translator protects
 
 <AccordionGroup>
-  <Accordion title="Placeholders stay intact" icon="brackets-curly">
+  <Accordion title="Placeholders stay intact" icon="braces">
     Strings such as `Hello :name` and `Version %s` contain placeholders that are
     replaced at runtime. A translation may move a placeholder to wherever the
     target language needs it, but never renames or drops one.
@@ -187,14 +187,14 @@ php bin/console app:locale:translate \
     and listed at the end of the run rather than being written out broken.
   </Accordion>
 
-  <Accordion title="Context is passed along" icon="quote-left">
+  <Accordion title="Context is passed along" icon="quote">
     Many strings carry a context that says where they appear — `button`,
     `heading`, `label`, `country` and so on. This is what stops "Post" the
     button and "Post" the noun becoming the same word. The context is sent with
     each string so the model can pick the right wording.
   </Accordion>
 
-  <Accordion title="Plural forms are complete" icon="list-ol">
+  <Accordion title="Plural forms are complete" icon="list-numbers">
     Languages need different numbers of plural forms — one for Japanese, two for
     German, four for Russian, six for Arabic. The translator asks for exactly the
     number your language needs, explains which numbers each form covers, and
@@ -412,7 +412,7 @@ as a globe icon or the current language code in the top-right corner.
 ## Troubleshooting
 
 <AccordionGroup>
-  <Accordion title="Interface text produced by JavaScript is still English" icon="triangle-exclamation">
+  <Accordion title="Interface text produced by JavaScript is still English" icon="alert-triangle">
     The browser dictionaries are out of date. The quickest fix needs no
     terminal: **Settings → Clear cache** in the admin area rebuilds them.
 
@@ -432,13 +432,13 @@ as a globe icon or the current language code in the top-right corner.
     application cache.
   </Accordion>
 
-  <Accordion title="The translator says a string was left untranslated" icon="circle-xmark">
+  <Accordion title="The translator says a string was left untranslated" icon="circle-x">
     The answer changed or dropped a placeholder, so it was rejected rather than
     written out broken. Run the command again to retry those entries, or fill
     them in by hand.
   </Accordion>
 
-  <Accordion title="New wording is missing from the catalogs" icon="magnifying-glass">
+  <Accordion title="New wording is missing from the catalogs" icon="search">
     Run `app:locale:extract` first — translation only fills in entries that are
     already in the catalogs.
   </Accordion>
