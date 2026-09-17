@@ -65,7 +65,7 @@ Every handler is a PSR-15 `RequestHandlerInterface`. The base class supplies the
 | --- | --- | --- | --- |
 | `Presentation\RequestHandlers\AbstractRequestHandler` | none | Exception, Install, RequestBodyParser, User, Locale | Public pages and endpoints that still need the standard stack |
 | `…\Admin\AbstractAdminRequestHandler` | `/admin` | + Authorization (admin only) | Admin endpoints that aren't pages |
-| `…\Admin\AbstractAdminViewRequestHandler` | `/admin` | + DemoEnvironment, License, View | Admin pages rendered with Twig |
+| `…\Admin\AbstractAdminViewRequestHandler` | `/admin` | + DemoEnvironment, View | Admin pages rendered with Twig |
 | `…\Admin\Api\AdminApi` | `/admin/api` | + DemoEnvironment | Admin JSON endpoints |
 | `…\App\AppView` | `/app` | + Authorization, EmailVerification, View | Pages for signed-in users |
 | `…\Api\Api` | `/api` | + Authorization, EmailVerification, Byok | Workspace-scoped JSON endpoints |
