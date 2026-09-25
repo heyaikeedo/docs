@@ -273,7 +273,8 @@
               "advanced/users-workspaces",
               "advanced/text-streaming",
               "advanced/secure-urls",
-              "advanced/byok"
+              "advanced/byok",
+              "advanced/connectors"
             ]
           },
           {
