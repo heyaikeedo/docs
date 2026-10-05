@@ -1,0 +1,85 @@
+---
+title: Private Mode
+sidebarTitle: Private Mode
+description: 'Let users make everything they create temporary across the whole app. Turn it on once and it stays on until they turn it off.'
+---
+
+import Support from '/snippets/support.mdx';
+
+## Introduction
+
+Private mode is a switch that makes everything a user creates temporary. Chats, images, videos, voice-overs, transcripts, classifications, isolated voices and what chat tools produce are kept out of history, Recents and the library, and are deleted automatically after a retention period you set.
+
+It applies to the whole app, not just chat, and it **stays on** until the user turns it off. Moving between tools, opening settings, reloading the page or opening another tab in the same browser keeps private mode on. Turning it off returns the user to normal mode.
+
+Private mode replaces the temporary chats of v4.1. If you are updating from an earlier version, [turn it on again](#turning-private-mode-on) after the update.
+
+## Turning private mode on
+
+Three things must be true for a user to see the switch.
+
+1. **The feature.** Go to **Settings → Features → Privacy & safety**, turn on **Private mode** and set the **retention period** in days. The default is one day.
+2. **The plan.** Open a plan and turn on **Private mode**. The plan editor shows a warning next to the setting while the feature is off globally.
+3. **Existing subscribers.** Subscriptions keep the plan settings they were created with. After changing a plan, use **Update snapshots** to apply the change to current subscribers. See [Plans, Snapshots & Subscriptions](/billing/plans-snapshots-subscriptions).
+
+<Note>
+  If the feature is turned off or a user's plan no longer includes it, any private mode a browser remembers is switched off automatically.
+</Note>
+
+## What users see
+
+### Switching it on and off
+
+Users switch private mode on with the ghost button beside **New** in the sidebar, or in the header on mobile. The keyboard shortcut is `Ctrl + Shift + X` (`⌘ + Shift + X` on Mac).
+
+While it is on:
+
+- App pages dim so it is clear which mode is active. Settings pages are not dimmed.
+- Each tool shows a note under its heading saying that what is created there stays out of history and the library, and is deleted after the retention period.
+- If the sidebar is collapsed, a **Private** badge appears in the head bar, which also switches the mode off.
+- Lists, including Recents, show only what was created in the current private session. Regular conversations and library items are out of view until the mode is turned off.
+
+### The private session
+
+A private session starts with the first thing the user creates, not when the switch is turned on. Switching the mode on and straight off leaves nothing behind and asks for no confirmation.
+
+Everything created in the session belongs to that browser. It cannot be opened from anywhere else.
+
+### Keeping something
+
+Private items offer **Save** where regular items offer **Share**. Saving an item moves it out of the private session and keeps it.
+
+### Turning it off
+
+If the session holds anything, a prompt tells the user how many items they will no longer be able to open and reminds them to save what they want to keep. The user can cancel or turn the mode off.
+
+If generations are still running, the prompt says so: they finish and count toward usage, but end up out of reach.
+
+## What it does not do
+
+- **It is per browser.** The mode and the session are remembered in that browser. Another browser or device is not in private mode unless the user turns it on there.
+- **Items are deleted after the retention period, not immediately.** Until then they exist on your server.
+- **It does not change what AI providers keep.** Prompts still go to the model provider, under that provider's data policy.
+- **It does not hide usage.** Credits and usage are counted as usual.
+
+## How deletion works
+
+Expired items are removed through the regular delete, so their files on storage and their embeddings go with them. Generations that stayed stuck in a private session are failed and their credit is released. Items that are still generating are left for their provider's webhook to finish.
+
+Deletion runs on the [cron job](/setup/initial-setup), so make sure it is set up.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Users don't see the private mode button">
+    Check that **Private mode** is on under **Settings → Features → Privacy & safety**, that the user's plan includes it, and that their subscription's snapshot is up to date.
+  </Accordion>
+  <Accordion title="Private mode switched itself off">
+    The browser could not keep the setting, or the feature or plan stopped offering it. Private mode is remembered in the browser's storage and in a cookie, so clearing site data turns it off.
+  </Accordion>
+  <Accordion title="A user can't find something they made in private mode">
+    Private items are listed only in the private session that made them, and only while private mode is on in that browser. Once the mode is turned off, or the retention period ends, they cannot be opened.
+  </Accordion>
+</AccordionGroup>
+
+<Support />

@@ -274,7 +274,9 @@
               "advanced/text-streaming",
               "advanced/secure-urls",
               "advanced/byok",
-              "advanced/connectors"
+              "advanced/connectors",
+              "advanced/private-mode",
+              "advanced/keyboard-shortcuts"
             ]
           },
           {

@@ -5,6 +5,7 @@ description: 'Let the AI in chat use tools from other services — Notion, Linea
 ---
 
 import Support from '/snippets/support.mdx';
+import { OfficialPlugins } from '/snippets/official-plugins.mdx';
 
 ## Introduction
 
@@ -61,6 +62,14 @@ Connectors are off by default. Three switches must all be on for a user to use t
 </Note>
 
 ## Adding catalogue connectors
+
+You can add each connector by hand, as described below, or import ready-made ones with the **Connector Catalogue** plugin. It ships 487 vetted MCP servers from official vendors in 14 categories, and requires Aikeedo 5.1 or later.
+
+<OfficialPlugins skus={['connectors']} />
+
+After installing the plugin, go to **Settings → Starter content → Connectors**, then search, filter by category and import the ones you want. Imported connectors are ordinary connectors: you can edit, switch off or delete them. Connectors that need you to register your own OAuth client are imported switched off, with a note saying so. The catalogue is never part of **Import everything**.
+
+To add a server yourself:
 
 1. Go to **Connectors** in the admin panel and click **Add connector**.
 2. Enter the **MCP server URL** and click **Check server**. Aikeedo contacts the server and reports how it signs users in.
