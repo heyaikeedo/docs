@@ -1,0 +1,158 @@
+---
+title: Connectors (MCP)
+sidebarTitle: Connectors
+description: 'Let the AI in chat use tools from other services — Notion, Linear, Sentry, your own APIs — through remote MCP servers, with each user signing in with their own account.'
+---
+
+import Support from '/snippets/support.mdx';
+import { OfficialPlugins } from '/snippets/official-plugins.mdx';
+
+## Introduction
+
+Connectors let the AI use tools from other services during a chat: search a Notion workspace, look up a Linear issue, read a Sentry error, or call your own internal API. They are built on the [Model Context Protocol](https://modelcontextprotocol.io) (MCP), the open standard that Claude and ChatGPT use for the same purpose, so any remote MCP server works.
+
+Each user connects with **their own account** on the service. The AI acts with that user's access, never someone else's, and the user decides which tools it may use and when it has to ask first.
+
+A user's connectors work in all of their chats, with or without one of your Assistants, on any model that supports tool calling.
+
+There are two kinds of connectors:
+
+- **Catalogue connectors** are ones you add in the admin panel. You choose which plans get them.
+- **Custom connectors** are ones a workspace adds itself, by pasting an MCP server's address. Your plans decide whether this is allowed and how many.
+
+<Note>
+  Connectors support remote MCP servers over HTTPS, using the Streamable HTTP transport. Servers that run as a local command (stdio) are not supported.
+</Note>
+
+## Before you start
+
+### Encryption key
+
+Connectors store each user's sign-in tokens and request header values **encrypted**, with the key in the `APP_ENCRYPTION_KEY` setting in your `.env` file. Without a key, nobody can connect.
+
+- New installations get a key from the installer.
+- Installations updated from a version before 5.1 get one written to `.env` automatically during the update.
+
+If the key could not be written, for example because `.env` is not writable, the **Connectors** page in the admin panel shows a warning. Create the key by running this in your application folder:
+
+```bash
+php bin/console app:generate-key
+```
+
+<Warning>
+  **Back up `APP_ENCRYPTION_KEY` together with your database.** Stored credentials cannot be read without it. If the key is lost or replaced, every user has to connect every connector again. Never run `app:generate-key --force` on an installation that is already in use.
+</Warning>
+
+### Cron
+
+The [cron job](/setup/initial-setup) refreshes each connection's list of tools every few hours. It picks up new and changed tools and keeps sign-ins from expiring for users who have not chatted in a while. Connectors work without cron, but tool lists only change when a user presses **Refresh tools**.
+
+## Turning connectors on
+
+Connectors are off by default. Three switches must all be on for a user to use them:
+
+1. **The feature.** Go to **Settings → Features → Chat** and turn on **Connectors**.
+2. **The plan.** Open a plan and turn on **Connectors** under Capabilities. Then choose:
+   - **Library → Connectors**: which catalogue connectors the plan includes. Check **All connectors** to include every active catalogue connector, including ones you add later.
+   - **Quota → Custom connectors cap**: how many servers a workspace can add itself. Leave it blank for unlimited, or set it to `0` to disallow custom connectors. Catalogue connectors do not count towards the cap.
+3. **The user.** Users can turn connectors off for themselves under **Capabilities**, like any other chat capability.
+
+<Note>
+  Existing subscriptions keep the plan settings they were created with. After changing a plan, use **Update snapshots** to apply the change to current subscribers. See [Plans, Snapshots & Subscriptions](/billing/plans-snapshots-subscriptions).
+</Note>
+
+## Adding catalogue connectors
+
+You can add each connector by hand, as described below, or import ready-made ones with the **Connector Catalogue** plugin. It ships 487 vetted MCP servers from official vendors in 14 categories, and requires Aikeedo 5.1 or later.
+
+<OfficialPlugins skus={['connectors']} />
+
+After installing the plugin, go to **Settings → Starter content → Connectors**, then search, filter by category and import the ones you want. Imported connectors are ordinary connectors: you can edit, switch off or delete them. Connectors that need you to register your own OAuth client are imported switched off, with a note saying so. The catalogue is never part of **Import everything**.
+
+To add a server yourself:
+
+1. Go to **Connectors** in the admin panel and click **Add connector**.
+2. Enter the **MCP server URL** and click **Check server**. Aikeedo contacts the server and reports how it signs users in.
+3. Fill in the **Details**:
+   - **Name**, **Description** and **Icon URL** are what users see.
+   - **Slug** identifies the connector in plan settings. It cannot be changed later.
+   - **Status**: new connectors can be saved as inactive and turned on when you are ready.
+4. Under **Authentication**, choose how users sign in:
+   - **Users sign in before using it (OAuth)**: the usual choice for services with user accounts.
+   - **Users sign in only when the server asks (OAuth)**: for servers that allow some tools without signing in.
+   - **No sign-in**: for public servers, or ones that authenticate with request headers.
+5. For OAuth, choose the **OAuth client**:
+   - **Register with the server automatically** works with most servers.
+   - **Use a client registered with the server** is for servers that do not register clients automatically. Register an application with the service, using the redirect URI shown on the page, and enter its **Client ID** and **Client secret**.
+6. Under **Request headers**, declare any headers the server needs, such as an API key. Give a header a **Shared value** to send the same value for every user. Leave it empty and each user enters their own when they connect. Values are encrypted and never shown again.
+7. Under **Tools**, **Tool limit** caps how many of the server's tools are stored.
+8. Click **Save changes**, then allow the connector on your plans.
+
+The **Connectors** list also shows the custom connectors workspaces have added. Filter by **Type** to see them. You can open, switch off or delete any of them.
+
+## What users see
+
+Users manage connectors under **Settings → Connectors** in the app.
+
+### Adding a custom connector
+
+When the plan allows it, any workspace member can click **Add custom connector**, enter a name and the server's address, and let Aikeedo check the server. Sign-in and request headers work as in the admin form above, except that header values are always entered by each member.
+
+A custom connector belongs to the workspace, and each member connects to it with their own account. The member who added it and the workspace owner can edit or delete it.
+
+### Connecting
+
+Clicking **Connect** signs the user in to the service, if it needs sign-in, and then lists the server's tools. Tools are grouped by what the server says they do:
+
+- **Read-only tools**
+- **Write/delete tools**
+- **Other tools**: the server did not say.
+- **Unavailable tools**: listed with the reason they cannot be used here, such as an unsupported input definition.
+
+Every tool can be set to **Always allow**, **Needs approval** or **Never allow**, one by one or for a whole group at once. **Every tool starts at Needs approval**, including read-only ones. Groups come from the server's own description of its tools, which Aikeedo cannot verify.
+
+### Approving tools in chat
+
+When the AI wants to use a tool that needs approval, the chat pauses and shows a card with the tool's name and **exactly what it will send**. The user chooses:
+
+- **Allow once**: runs the tool this time.
+- **Always allow**: runs it, and changes the tool's permission so it will not ask again.
+- **Deny**: the AI is told the request was declined.
+
+Closing the card, or pressing Escape, declines the request and lets the user reply in their own words.
+
+## Credits
+
+Tool calls are not charged. They run against the user's own account with the service. The model's tokens are charged as usual. Every tool offered to the model adds its description to the request, so connecting servers with many tools makes each message larger.
+
+## Security
+
+- **Trust.** A connector receives whatever the AI sends it, and its tools act on the user's account. Users are warned about this when they add a custom connector. Only add catalogue connectors from developers you trust.
+- **Untrusted text.** Tool descriptions and results come from a third party. Aikeedo marks them to the model as data, not instructions, and strips hidden characters. This lowers the risk of prompt injection but cannot remove it, which is why tools ask before running by default.
+- **Private networks.** Connector addresses must be public HTTPS URLs. Addresses that point to `localhost`, private networks (such as `10.x`, `192.168.x`) or cloud metadata endpoints are refused, including through redirects. The same protection applies to web pages read during a chat and to dataset URLs. As a result, an MCP server running on the same machine or local network as Aikeedo cannot be used as a connector.
+- **Credentials.** Tokens and header values are encrypted at rest and never sent back to the browser.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title='"Encryption key missing" on the Connectors page'>
+    Run `php bin/console app:generate-key` in the application folder, as described in [Encryption key](#encryption-key).
+  </Accordion>
+  <Accordion title='Users don’t see Settings → Connectors'>
+    Check that **Connectors** is turned on under **Settings → Features → Chat**.
+  </Accordion>
+  <Accordion title='A connector is missing for some users'>
+    Check that the connector is active, that their plan includes it under **Library → Connectors**, and that their subscription's snapshot is up to date.
+  </Accordion>
+  <Accordion title='"This server does not register clients automatically"'>
+    The service requires a pre-registered OAuth application. Register one with the service using the redirect URI shown in the form, and choose **Use a client registered with the server**.
+  </Accordion>
+  <Accordion title='"Sign in again to keep using this connector"'>
+    The service no longer accepts the user's sign-in, for example because it was revoked or expired. The user clicks **Sign in** on the connector's page. Their tool permissions are kept.
+  </Accordion>
+  <Accordion title='A server’s new tools don’t appear'>
+    Tool lists refresh through cron every few hours. Users can press **Refresh tools** on the connector's page to refresh at once.
+  </Accordion>
+</AccordionGroup>
+
+<Support />
