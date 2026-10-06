@@ -20,7 +20,7 @@
     "links": [
       {
         "label": "Support",
-        "href": "https://aikeedo.com/support/"
+        "href": "https://aikeedo.com/support/?utm_source=docs&utm_medium=nav"
       }
     ],
     "primary": {
@@ -92,12 +92,12 @@
       "anchors": [
         {
           "anchor": "Affiliates",
-          "href": "https://aikeedo.com/affiliates/",
+          "href": "https://aikeedo.com/affiliates/?utm_source=docs&utm_medium=nav",
           "icon": "coin"
         },
         {
           "anchor": "Changelog",
-          "href": "https://aikeedo.com/changelog/",
+          "href": "https://aikeedo.com/changelog/?utm_source=docs&utm_medium=nav",
           "icon": "chart-area-line"
         },
         {
@@ -484,8 +484,8 @@
     "indexing": "all"
   },
   "integrations": {
-    "ga4": {
-      "measurementId": "G-DBXM1DY73B"
+    "gtm": {
+      "tagId": "GTM-WJJWH53N"
     }
   }
 }
