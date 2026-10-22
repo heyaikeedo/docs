@@ -1,0 +1,44 @@
+---
+title: "Redis"
+description: "Keep Aikeedo's background jobs in Redis, Valkey, Dragonfly, ElastiCache or Upstash."
+---
+
+import Support from '/snippets/support.mdx';
+
+## Overview
+
+Redis keeps jobs in memory, so they are added and taken quickly. The adapter works with anything that speaks the Redis protocol: Redis, Valkey, Dragonfly, Amazon ElastiCache and Upstash. It is the only adapter that lists its jobs on the Queue page; the others show counts only.
+
+No PHP extension is needed. The adapter uses the `redis` extension when it is loaded, which is faster, and the built-in Predis client otherwise, so it also works on shared hosting with a hosted Redis such as Upstash.
+
+## Configuration
+
+<Steps>
+<Step title="Get a Redis server">
+  Use a Redis on your server, or create a hosted database. On [Upstash](https://upstash.com), create a Redis database and copy its connection URL, which looks like `rediss://default:PASSWORD@HOST.upstash.io:6379`.
+</Step>
+
+<Step title="Enter the connection">
+  Go to **Settings → System → Queue adapters → Redis** and either:
+
+  - paste a **Connection URL** (`rediss://` turns on TLS, which hosted services need), or
+  - fill in **Host**, **Port**, **Username**, **Password** and **Database**, and turn on **Use TLS** if your server needs it.
+</Step>
+
+<Step title="Test and enable">
+  Turn on **Status** and press **Save and test connection**. Then choose Redis on the **Queue** page.
+</Step>
+</Steps>
+
+## Settings
+
+| Setting | Description |
+|---|---|
+| Key prefix | Every key starts with it (default `aikeedo`). Change it to share one Redis database between installations. |
+| Queues | Optional. Queues are found once a job is added to them; list any a worker should watch from the start. |
+
+<Note>
+  Keys are grouped under one hash tag (`{aikeedo}:…`), so the adapter also works on a Redis Cluster.
+</Note>
+
+<Support />

@@ -1,0 +1,66 @@
+---
+title: "Amazon SQS"
+description: "Keep Aikeedo's background jobs in Amazon SQS queues."
+---
+
+import Support from '/snippets/support.mdx';
+
+## Overview
+
+Amazon Simple Queue Service (SQS) is a fully managed queue on AWS. Each Aikeedo queue becomes a standard SQS queue named with your prefix, such as `aikeedo-default`. The adapter creates the queues as needed.
+
+The adapter also works with SQS-compatible services such as ElasticMQ and LocalStack, through the **Endpoint** setting.
+
+## Configuration
+
+<Steps>
+<Step title="Create an IAM user">
+  In the [IAM console](https://console.aws.amazon.com/iam/home), create a user for programmatic access and attach this policy, adjusting the prefix if you change it:
+
+  ```json
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "sqs:CreateQueue",
+          "sqs:GetQueueUrl",
+          "sqs:GetQueueAttributes",
+          "sqs:SendMessage",
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:ChangeMessageVisibility"
+        ],
+        "Resource": "arn:aws:sqs:*:*:aikeedo-*"
+      },
+      {
+        "Effect": "Allow",
+        "Action": "sqs:ListQueues",
+        "Resource": "*"
+      }
+    ]
+  }
+  ```
+
+  `sqs:ListQueues` needs its own statement on `"*"`: it cannot be limited to some queues, and AWS ignores it under a narrower resource.
+
+  Then create an access key for it and copy the **Access key ID** and **Secret access key**.
+</Step>
+
+<Step title="Enter the connection">
+  Go to **Settings → System → Queue adapters → Amazon SQS**, choose the **Region** and enter the keys. Leave **Endpoint** empty for Amazon SQS.
+</Step>
+
+<Step title="Test and enable">
+  Turn on **Status** and press **Save and test connection**. Then choose Amazon SQS on the **Queue** page.
+</Step>
+</Steps>
+
+## Good to know
+
+- **Counts only.** SQS cannot list its messages, so the Queue page shows how many jobs are waiting, and those numbers are approximate.
+- **Long delays.** SQS delays a message by at most 15 minutes. The adapter handles longer delays itself: a message taken before it is due is sent again, keeping its attempt count.
+- **Prefix.** An empty prefix falls back to `aikeedo-`, so workers never take messages from your other queues.
+
+<Support />

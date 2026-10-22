@@ -11,7 +11,7 @@ After successfully installing Aikeedo, complete these crucial technical setup st
 
 A cron job is essential for automating recurring tasks in Aikeedo, particularly for renewing subscription usages.
 
-It also keeps [connectors](/advanced/connectors) up to date, refreshing each connection's list of tools every few hours.
+Each run starts the scheduled tasks that are due, such as renewing subscriptions and keeping [connectors](/advanced/connectors) up to date. It also runs waiting background jobs, such as imports, when no background worker is running. You can follow every task and job under **Settings → System → Queue**. See [Background Jobs & Queue](/advanced/queue).
 
 ### Frequency and Interval
 
@@ -19,7 +19,7 @@ It also keeps [connectors](/advanced/connectors) up to date, refreshing each con
 - **Recommended Interval:** The cron task should run once per minute for optimal performance.
 
 <Note>
-Some servers may limit cron tasks to a minimum interval of 15 minutes. In such cases, subscriptions will still renew, but there might be a slight delay of up to 15 minutes.
+Some servers may limit cron tasks to a minimum interval of 15 minutes. In such cases, subscriptions will still renew, but there might be a slight delay of up to 15 minutes. Background jobs wait just as long, unless you run a [background worker](/advanced/queue#running-a-background-worker).
 </Note>
 
 ### Configuring the Cron Task

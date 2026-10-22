@@ -1,0 +1,152 @@
+---
+title: Background Jobs & Queue
+sidebarTitle: Background Jobs & Queue
+description: 'How Aikeedo runs slow work and scheduled tasks in the background: what cron does, when to add a background worker, and how to read the Queue page.'
+---
+
+import Support from '/snippets/support.mdx';
+import { OfficialPlugins } from '/snippets/official-plugins.mdx';
+
+## Introduction
+
+Some work is too slow to do while a user waits, such as importing content or refreshing a connector's tools. Aikeedo puts that work on a **queue** as **jobs**, and runs them in the background. Recurring work, such as renewing subscriptions, runs as **scheduled tasks**, each on its own schedule.
+
+Both run from the [cron job](/setup/initial-setup#setting-up-the-cron-job), so cron is all you need, including on shared hosting. For faster background work, you can also keep a **background worker** running.
+
+## How it works
+
+Cron runs `cron.php` every minute. Each run:
+
+1. **Runs the scheduled tasks that are due.** Each task runs on its own, so one that fails doesn't stop the others. Its result shows on the Queue page.
+2. **Works the queue for about 50 seconds**, but only when no background worker is running. A job added between cron runs therefore waits up to a minute.
+
+A failed job is retried a few times with a pause in between. If it keeps failing, it is kept as a **failed job**, so you can see why and retry it.
+
+<Note>
+  Keep cron running every minute even if you add a background worker. The worker runs jobs; scheduled tasks still run from cron.
+</Note>
+
+## The Queue page
+
+Go to **Settings → System → Queue**.
+
+| Section | What it shows |
+| --- | --- |
+| **Overview** | The **Adapter** in use, and how many jobs are **Waiting**, **Running** and **Failed**, and how many **Workers** are running. |
+| **Workers** | The background workers that are running, and when each started. **Restart all** asks them to finish their current job and start again. |
+| **Waiting jobs** | The next jobs to run. **View all** opens the searchable **Jobs** page. |
+| **Failed jobs** | Jobs that failed for good, with their error. Retry or delete them one by one, or with **Retry all** and **Delete all**. |
+| **Scheduled tasks** | Every task with its schedule, last run and status: **Succeeded**, **Failed**, **Running** or **Never run**. Open a task to see its error and stack trace. |
+| **Run a background worker** | Ready-to-use configurations for your server. See [below](#running-a-background-worker). |
+
+The **Status** page in the admin menu also has **Cron** and **Queue** rows. They warn when cron hasn't run for more than five minutes, when scheduled tasks are failing, and when jobs have failed.
+
+## Running a background worker
+
+A background worker is a process that keeps running and starts each job as soon as it is added. It is optional. Use one when jobs should start right away, or when you have many of them.
+
+Keep it running with a process manager such as **Supervisor** or **systemd**. The process manager starts the worker when the server boots and restarts it if it stops. You need only one of them.
+
+<Tip>
+  The **Run a background worker** section of the Queue page shows these configurations with your paths, PHP binary and web server user filled in. Copy them from there.
+</Tip>
+
+<Tabs>
+  <Tab title="Supervisor">
+    1. Install Supervisor if it isn't installed: `sudo apt install supervisor`
+    2. Save this as `/etc/supervisor/conf.d/aikeedo-worker.conf`:
+
+    ```ini
+    [program:aikeedo-worker]
+    command=/usr/bin/php /path/to/aikeedo/bin/console app:queue:work --time-limit=3600
+    directory=/path/to/aikeedo
+    user=www-data
+    numprocs=1
+    autostart=true
+    autorestart=true
+    stopwaitsecs=660
+    redirect_stderr=true
+    stdout_logfile=/path/to/aikeedo/var/log/worker.log
+    ```
+
+    3. Load it and start the worker:
+
+    ```bash
+    sudo supervisorctl reread
+    sudo supervisorctl update
+    ```
+
+    4. Check that it is running: `sudo supervisorctl status aikeedo-worker`
+  </Tab>
+  <Tab title="systemd">
+    1. Save this as `/etc/systemd/system/aikeedo-worker.service`:
+
+    ```ini
+    [Unit]
+    Description=Aikeedo queue worker
+    After=network.target
+
+    [Service]
+    User=www-data
+    WorkingDirectory=/path/to/aikeedo
+    ExecStart=/usr/bin/php /path/to/aikeedo/bin/console app:queue:work --time-limit=3600
+    Restart=always
+    RestartSec=3
+    TimeoutStopSec=660
+
+    [Install]
+    WantedBy=multi-user.target
+    ```
+
+    2. Start the worker, and start it on every boot:
+
+    ```bash
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now aikeedo-worker
+    ```
+
+    3. Check that it is running: `sudo systemctl status aikeedo-worker`
+  </Tab>
+</Tabs>
+
+Once it is running, the worker appears under **Workers** on the Queue page within a few seconds.
+
+- **Run it as the web server user** (`www-data` above). Otherwise files it creates, such as cache, can't be changed by the application.
+- **Use the same PHP as the website.** If your server has more than one PHP version, the Queue page's configurations use the website's by its full path, because plain `php` may be another version. Cron and workers log a warning when their PHP differs from the website's.
+- **Nothing to do after updates or settings changes.** Workers restart on their own when you update Aikeedo or save settings.
+
+## Queue adapters
+
+The **adapter** is where waiting jobs are kept. Change it with **Change** next to **Adapter** on the Queue page.
+
+| Adapter | Use it for |
+| --- | --- |
+| **Database** (default) | Any server, including shared hosting. Jobs wait in your database. |
+| **Synchronous** | Troubleshooting only. Each job runs immediately, while the user waits. |
+
+The [Queue Adapters](/integrations/queue-adapters/overview) plugin adds Redis, Amazon SQS, Azure Queue Storage and Cloudflare Queues, which take that load off your database on busy sites.
+
+<OfficialPlugins skus={['queue-adapters']} />
+
+<Warning>
+  Switching adapters doesn't move jobs that are already waiting. Let the queue empty first: the Queue page shows how many jobs are waiting.
+</Warning>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="The Status page says cron has never run or hasn't run recently">
+    Set up the [cron job](/setup/initial-setup#setting-up-the-cron-job) to run `cron.php` every minute, as the web server user.
+  </Accordion>
+  <Accordion title="Jobs wait about a minute before they start">
+    That is expected without a background worker: jobs run on the next cron run. Add a [background worker](#running-a-background-worker) to start them right away.
+  </Accordion>
+  <Accordion title="A scheduled task shows Failed">
+    Open it on the Queue page to see the error and stack trace. Tasks from plugins name the plugin, so you know which one to update or contact.
+  </Accordion>
+  <Accordion title="The worker doesn't appear under Workers">
+    Check the process manager's status command and the worker log. Make sure the configuration uses the website's PHP binary and the right path.
+  </Accordion>
+</AccordionGroup>
+
+<Support />

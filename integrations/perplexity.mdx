@@ -1,0 +1,51 @@
+---
+title: Perplexity Search
+sidebarTitle: Perplexity Search
+description: 'Use the Perplexity Search API as the web search provider in chat. Results come with page excerpts, so the model rarely needs to open pages.'
+---
+
+import Support from '/snippets/support.mdx';
+
+## Introduction
+
+The [Perplexity Search API](https://www.perplexity.ai/hub/blog/introducing-the-perplexity-search-api) can be the [web search provider](/advanced/web-search-and-reading#web-search) for chat. Unlike other providers, it returns excerpts of the result pages with the results, so when the model needs page details, no extra pages have to be opened.
+
+<Note>
+  This page is about web search. To chat with Perplexity's models, add Perplexity as a [custom LLM server](/integrations/openai-api-compatibility).
+</Note>
+
+## Setting up
+
+<Steps>
+  <Step title="Get an API key">
+    Sign in to Perplexity and open [API keys](https://www.perplexity.ai/account/api/keys). Create a key and copy it.
+  </Step>
+  <Step title="Add it to Aikeedo">
+    Go to **Settings → Integrations → Perplexity**, paste the key into **API Key**, and click **Save changes**.
+  </Step>
+  <Step title="Choose it for web search">
+    In **Settings → Features → Chat**, choose **Perplexity** as the **Search provider**.
+  </Step>
+</Steps>
+
+## Search mode
+
+Under **Web search**, choose the **Search mode**:
+
+- **Standard** (default) gives better results.
+- **Fast** returns results sooner and costs less per search.
+
+Each mode has its own credit rate, under **Perplexity Search** in **Settings → Finance → Credit ratios**.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Web search shows a missing API key warning">
+    Save the key under **Settings → Integrations → Perplexity**.
+  </Accordion>
+  <Accordion title="Searches fail with an authentication or quota error">
+    Check the key and your API credit balance in your Perplexity account.
+  </Accordion>
+</AccordionGroup>
+
+<Support />

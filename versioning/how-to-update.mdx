@@ -7,6 +7,14 @@ description: Stay up-to-date with the latest features and improvements by follow
 Keeping your Aikeedo installation current ensures you benefit from the latest features, security patches, and performance enhancements. This guide provides a comprehensive, step-by-step process for updating Aikeedo, suitable for users of all technical levels.
 
 <Note>
+  **Upgrading to v5.2?** Web search was renamed and its settings were not
+  carried over, so choose a search provider and turn web search back on in
+  each plan afterwards. Keep cron running every minute: it now also runs
+  background jobs. See the [v5.2
+  notes](/versioning/release-notes#upgrading-to-v5-2).
+</Note>
+
+<Note>
   **Upgrading to v5.1?** The update adds an `APP_ENCRYPTION_KEY` to your `.env`
   file for [Connectors](/advanced/connectors#encryption-key) if there is none.
   If the file is not writable, run `php bin/console app:generate-key` and back

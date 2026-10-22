@@ -1,0 +1,106 @@
+---
+title: Web Search & Web Pages
+sidebarTitle: Web Search & Web Pages
+description: 'Let chat search the web and open web pages. Choose the search provider and the web page reader, and control how much of each result reaches the model.'
+---
+
+import Support from '/snippets/support.mdx';
+
+## Introduction
+
+Chat has two web capabilities:
+
+- **Web search** finds current information. The model sends a query, gets back a short numbered list of results with titles, dates and snippets, and cites them as `[1]`, `[2]` in its answer.
+- **Web browsing** opens a page the user links to, or one the model finds, and reads its text.
+
+Both are set up under **Settings → Features → Chat**. You choose who runs the search and who reads the pages, and how much of each result goes to the model. Smaller results cost less input, so these limits keep web-enabled chats affordable.
+
+## Web search
+
+### Turning it on
+
+1. Pick a provider and add its API key:
+   - [Jina](/integrations/jina): search, page and file reading with one key.
+   - [Serper](/integrations/serper): Google results.
+   - [Perplexity](/integrations/perplexity): results with page excerpts included.
+2. Go to **Settings → Features → Chat**. In the **Web search** section, choose the **Search provider**.
+3. In the **Capabilities** section, turn on **Web search**.
+4. Open each plan that should have it and turn on **Web search**. To apply the change to current subscribers, save with **Update snapshots**. See [Plans, Snapshots & Subscriptions](/billing/plans-snapshots-subscriptions).
+
+<Note>
+  Web search is unavailable until a provider is selected and its API key is set. The **Web search** toggle shows a warning icon while either is missing.
+</Note>
+
+### Settings
+
+| Setting | What it does | Default |
+| --- | --- | --- |
+| **Search provider** | None, Jina, Serper or Perplexity. | None |
+| **Results per search** | How many results each search returns, from 1 to 20. More results give the model more to go on but add to its input. Jina bills the same for up to 10 results. | 5 |
+| **Search result size (characters)** | Caps what one search adds to the model input. Lower is cheaper. The minimum is 2,000. | 12,000 |
+
+### Reading the results
+
+For most questions, titles and snippets are enough. When the model needs details, such as facts or figures, it asks for the text of the result pages in the same search:
+
+- **Perplexity** returns page excerpts itself.
+- **Jina** and **Serper** return snippets only. The top three result pages are then opened with the [web page reader](#web-page-reader), and the search result size is shared between them.
+
+## Web browsing
+
+Turn on **Web browsing** in the **Capabilities** section of **Settings → Features → Chat**, and in each plan that should have it.
+
+### Web page size
+
+**Web page size (characters)** caps how much of a page the model gets when it opens a link. Longer pages are cut at this length. The default is 40,000 characters, about 10,000 tokens, and the minimum is 2,000.
+
+### Web page reader
+
+The **Web page reader** decides who fetches and reads pages:
+
+| Reader | How it works | Needs |
+| --- | --- | --- |
+| **Built-in** (default) | Reads pages on your server. | Nothing |
+| **Jina** | Also renders pages built with JavaScript. | A [Jina](/integrations/jina) API key |
+| **Cloudflare** | Renders pages in a real browser. | A [Cloudflare](/integrations/cloudflare-browser-rendering) account ID and API token |
+
+When you choose Jina or Cloudflare, **Use only as fallback** appears, and it is on by default:
+
+- **On:** pages are read on your server first. Only the ones it can't load, or reads too thin (such as JavaScript-rendered pages), go to the selected reader. This keeps costs down.
+- **Off:** every page goes to the selected reader first, and your server reads it only if that fails.
+
+The same reader opens result pages for web search.
+
+<Note>
+  Links must point to public websites. Addresses on `localhost`, private networks or cloud metadata endpoints are refused, including through redirects, before any page is fetched or sent to a reader.
+</Note>
+
+## Credits
+
+Each provider has its own rate under **Settings → Finance → Credit ratios**, in the **Capabilities** section:
+
+| Rate | Charged per |
+| --- | --- |
+| Serper API | search |
+| Jina Search | search |
+| Perplexity Search, Perplexity Search (fast) | search |
+| Jina Reader | token read |
+| Cloudflare Browser Rendering | page |
+
+Pages read on your server are not charged. With **Use only as fallback** on, users pay for a reader only when it was needed. See [Unified Credit System](/billing/unified-credit-system).
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Web search is not available in chat">
+    Check that a **Search provider** is selected and its API key is saved, that **Web search** is on under **Capabilities**, and that the user's plan includes it with an up-to-date snapshot.
+  </Accordion>
+  <Accordion title="Web search stopped working after updating to v5.2">
+    The capability was renamed in v5.2 and its old settings were not carried over. Turn it on again, choose a provider, and enable it in each plan with **Update snapshots**.
+  </Accordion>
+  <Accordion title="Some pages come back empty or very short">
+    Pages built with JavaScript often have little text until a browser runs them. Choose **Jina** or **Cloudflare** as the web page reader, with **Use only as fallback** on.
+  </Accordion>
+</AccordionGroup>
+
+<Support />

@@ -1,0 +1,36 @@
+---
+title: "Azure Queue Storage"
+description: "Keep Aikeedo's background jobs in Azure Queue Storage."
+---
+
+import Support from '/snippets/support.mdx';
+
+## Overview
+
+Azure Queue Storage keeps queues in an Azure storage account at low cost. Each Aikeedo queue becomes a storage queue named with your prefix, such as `aikeedo-default`, created as needed. Messages are kept until they are worked; the adapter turns off Azure's default 7-day expiry.
+
+## Configuration
+
+<Steps>
+<Step title="Create a storage account">
+  In the [Azure portal](https://portal.azure.com/#browse/Microsoft.Storage%2FStorageAccounts), create a storage account, or use an existing one.
+</Step>
+
+<Step title="Copy the connection string">
+  Open the storage account and go to **Security + networking > Access keys**. Press **Show** next to a connection string and copy it.
+
+  A connection string with a SAS token works too. It needs the Queue service; the Service, Container and Object resource types; and the read, write, delete, list, add, create, update and process permissions.
+</Step>
+
+<Step title="Test and enable">
+  Go to **Settings → System → Queue adapters → Azure Queue Storage**, paste the **Connection string**, turn on **Status** and press **Save and test connection**. Then choose Azure Queue Storage on the **Queue** page.
+</Step>
+</Steps>
+
+## Good to know
+
+- **Counts only.** The Queue page shows how many jobs are waiting, as Azure reports it, approximately.
+- **Message size.** Azure takes messages up to 64 KB. Aikeedo's jobs are far smaller; a larger one fails with a clear error.
+- **Prefix.** An empty prefix falls back to `aikeedo-`, so workers never take messages from your other queues.
+
+<Support />

@@ -13,7 +13,7 @@ Aikeedo requires up-to-date versions of PHP and MySQL to ensure optimal performa
 
 <CardGroup cols={2}>
   <Card title="PHP Version" icon="brand-php">
-    8.2 or later
+    8.2 or later, up to 8.5
   </Card>
   <Card title="MySQL Version" icon="database">
     8.0 or later
@@ -50,6 +50,8 @@ To run Aikeedo smoothly, make sure your PHP installation includes these extensio
 <Tip>
   Most of these extensions are typically included in standard PHP installations. If you're unsure, consult your hosting provider or server administrator.
 </Tip>
+
+If you run a [background worker](/advanced/queue#running-a-background-worker), the `pcntl` extension is recommended. It lets the worker stop a job that runs past its time limit and shut down cleanly when restarted. Cron works without it.
 
 ## Minimum Server Requirements
 

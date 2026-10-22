@@ -1,0 +1,49 @@
+---
+title: "Queue Adapters"
+sidebarTitle: Overview
+description: "Keep Aikeedo's background jobs in Redis, Amazon SQS, Azure Queue Storage or Cloudflare Queues instead of the database."
+---
+
+import Support from '/snippets/support.mdx';
+
+## Overview
+
+Aikeedo runs slow work, such as imports and connector refreshes, as background jobs. By default the jobs wait in your database, which needs nothing extra. The Queue Adapters plugin lets them wait in a dedicated queue service instead, which takes that load off the database on busy sites.
+
+<Note>
+  The Queue Adapters plugin is available for purchase from the [Aikeedo Marketplace](https://aikeedo.com/marketplace/?utm_source=docs&utm_medium=content). It needs Aikeedo 5.2 or later.
+</Note>
+
+## Supported adapters
+
+<CardGroup cols={2}>
+<Card title="Redis" icon="database" href="/integrations/queue-adapters/redis">
+  Redis, Valkey, Dragonfly, ElastiCache or Upstash. The only one that lists its jobs on the Queue page.
+</Card>
+
+<Card title="Amazon SQS" icon="brand-aws" href="/integrations/queue-adapters/amazon-sqs">
+  Fully managed queues on AWS.
+</Card>
+
+<Card title="Azure Queue Storage" icon="brand-azure" href="/integrations/queue-adapters/azure-queue-storage">
+  Low-cost queues in an Azure storage account.
+</Card>
+
+<Card title="Cloudflare Queues" icon="brand-cloudflare" href="/integrations/queue-adapters/cloudflare-queues">
+  Managed queues over HTTP, available on the Workers Free plan.
+</Card>
+</CardGroup>
+
+## Choosing an adapter
+
+1. Go to **Settings → System → Queue adapters** and open the adapter.
+2. Fill in the connection, turn on **Status** and press **Save and test connection**. The page reloads and shows whether the saved settings work.
+3. Go to **Settings → System → Queue**, press **Change** next to **Adapter** and choose it. Running workers restart on their own.
+
+<Warning>
+  Switching adapters does not move jobs that are already waiting. Let the queue empty first: the Queue page shows how many jobs are waiting.
+</Warning>
+
+Cron is enough with any adapter: each cron run works the queue when no worker is running. A worker kept running with Supervisor or systemd picks jobs up sooner. See [Background Jobs & Queue](/advanced/queue).
+
+<Support />

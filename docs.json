@@ -210,7 +210,11 @@
                   "integrations/falai",
                   "integrations/stabilityai",
                   "integrations/clipdrop",
-                  "integrations/serper"
+                  "integrations/serper",
+                  "integrations/jina",
+                  "integrations/perplexity",
+                  "integrations/cloudflare-browser-rendering",
+                  "integrations/mistral-ocr"
                 ]
               },
               {
@@ -235,6 +239,16 @@
                   "integrations/cloud-storage/cloudflare-r2",
                   "integrations/cloud-storage/wasabi",
                   "integrations/cloud-storage/minio"
+                ]
+              },
+              {
+                "group": "Queue Adapters",
+                "pages": [
+                  "integrations/queue-adapters/overview",
+                  "integrations/queue-adapters/redis",
+                  "integrations/queue-adapters/amazon-sqs",
+                  "integrations/queue-adapters/azure-queue-storage",
+                  "integrations/queue-adapters/cloudflare-queues"
                 ]
               },
               {
@@ -275,6 +289,9 @@
               "advanced/secure-urls",
               "advanced/byok",
               "advanced/connectors",
+              "advanced/web-search-and-reading",
+              "advanced/file-reading",
+              "advanced/queue",
               "advanced/private-mode",
               "advanced/keyboard-shortcuts"
             ]

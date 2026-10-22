@@ -11,6 +11,77 @@ description: Learn about the latest changes, breaking updates, and migration ins
   releases.
 </Note>
 
+## v5.2
+
+v5.2 lets you choose who searches the web and reads pages and files in chat, adds a background job queue and scheduler, and runs on PHP 8.5.
+
+<Warning>
+  **Back up your files and database before updating.** The standard update
+  process works and database migrations run automatically. After the update,
+  [turn web search on again](#web-search-was-renamed) and update every
+  installed plugin.
+</Warning>
+
+### What's new in v5.2
+
+- **Web search providers** — choose Jina, Serper or Perplexity under **Settings → Features → Chat**. Results reach the model as a short cited list, capped by **Results per search** and **Search result size**, which cuts the input each search adds. See [Web Search & Web Pages](/advanced/web-search-and-reading).
+- **Web page readers** — pages can be read on your server, by Jina, or in a real browser by [Cloudflare Browser Rendering](/integrations/cloudflare-browser-rendering), with **Use only as fallback** so a paid reader is used only for pages your server can't read.
+- **File reading** — chat reads `.xlsx`, `.ods`, `.pptx` and `.rtf` files, and scanned PDFs through Jina or [Mistral OCR](/integrations/mistral-ocr). Small files go to the model in full, so it can summarise and compare them; larger ones are searched and read page by page. See [File Reading](/advanced/file-reading).
+- **Background jobs and scheduler** — slow work runs as queued jobs and recurring work as scheduled tasks, each with its own schedule, isolated from the others. **Settings → System → Queue** shows waiting and failed jobs, workers and every task. Cron is still all you need; a [background worker](/advanced/queue#running-a-background-worker) is optional. See [Background Jobs & Queue](/advanced/queue).
+- **Queue Adapters plugin** — keeps background jobs in Redis, Amazon SQS, Azure Queue Storage or Cloudflare Queues instead of the database. Requires Aikeedo 5.2 or later. See [Queue Adapters](/integrations/queue-adapters/overview).
+- **PHP 8.5** — Aikeedo runs on PHP 8.2 to 8.5. PHP deprecation notices are now logged instead of shown on the page.
+
+### Changes to be aware of in v5.2
+
+#### Web search was renamed
+
+The chat capability is now **Web search**, and its settings were not carried over. After the update:
+
+1. Choose a **Search provider** under **Settings → Features → Chat**. None is selected by default, and Serper is no longer used automatically.
+2. Turn on **Web search** in the **Capabilities** section.
+3. Enable **Web search** in each plan, and save with **Update snapshots**.
+
+Plugins that registered a tool under `google_search` should use `web_search`.
+
+#### Chat attachments are checked before they are stored
+
+Files attached in chat go through the same checks as other uploads, with a new **Max file size (MB)** setting under **Settings → Features → Chat → File reading**. Left empty, the server's PHP limit applies.
+
+#### Cron runs scheduled tasks and the queue
+
+Keep `cron.php` running every minute. It now runs the scheduled tasks that are due and, when no background worker is running, the waiting jobs. Plugins' cron listeners run as the **Run plugin cron listeners** task, each on its own: one that fails no longer stops the others, and the failure names its plugin.
+
+#### Workers restart after updates
+
+If you run a background worker, `app:update` and saving settings make it restart on its own. There is nothing to do after an update.
+
+### Upgrading to v5.2
+
+<Steps>
+  <Step title="Back up">Back up your files and database.</Step>
+  <Step title="Update the core">
+    Follow the standard [How to Update](/versioning/how-to-update) process.
+    Database migrations run automatically.
+  </Step>
+  <Step title="Update every plugin">
+    Update all installed plugins from the marketplace.
+  </Step>
+  <Step title="Turn web search back on">
+    Choose a search provider, turn on **Web search** and enable it in each plan
+    with **Update snapshots**. See [Web search was renamed](#web-search-was-renamed).
+  </Step>
+  <Step title="Review the new settings">
+    Check **Web browsing** and **File reading** under **Settings → Features →
+    Chat**, and the credit rates for any provider you turn on under
+    **Settings → Finance → Credit ratios**.
+  </Step>
+  <Step title="Check cron">
+    Open **Settings → System → Queue** and confirm the scheduled tasks have run.
+  </Step>
+</Steps>
+
+---
+
 ## v5.1
 
 v5.1 adds MCP connectors, an optional Connector Catalogue plugin, an app-wide private mode and keyboard shortcuts, and refreshes the model catalog.

@@ -177,8 +177,8 @@ Step 3 is the limit: `Billing\Domain\ValueObjects\PlanConfig` builds its `tools`
 
 | Key | Capability |
 | --- | --- |
-| `embedding_search` | Search uploaded files |
-| `google_search` | Web search |
+| `embedding_search` | Search and read uploaded files |
+| `web_search` | Web search (`google_search` before v5.2) |
 | `youtube` | YouTube lookups |
 | `web_scrap` | Fetch a web page |
 | `generate_media` | Images, video, speech and transcription |
@@ -192,7 +192,9 @@ A key outside that list is never enabled on a plan, so the collection never yiel
 
 <AccordionGroup>
   <Accordion title="Replace a built-in tool's implementation">
-    Register your class under an existing key, such as `google_search`, to swap the provider behind a capability administrators already control. Keep the same argument schema so existing prompts keep working.
+    Register your class under an existing key, such as `web_search`, to swap the provider behind a capability administrators already control. Keep the same argument schema so existing prompts keep working.
+
+    For web search you rarely need to: implement `Ai\Infrastructure\Services\WebSearch\WebSearchProviderInterface` and register it in the service collection under a lookup key instead. It then appears in the **Search provider** list, and the built-in tool keeps its citations, result limits and page reading. Web page readers plug in the same way, through `RemoteWebReaderInterface`.
   </Accordion>
   <Accordion title="Call the tool from your own flow">
     If your plugin runs its own AI flow, for example an assistant of your own, you own the tool loop: build the definitions, call your tool when the model asks for it, and feed the result back. Nothing restricts which tools you offer there.

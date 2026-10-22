@@ -1,0 +1,46 @@
+---
+title: "Cloudflare Queues"
+description: "Keep Aikeedo's background jobs in Cloudflare Queues, taken over its HTTP pull API."
+---
+
+import Support from '/snippets/support.mdx';
+
+## Overview
+
+Cloudflare Queues is a managed queue that Aikeedo reaches over HTTP, so it works from any host. Each Aikeedo queue becomes a Cloudflare queue named with your prefix, such as `aikeedo-default`. The adapter creates the queues as needed, each with an HTTP pull consumer.
+
+Cloudflare Queues is available on the Workers Free plan, with 10,000 operations a day and messages kept for 24 hours. The Workers Paid plan keeps messages for 14 days.
+
+## Configuration
+
+<Steps>
+<Step title="Create an API token">
+  In the Cloudflare dashboard, go to [**My Profile > API Tokens**](https://dash.cloudflare.com/profile/api-tokens) and create a custom token with the **Account > Queues > Edit** permission. Copy the token, and your **Account ID** from the dashboard's overview page.
+</Step>
+
+<Step title="Enter the connection">
+  Go to **Settings → System → Queue adapters → Cloudflare Queues** and enter the **Account ID** and **API token**.
+
+  If you have already set up [Cloudflare Browser Rendering](/integrations/cloudflare-browser-rendering) under **Settings → Integrations → Cloudflare**, you can leave both empty to use that account. Its token then needs the Queues permission as well.
+</Step>
+
+<Step title="Test and enable">
+  Turn on **Status** and press **Save and test connection**. Then choose Cloudflare Queues on the **Queue** page.
+</Step>
+</Steps>
+
+## Settings
+
+| Setting | Description |
+|---|---|
+| Job lease | Seconds a worker holds a job before Cloudflare hands it out again (default 900, at most 43200). Cloudflare cannot extend a lease, so keep it longer than your longest job; imports may take up to 10 minutes. |
+| Queue name prefix | Each queue's name starts with it (default `aikeedo-`). |
+| Queues | Optional. Queues with the prefix are found on their own within a minute; list any a worker should watch from the start. |
+
+## Good to know
+
+- **API limits.** Every check for jobs is a Cloudflare API request, which Cloudflare limits per token. The adapter leaves an empty queue alone for 5 seconds between checks.
+- **Free plan.** Each check, add and delete counts toward the 10,000 daily operations. A job delayed longer than the plan keeps messages is lost.
+- **Counts only.** The Queue page shows Cloudflare's backlog count, which trails by a second or two.
+
+<Support />

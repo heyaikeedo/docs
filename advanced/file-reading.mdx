@@ -1,0 +1,94 @@
+---
+title: File Reading
+sidebarTitle: File Reading
+description: 'Let users attach documents in chat. Choose which files are accepted, how they are read, including scanned PDFs, and when the model gets a file in full.'
+---
+
+import Support from '/snippets/support.mdx';
+
+## Introduction
+
+Users can attach documents in chat and ask about them: summarise a report, compare two contracts, pull figures from a spreadsheet. Aikeedo extracts the text of each file and gives it to the model.
+
+Small files go to the model whole, so it can read, summarise and compare them in full. Larger files are searched in pieces, and the model reads the parts it needs page by page.
+
+## Turning it on
+
+1. Go to **Settings → Features → Chat** and turn on **File analysis** in the **Capabilities** section.
+2. Open each plan that should have it and turn on **File analysis**. To apply the change to current subscribers, save with **Update snapshots**. See [Plans, Snapshots & Subscriptions](/billing/plans-snapshots-subscriptions).
+
+## Supported files
+
+| Kind | Extensions |
+| --- | --- |
+| Documents | `.pdf`, `.doc`, `.docx`, `.odt`, `.rtf` |
+| Spreadsheets | `.xlsx`, `.ods`, `.csv` |
+| Presentations | `.pptx` |
+| Text and data | `.txt` and other text files, `.md`, `.json`, `.xml`, `.yml`, `.yaml` |
+
+Spreadsheets are read sheet by sheet, and presentations slide by slide.
+
+## Settings
+
+All file settings are in the **File reading** section of **Settings → Features → Chat**.
+
+### Max file size
+
+**Max file size (MB)** is the largest file users can attach. Larger files are rejected before they are stored. Leave it empty to allow anything up to your server's limit, set by PHP's `upload_max_filesize` and `post_max_size`.
+
+### Read in full up to
+
+**Read in full up to (tokens)** decides when a file goes to the model whole. The default is 8,000 tokens, about 32,000 characters.
+
+- **Files up to this size** are added to the conversation in full, so the model can summarise and compare them.
+- **Larger files** are searched for the passages that match the question. When the model needs more, it reads the file page by page, which users see as a **Read uploaded file** step in the conversation.
+
+Set it to `0` to always search files in pieces. A higher limit gives better answers about long files, but every message in the conversation then carries more input.
+
+### File reader
+
+The **File reader** decides who extracts the text:
+
+| Reader | How it works | Needs |
+| --- | --- | --- |
+| **Built-in** (default) | Reads files on your server. Files it can't get text from, such as scanned PDFs, are attached but not read, and the model tells the user so. | Nothing |
+| **Jina** | Also reads scanned PDFs with OCR. | A [Jina](/integrations/jina) API key |
+| **Mistral OCR** | Reads PDFs and images, including scans, tables and handwriting, and keeps their layout as Markdown. Other files are read on your server. | A [Mistral](/integrations/mistral-ocr) API key |
+
+When you choose Jina or Mistral OCR, **Use only as fallback** appears, and it is on by default:
+
+- **On:** files are read on your server first. Only the ones it can't get text from are sent to the selected reader.
+- **Off:** every uploaded file goes to the selected reader first, and your server reads it only if that fails.
+
+<Warning>
+  Files read by Jina or Mistral OCR are sent to that provider. Check its data policy before you turn it on, especially with **Use only as fallback** off.
+</Warning>
+
+The file reader is also used for files added to knowledge bases.
+
+## Credits
+
+Remote readers are charged under **Settings → Finance → Credit ratios**, in the **Capabilities** section:
+
+| Rate | Charged per |
+| --- | --- |
+| Jina Reader | token read |
+| Mistral OCR | page |
+
+Files read on your server are not charged. With **Use only as fallback** on, users pay for a reader only when their file needed it. See [Unified Credit System](/billing/unified-credit-system).
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Users can't attach files">
+    Check that **File analysis** is on under **Capabilities** and in the user's plan, with an up-to-date snapshot.
+  </Accordion>
+  <Accordion title="A file is rejected as too large">
+    Raise **Max file size (MB)**, or PHP's `upload_max_filesize` and `post_max_size` if the setting is empty or higher than them.
+  </Accordion>
+  <Accordion title="The model says it can't read a PDF">
+    The PDF is probably scanned, with images instead of text. Choose **Jina** or **Mistral OCR** as the file reader, with **Use only as fallback** on.
+  </Accordion>
+</AccordionGroup>
+
+<Support />

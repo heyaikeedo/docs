@@ -1,10 +1,10 @@
 ---
 title: "Events and scheduled work"
 sidebarTitle: "Events and cron"
-description: "React to Aikeedo domain events from a plugin, dispatch your own, and run batched background work on the cron tick."
+description: "React to Aikeedo domain events from a plugin, dispatch your own, and run background work as scheduled tasks and queued jobs."
 ---
 
-Aikeedo dispatches domain events whenever something meaningful happens: a user signs up, an order is fulfilled, credits are consumed. Plugins subscribe to those events, and use the cron event for scheduled work.
+Aikeedo dispatches domain events whenever something meaningful happens: a user signs up, an order is fulfilled, credits are consumed. Plugins subscribe to those events, and run background work as scheduled tasks and queued jobs.
 
 ## Subscribe to an event
 
@@ -152,104 +152,123 @@ Other plugins can then subscribe to your event, which is how you make your plugi
 
 ## Scheduled work
 
-There's no queue. Recurring work runs when `cron.php` executes, which dispatches `Cron\Domain\Events\CronEvent`. Subscribe to it like any other event.
+Since v5.2, recurring work is a **scheduled task**, and slow work is a **queued job**. Cron runs both, and a background worker, if there is one, picks jobs up sooner. See [Background jobs and cron](/development/core/background-jobs-and-cron) for how they run.
+
+### Scheduled tasks
+
+Implement `Cron\Domain\ScheduledTaskInterface` and register the task in `boot()` under a name that starts with your plugin's:
+
+```php src/Plugin.php
+use Cron\Infrastructure\Scheduler\TaskCollectionInterface;
+
+public function __construct(
+    private TaskCollectionInterface $tasks,
+) {}
+
+public function boot(Context $context): void
+{
+    $this->tasks->add(
+        'crm.sync_contacts',
+        SyncContacts::class,
+        fn() => __('Sync contacts with the CRM')
+    );
+}
+```
+
+```php src/SyncContacts.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Crm;
+
+use Cron\Domain\ScheduledTaskInterface;
+use Queue\Infrastructure\QueueBus;
+
+class SyncContacts implements ScheduledTaskInterface
+{
+    public function __construct(
+        private QueueBus $queue,
+    ) {}
+
+    public function getSchedule(): string
+    {
+        return '*/15 * * * *';   // every 15 minutes, in UTC
+    }
+
+    public function run(): void
+    {
+        // Keep this short: queue the slow part.
+        $this->queue->dispatch(new SyncContactsJob());
+    }
+}
+```
+
+- **The schedule** is a cron expression in UTC. A run that was missed happens once on the next cron run.
+- **Each task runs on its own.** One that throws is recorded as failed, with its error, on **Settings → System → Queue**, and the others still run.
+- **The label** is a closure, so it is translated when shown. Without one, the name is shown.
+
+### Queued jobs
+
+Slow work, or work per record, belongs in a job. A job is a small message handled like a command:
+
+```php src/SyncContactsJob.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Crm;
+
+use Queue\Domain\Attributes\JobOptions;
+use Queue\Domain\JobInterface;
+use Shared\Infrastructure\CommandBus\Attributes\Handler;
+
+#[Handler(SyncContactsJobHandler::class)]
+#[JobOptions(maxAttempts: 3, timeout: 300, backoff: [60, 600])]
+final class SyncContactsJob implements JobInterface
+{
+    public function __construct(
+        public readonly ?string $cursor = null,
+    ) {}
+
+    public function toArray(): array
+    {
+        return ['cursor' => $this->cursor];
+    }
+
+    public static function fromArray(array $data): static
+    {
+        return new static($data['cursor'] ?? null);
+    }
+}
+```
+
+- **`toArray()` returns plain values.** Jobs are stored as JSON; keep ids, not entities.
+- **The handler reloads what it needs**, and returns quietly when a record is gone.
+- **Jobs run at least once.** A second run must do no harm.
+- **A failing job is retried** after each `backoff` delay, then kept as a failed job that administrators can retry.
+- **Dispatching from a request** is safe: `QueueBus` holds the job until the request's changes are saved.
+
+A handler that works in batches can queue the next batch itself, `$this->queue->dispatch(new SyncContactsJob($lastId))`, instead of keeping a cursor in an option.
+
+### The cron event
+
+`Cron\Domain\Events\CronEvent` is still dispatched every minute, by the **Run plugin cron listeners** task, so existing listeners keep working:
 
 ```php
 $this->mapper->addEventListener(CronEvent::class, SyncContacts::class);
 ```
 
-A cron listener should process a bounded batch and remember where it stopped, because the next tick may be a minute away:
-
-```php src/Listeners/SyncContacts.php
-<?php
-
-declare(strict_types=1);
-
-namespace Acme\Crm\Listeners;
-
-use Acme\Crm\Client;
-use Cron\Domain\Events\CronEvent;
-use Easy\Container\Attributes\Inject;
-use Option\Application\Commands\SaveOptionCommand;
-use Shared\Infrastructure\CommandBus\Dispatcher;
-use Throwable;
-use User\Application\Commands\ListUsersCommand;
-
-class SyncContacts
-{
-    private const BATCH_SIZE = 50;
-
-    public function __construct(
-        private Client $client,
-        private Dispatcher $dispatcher,
-
-        #[Inject('option.crm.sync')]
-        private ?array $sync = null,
-    ) {}
-
-    public function __invoke(CronEvent $event): void
-    {
-        $state = $this->sync ?? [];
-
-        // Only run while an administrator has started a sync.
-        if (($state['status'] ?? null) !== 'processing') {
-            return;
-        }
-
-        $cmd = new ListUsersCommand();
-        $cmd->setLimit(self::BATCH_SIZE);
-
-        if (!empty($state['cursor_id'])) {
-            $cmd->setCursor($state['cursor_id'], 'starting_after');
-        }
-
-        $synced = (int) ($state['synced'] ?? 0);
-        $failed = (int) ($state['failed'] ?? 0);
-        $cursor = $state['cursor_id'] ?? null;
-        $processed = 0;
-
-        foreach ($this->dispatcher->dispatch($cmd) as $user) {
-            $processed++;
-            $cursor = (string) $user->getId()->getValue();
-
-            try {
-                $this->client->upsertContact([
-                    'email' => (string) $user->getEmail()->value,
-                ]);
-
-                $synced++;
-            } catch (Throwable) {
-                $failed++;
-            }
-        }
-
-        $this->dispatcher->dispatch(new SaveOptionCommand('crm', json_encode([
-            'sync' => [
-                'status' => $processed === 0 ? 'completed' : 'processing',
-                'cursor_id' => $cursor,
-                'synced' => $synced,
-                'failed' => $failed,
-            ],
-        ])));
-    }
-}
-```
-
-Points to copy from this pattern:
-
-- **Opt in.** Do nothing unless an administrator started the job, so an idle installation pays nothing for your plugin.
-- **Batch.** Process a fixed number of records per tick.
-- **Persist a cursor.** Store the last processed ID in an option, so the next tick continues instead of restarting.
-- **Track counters and a status.** `processing`, `paused` and `completed` give the admin page something to show, and stopping is just a status change.
-- **Rate-limit yourself.** For a daily job, store a timestamp and return early until it's due.
+Since v5.2 each listener runs on its own: one that throws no longer stops the others, and the failure names the plugin it came from. Prefer a scheduled task for new work. It runs on its own schedule, and its last run and errors are shown in the admin area.
 
 <Note>
-  Entity changes made in cron listeners are flushed after the event finishes, the same as in a web request.
+  Entity changes made in tasks, jobs and cron listeners are flushed when they finish, the same as in a web request.
 </Note>
 
 ## Testing
 
-- Run the cron tick by hand with `php cron.php`.
+- Run the cron tick by hand with `php cron.php`, or only the due tasks with `php bin/console app:schedule:run`.
+- Work queued jobs and watch them with `php bin/console app:queue:work --stop-when-empty -vv`.
 - Trigger domain events by doing the thing in the UI, such as creating a user.
 - Watch `var/log/app-*.log`, and log at the start and end of your listener while developing.
 
