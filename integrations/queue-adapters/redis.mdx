@@ -19,10 +19,9 @@ No PHP extension is needed. The adapter uses the `redis` extension when it is lo
 </Step>
 
 <Step title="Enter the connection">
-  Go to **Settings → System → Queue adapters → Redis** and either:
+  Go to **Settings → System → Queue adapters → Redis** and paste the **Connection URL**. A URL starting with `rediss://` uses TLS, which hosted services need.
 
-  - paste a **Connection URL** (`rediss://` turns on TLS, which hosted services need), or
-  - fill in **Host**, **Port**, **Username**, **Password** and **Database**, and turn on **Use TLS** if your server needs it.
+  To type the details in instead, click **Enter host, port and password separately**, then fill in **Host and port**, **Username**, **Password** and **Database**, and turn on **Use TLS** if your server needs it. Any URL already entered is split into these fields, and saving builds the URL from them. **Use a connection URL instead** switches back.
 </Step>
 
 <Step title="Test and enable">
