@@ -37,6 +37,9 @@ Find your issue and click to jump to the solution:
 ### Database Issues
 - [MySQL Server Has Gone Away](#mysql-server-has-gone-away)
 
+### Update Issues
+- [Error When Updating from 5.1 to 5.2](#error-when-updating-from-5-1-to-5-2)
+
 ### Feature-Specific Issues
 - [Auto-Generated Titles Don't Match Content Language](#auto-generated-titles-don't-match-content-language)
 - [Uploaded Files Return 404 Not Found Errors](#uploaded-files-return-404-not-found-errors)
@@ -751,6 +754,35 @@ Common locations for the MySQL configuration file:
 <Note>
 If you're on shared hosting and don't have access to `my.cnf`, contact your hosting provider to request these changes.
 </Note>
+
+---
+
+## Update Issues
+
+### Error When Updating from 5.1 to 5.2
+
+**Symptoms:**
+- The Update page shows an error at the end of the upload
+- Error message like: `Call to undefined method MariaDB1010Platform::getUnquotedIdentifierFolding()` (the platform name depends on your database)
+
+**Cause:**
+The update is uploaded through the 5.1 updater, which unpacks the new files and runs the migrations in the same request. Some of the old database library is still loaded then, and the libraries updated for PHP 8.5 in v5.2 don't fit with it. The new files are already in place; only the last step failed.
+
+**Solution:**
+
+Reload the page, or open any admin page. Admin pages lead to the Update page until the update is finished, and it finishes there automatically. Use **Try again** if it stops.
+
+If you updated from the terminal with `php bin/console app:update`, run:
+
+```bash
+php bin/console app:update:finalize
+```
+
+This happens only once, when updating from 5.1. From v5.2 on, the updater finishes every update in a separate step.
+
+**Related Documentation:**
+- [Release notes: Updating from 5.1 finishes in two steps](/versioning/release-notes#updating-from-5-1-finishes-in-two-steps)
+- [How to Update](/versioning/how-to-update)
 
 ---
 

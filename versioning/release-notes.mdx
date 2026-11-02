@@ -51,7 +51,9 @@ v5.2 adds scheduled tasks and notifications, invoicing and business details at c
 
 The update now unpacks the new files first, then finishes in a separate step: migrations, plugins, translations and cache. The Update page does this on its own, showing **Finishing the update**.
 
-Because 5.1 runs the old updater, a 5.1 site may show an error once at the end of the upload. **Reload the page, or open any admin page.** Admin pages lead to the Update page until the update is finished, and it finishes there automatically. Use **Try again** if it stops. Cron does nothing until the update is finished.
+Because 5.1 runs the old updater, a 5.1 site may show an error once at the end of the upload, such as `Call to undefined method MariaDB1010Platform::getUnquotedIdentifierFolding()` (the platform name depends on your database). The new files are already in place: the 5.1 updater runs the migrations in the same request, with some of the old database library still loaded, and the libraries updated for PHP 8.5 don't fit with it. **Reload the page, or open any admin page.** Admin pages lead to the Update page until the update is finished, and it finishes there automatically. Use **Try again** if it stops. Cron does nothing until the update is finished.
+
+If you update from the terminal with `php bin/console app:update`, the 5.1 command can stop with the same error. Run `php bin/console app:update:finalize` to finish the update.
 
 #### Web search was renamed
 
