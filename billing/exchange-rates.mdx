@@ -1,0 +1,64 @@
+---
+title: Exchange Rates
+sidebarTitle: Exchange Rates
+description: 'Convert prices between currencies with an automatic rate provider, your own fixed rates, or both.'
+---
+
+import Support from '/snippets/support.mdx';
+
+## Introduction
+
+Plan prices are set in your [default currency](/billing/overview#default-currency). Aikeedo converts them when a payment gateway charges in another currency, and when it adds up revenue, such as MRR, from orders in several currencies.
+
+Rates come from two places:
+
+- A **rate provider**, a service that keeps rates up to date automatically, such as [CurrencyAPI](/integrations/currency-api).
+- **Custom rates**, fixed rates you set yourself for particular currencies.
+
+You can use either, or both. A custom rate always wins over the provider's rate for its currency.
+
+## The Exchange page
+
+Go to **Settings → Finance → Exchange**.
+
+- **Rate providers** lists the installed providers. The one you use is marked **In use**. Click a provider to enter its settings, such as an API key.
+- **Custom rates** shows the currencies you have set a rate for. Hover over a currency to see its rate. Click **Manage custom rates** to change them.
+
+Choose which provider to use under **Settings → Billing → Currency rate provider**. More providers can be added with plugins.
+
+{/* SCREENSHOT: Settings → Finance → Exchange with a provider In use and two custom rates
+<Frame><img src="https://cdn.aikeedo.com/docs/v5.2/exchange-page.png" alt="The Exchange page" /></Frame> */}
+
+## Custom rates
+
+Custom rates are useful when you want to charge a fixed rate in a local currency, or when no provider covers a currency.
+
+1. Go to **Settings → Finance → Exchange** and click **Manage custom rates**. **Set custom rates** under **Settings → Billing** opens the same page.
+2. Click **Add currency** and choose a currency.
+3. Enter how many units of it equal **1 USD**. Rates are always per 1 USD, even if your default currency isn't USD. If you use a rate provider, its current rate is shown under the field for comparison.
+4. Click **Save changes**.
+
+To stop using a custom rate, remove its row and save. The currency then goes back to the provider's rate.
+
+<Warning>
+  Custom rates are never updated automatically. Keep them up to date yourself, or use a rate provider for currencies that move often.
+</Warning>
+
+{/* SCREENSHOT: Custom rates page with two currencies
+<Frame><img src="https://cdn.aikeedo.com/docs/v5.2/exchange-custom-rates.png" alt="The Custom rates page" /></Frame> */}
+
+## How conversion works
+
+- When neither currency has a custom rate, the provider's rate is used.
+- When either has one, both are converted through USD, using the custom rate where there is one and the provider's rate for the other.
+- **Without a provider**, only USD and the currencies with a custom rate are converted. Any other currency is treated as equal to USD, one to one.
+
+The admin dashboard warns that MRR can't be calculated correctly only when an order's currency has no rate at all.
+
+## Related Guides
+
+- [Billing Overview](/billing/overview) - Default currency and other billing settings
+- [CurrencyAPI](/integrations/currency-api) - Set up the CurrencyAPI rate provider
+- [Currency Rate Provider](/development/plugins/guides/currency-rate-provider) - Build a provider plugin
+
+<Support />

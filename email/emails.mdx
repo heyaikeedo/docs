@@ -1,0 +1,72 @@
+---
+title: Transactional Emails
+sidebarTitle: Emails
+description: 'See every email Aikeedo sends, turn each one on or off, and preview it before your users get it.'
+---
+
+import Support from '/snippets/support.mdx';
+
+## Introduction
+
+Aikeedo sends emails when something happens on an account: a sign-up, a password reset, an invitation, a purchase. The **Emails** page lists every one of them, including emails added by plugins. From there you can turn each one off, and preview how it looks.
+
+Emails are delivered through the transport you set up under [Mail](/email/mailer). To change their wording or design, edit their [templates](/advanced/email-templates).
+
+## The Emails page
+
+Go to **Settings → Email → Emails**.
+
+Emails are grouped by what they are about: **Account**, **Workspace**, **Billing** and **Admin**, followed by any groups that plugins add. Each row shows the email's name and when it is sent. Emails added by a plugin are marked with a puzzle icon.
+
+{/* SCREENSHOT: Settings → Email → Emails, showing the Account and Billing groups
+<Frame><img src="https://cdn.aikeedo.com/docs/v5.2/emails-page.png" alt="The Emails settings page" /></Frame> */}
+
+## Emails Aikeedo sends
+
+| Email | Group | Sent when | Can be turned off |
+| --- | --- | --- | --- |
+| **Welcome** | Account | A user signs up. When email verification is required, once the address is verified. | Yes |
+| **Email verification** | Account | A user signs up or changes their email address, while email verification is turned on in the account settings. | No |
+| **Password reset** | Account | A user asks to recover their account. | No |
+| **Workspace invitation** | Workspace | A member invites someone to a workspace. | Yes |
+| **Purchase confirmation** | Billing | A paid order is completed. Sent to the workspace owner with a receipt. | Yes |
+| **Invoice ready** | Billing | An invoice is issued after the purchase confirmation has already gone out. | Yes |
+| **Data export** | Admin | An admin exports users, workspaces, orders or subscriptions. The CSV file is attached. | No |
+
+Emails that accounts need in order to work are marked **Always on** and have no switch.
+
+<Note>
+  Without the **Workspace invitation** email, invited people only learn about an invitation if someone tells them.
+</Note>
+
+## Turning emails off
+
+Every email is on by default. Switch an email to **Disabled** and click **Save changes**. The change applies to the next email sent, including ones sent by a [background worker](/advanced/queue).
+
+If you turned off purchase emails in an earlier version, that choice carries over until you first save this page.
+
+## Previewing an email
+
+Click **Preview** on any row to see the email as your users will. It is filled with sample data, with your own account as the recipient. Switch between **Desktop** and **Mobile** to check both widths. The **Subject** is shown above the email.
+
+Nothing is sent when you preview. This makes it a quick way to check a [customised template](/advanced/email-templates) after editing it.
+
+{/* SCREENSHOT: Preview of the Purchase confirmation email, Desktop view
+<Frame><img src="https://cdn.aikeedo.com/docs/v5.2/emails-preview.png" alt="Previewing the purchase confirmation email" /></Frame> */}
+
+## Purchase confirmation
+
+After a paid order is completed, the workspace owner gets a **Purchase confirmation** email in their own language. It works as a receipt: the plan, amounts, any discount and tax, the total, the payment method and the billing details. Free orders don't send one.
+
+When you use [invoicing](/billing/invoicing), the email waits for the invoice and arrives with the invoice PDF attached. If the invoice isn't ready within an hour, the email is sent without it, and the **Invoice ready** email follows with the PDF once the invoice is issued.
+
+Both emails are sent as [background jobs](/advanced/queue), so cron must be running.
+
+## Related Guides
+
+- [Mailer Configuration](/email/mailer) - Set up email delivery
+- [SMTP Setup](/email/smtp) - Configure an SMTP server
+- [Email Templates](/advanced/email-templates) - Change the wording and design of emails
+- [Invoicing](/billing/invoicing) - Invoices for paid orders
+
+<Support />

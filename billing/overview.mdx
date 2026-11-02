@@ -1,21 +1,45 @@
 ---
 title: Billing Overview
 sidebarTitle: Overview
-description: 'Configure billing settings in Aikeedo including default currency, trial periods, sign-up plans, and fallback subscriptions for user onboarding.'
+description: 'Configure billing settings in Aikeedo including billing details at checkout, default currency, invoicing, trial periods, sign-up plans, and fallback subscriptions.'
 ---
 
 ## General Settings
 
 ### Billing Address
 
-Control whether billing address information is required during checkout.
+Control whether customers enter their billing details at checkout.
 
-- **Enabled**: Billing address will be required at checkout
-- **Disabled**: Billing address is optional
+- **Enabled**: Customers fill in a billing address step before payment
+- **Disabled**: Checkout goes straight to payment
+
+When enabled, checkout asks for:
+
+- **Address line 1**, **City** and **Country**, plus an optional **Address line 2**.
+- **State / region**: a list of the country's states, provinces or regions when Aikeedo knows them, which the customer must choose from. For other countries, an optional text field.
+- **Zip**: required only in countries that use postal codes.
+- **Phone number**: always required. It is checked and saved in international format.
+- **I'm buying as a business**: when ticked, **Company name** and **Tax ID** (such as a VAT, GST or PAN number) are required. Other customers can add a tax ID too.
+
+These details appear on the order in the admin panel and on [invoices](/billing/invoicing), and [tax engines](/integrations/tax-engines/overview) can use them.
 
 <Note>
   Address information is required by payment gateways in some countries for compliance and fraud prevention.
 </Note>
+
+{/* SCREENSHOT: Checkout billing address step with "I'm buying as a business" ticked
+<Frame><img src="https://cdn.aikeedo.com/docs/v5.2/checkout-billing-details.png" alt="Billing details at checkout" /></Frame> */}
+
+### Default Billing Country
+
+The country pre-selected at checkout. Checkout picks the customer's country in this order:
+
+1. The address saved on their workspace.
+2. The country on their account.
+3. Their location.
+4. This setting.
+
+Leave it as **None** to make customers choose.
 
 ### Credit Overuse Allowance
 
@@ -67,8 +91,10 @@ Choose the default currency for your billing system. This setting affects how pr
 
 Select a provider for currency exchange rates. Options include:
 
-- **None**: No automatic currency conversion.
+- **None**: No automatic conversion. Only currencies you set a [custom rate](/billing/exchange-rates#custom-rates) for are converted. Others are treated as equal to USD.
 - **CurrencyAPI**: Uses the CurrencyAPI service for up-to-date exchange rates.
+
+Click **Configure selected provider** to enter the provider's settings, or **Set custom rates** to fix your own rates for particular currencies. See [Exchange Rates](/billing/exchange-rates).
 
 <Note>
   Additional currency providers can be added through plugins, expanding your options for managing multi-currency transactions.
@@ -99,6 +125,10 @@ Set how many credits equal one unit of your default currency. This setting is sh
 <Note>
   In session-based usage mode, this field appears under **Usage mode**. In credit metering mode, it appears under **Custom Credit Purchases** when add-on purchases are enabled.
 </Note>
+
+## Invoicing
+
+Choose an **Invoicing engine** to issue an invoice for every paid order through your invoicing service. Engines are available as plugins. See [Invoicing](/billing/invoicing).
 
 ## Trial Configuration
 
@@ -232,6 +262,8 @@ Set the maximum amount users can spend in a single credit purchase.
 
 - [Unified Credit System](/billing/unified-credit-system) - Understand credit management
 - [Plans, Snapshots & Subscriptions](/billing/plans-snapshots-subscriptions) - Create and manage plans
+- [Invoicing](/billing/invoicing) - Invoices for paid orders
+- [Exchange Rates](/billing/exchange-rates) - Rate providers and custom rates
 - [Stripe Integration](/integrations/payment-gateways/stripe) - Configure Stripe payments
 - [PayPal Integration](/integrations/payment-gateways/paypal) - Configure PayPal payments
 

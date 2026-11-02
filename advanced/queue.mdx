@@ -13,14 +13,20 @@ Some work is too slow to do while a user waits, such as importing content or ref
 
 Both run from the [cron job](/setup/initial-setup#setting-up-the-cron-job), so cron is all you need, including on shared hosting. For faster background work, you can also keep a **background worker** running.
 
+<Note>
+  The scheduled tasks on this page are Aikeedo's own recurring work. They are not the [scheduled tasks](/advanced/scheduled-tasks) your users create to run chat instructions on a schedule, although those are started by one of them: **Run due scheduled tasks**.
+</Note>
+
 ## How it works
 
 Cron runs `cron.php` every minute. Each run:
 
 1. **Runs the scheduled tasks that are due.** Each task runs on its own, so one that fails doesn't stop the others. Its result shows on the Queue page.
-2. **Works the queue for about 50 seconds**, but only when no background worker is running. A job added between cron runs therefore waits up to a minute.
+2. **Works the queue for about 50 seconds**, unless a background worker that handles every queue is running. A job added between cron runs therefore waits up to a minute.
 
-A failed job is retried a few times with a pause in between. If it keeps failing, it is kept as a **failed job**, so you can see why and retry it.
+A failed job is retried a few times with a pause in between. If it keeps failing, it is kept as a **failed job** for 30 days, so you can see why and retry it.
+
+While an update is unfinished, cron does nothing until it is finished. See [How to Update](/versioning/how-to-update).
 
 <Note>
   Keep cron running every minute even if you add a background worker. The worker runs jobs; scheduled tasks still run from cron.
@@ -33,13 +39,51 @@ Go to **Settings → System → Queue**.
 | Section | What it shows |
 | --- | --- |
 | **Overview** | The **Adapter** in use, and how many jobs are **Waiting**, **Running** and **Failed**, and how many **Workers** are running. |
-| **Workers** | The background workers that are running, and when each started. **Restart all** asks them to finish their current job and start again. |
-| **Waiting jobs** | The next jobs to run. **View all** opens the searchable **Jobs** page. |
-| **Failed jobs** | Jobs that failed for good, with their error. Retry or delete them one by one, or with **Retry all** and **Delete all**. |
-| **Scheduled tasks** | Every task with its schedule, last run and status: **Succeeded**, **Failed**, **Running** or **Never run**. Open a task to see its error and stack trace. |
+| **Workers** | The workers that are running: background workers, and cron's own runs, marked **Cron**. Each shows when it started, when it was last seen and how many jobs it has done, with a **Restart** action. **Restart all** asks every background worker to finish its current job and start again. |
+| **Waiting jobs** | The next jobs to run. |
+| **Failed jobs** | Jobs that failed for good, with their error. Retry or delete them one by one. |
+| **Scheduled tasks** | Every task with its schedule, last run and status: **Succeeded**, **Failed**, **Running** or **Never run**. |
 | **Run a background worker** | Ready-to-use configurations for your server. See [below](#running-a-background-worker). |
 
+When there are more workers, waiting jobs or failed jobs than the section shows, **View all** opens the full list.
+
+Click any job, worker or task to see its details:
+
+- **Job**: its name, queue, status, attempts, timeout, when it was added and when it is due, and its data. A failed job also shows its error and stack trace, with **Retry**.
+- **Worker**: the job it is running, who started it, the queues it works, jobs done, memory, when it will exit, and **Restart**.
+- **Task**: its schedule, **Next run**, last run and status, with the error and stack trace if it failed.
+
+### Jobs and Workers pages
+
+- **Jobs** lists every job, with **Waiting** and **Failed** tabs and a search. The **Failed** tab has **Retry all** and **Delete all**.
+- **Workers** lists every running worker, with a search, a **Started by** filter (**Process manager** or **Cron**) and **Restart all**.
+
+### Status page
+
 The **Status** page in the admin menu also has **Cron** and **Queue** rows. They warn when cron hasn't run for more than five minutes, when scheduled tasks are failing, and when jobs have failed.
+
+## Scheduled tasks
+
+These are the tasks Aikeedo runs on its own. Plugins can add more, which also appear on the Queue page. Times are in UTC.
+
+| Task | Runs |
+| --- | --- |
+| Run plugin cron listeners | Every minute |
+| Renew subscriptions | Every minute |
+| End expired subscriptions | Every minute |
+| Calculate MRR | Every minute |
+| Retry invoices | Every minute. See [Invoicing](/billing/invoicing#retries). |
+| Send delayed purchase confirmations | Every 5 minutes |
+| Run due scheduled tasks | Every minute. Starts your users' [scheduled tasks](/advanced/scheduled-tasks). |
+| End stuck generations | Every 5 minutes |
+| Delete expired private items | Every minute |
+| Convert legacy messages | Every minute |
+| Refresh connector tools | Every minute, for connections that are due |
+| Delete expired connector sign-ins | Every hour |
+| Resume stalled imports | Every 5 minutes |
+| Prune cache | Every hour |
+| Delete old failed jobs | Daily at 04:30. Failed jobs are kept for 30 days. |
+| Delete old notifications | Daily at 04:45. See [Notifications](/advanced/notifications#retention). |
 
 ## Running a background worker
 
@@ -111,13 +155,13 @@ Keep it running with a process manager such as **Supervisor** or **systemd**. Th
 
 Once it is running, the worker appears under **Workers** on the Queue page within a few seconds.
 
-- **Run it as the web server user** (`www-data` above). Otherwise files it creates, such as cache, can't be changed by the application.
+- **Run it as the web server user** (`www-data` above). Otherwise files it creates, such as cache, can't be changed by the application. The worker won't run as `root` unless the application's files belong to `root`.
 - **Use the same PHP as the website.** If your server has more than one PHP version, the Queue page's configurations use the website's by its full path, because plain `php` may be another version. Cron and workers log a warning when their PHP differs from the website's.
 - **Nothing to do after updates or settings changes.** Workers restart on their own when you update Aikeedo or save settings.
 
 ## Queue adapters
 
-The **adapter** is where waiting jobs are kept. Change it with **Change** next to **Adapter** on the Queue page.
+The **adapter** is where waiting jobs are kept. Change it with **Change** next to **Adapter** on the Queue page. The list shows only enabled adapters: turn on an adapter from a plugin under **Settings → System → Queue adapters** first.
 
 | Adapter | Use it for |
 | --- | --- |
@@ -127,6 +171,8 @@ The **adapter** is where waiting jobs are kept. Change it with **Change** next t
 The [Queue Adapters](/integrations/queue-adapters/overview) plugin adds Redis, Amazon SQS, Azure Queue Storage and Cloudflare Queues, which take that load off your database on busy sites.
 
 <OfficialPlugins skus={['queue-adapters']} />
+
+If the chosen adapter can't be used, for example because its plugin was removed, jobs fall back to **Database** and a warning is logged.
 
 <Warning>
   Switching adapters doesn't move jobs that are already waiting. Let the queue empty first: the Queue page shows how many jobs are waiting.
@@ -142,7 +188,7 @@ The [Queue Adapters](/integrations/queue-adapters/overview) plugin adds Redis, A
     That is expected without a background worker: jobs run on the next cron run. Add a [background worker](#running-a-background-worker) to start them right away.
   </Accordion>
   <Accordion title="A scheduled task shows Failed">
-    Open it on the Queue page to see the error and stack trace. Tasks from plugins name the plugin, so you know which one to update or contact.
+    Open it on the Queue page to see the error and stack trace. If **Run plugin cron listeners** fails, the error names the plugin whose listener failed, so you know which one to update or contact.
   </Accordion>
   <Accordion title="The worker doesn't appear under Workers">
     Check the process manager's status command and the worker log. Make sure the configuration uses the website's PHP binary and the right path.

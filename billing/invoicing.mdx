@@ -1,0 +1,87 @@
+---
+title: Invoicing
+sidebarTitle: Invoicing
+description: 'Issue an invoice for every paid order through an invoicing service, and give customers and admins the invoice PDF.'
+---
+
+import Support from '/snippets/support.mdx';
+
+## Introduction
+
+Aikeedo can issue an invoice for each paid order through an **invoicing engine**: a plugin that connects to an invoicing or accounting service. The service numbers the invoice, records the payment and produces the PDF. Aikeedo keeps track of each invoice, retries when the service is unavailable, and gives the PDF to the customer and to you.
+
+Aikeedo doesn't number invoices or produce invoice PDFs itself. Without an engine, orders are not invoiced, and customers still get a [purchase confirmation](/email/emails#purchase-confirmation) that works as a receipt.
+
+<Note>
+  Invoicing engines are available as plugins. Aikeedo ships with **No invoicing** selected. Developers can build an engine for any service. See [Invoicing Engine](/development/plugins/guides/invoicing-engine).
+</Note>
+
+## Choosing an engine
+
+1. Install the invoicing engine plugin. Installed engines are listed under **Settings → Finance → Invoicing engines**.
+2. Go to **Settings → Billing** and, under **Invoicing**, choose the **Invoicing engine**.
+3. Click **Configure selected engine** and enter the service's details. This page belongs to the plugin.
+4. Click **Save changes**.
+
+Which payment methods are invoiced is set in the engine's own settings. Free orders are never invoiced.
+
+{/* SCREENSHOT: Settings → Billing, Invoicing section with an engine selected
+<Frame><img src="https://cdn.aikeedo.com/docs/v5.2/invoicing-settings.png" alt="Invoicing section of the billing settings" /></Frame> */}
+
+## When an order is invoiced
+
+When a paid order is fulfilled, Aikeedo asks the engine for an invoice in the background, so the payment never waits for the invoicing service. The invoice is:
+
+- **Pending** while Aikeedo is waiting for the service.
+- **Issued** once the service has created it. The invoice number comes from the service.
+- **Failed** when the service refused it, or after the last retry.
+
+The PDF is fetched from the service each time someone downloads it. Aikeedo doesn't store a copy.
+
+### Retries
+
+If the service can't be reached, or returns an error, Aikeedo tries again later, waiting longer each time: after 5 minutes, 15 minutes, 1 hour, 3 hours, 12 hours and then once a day. It gives up after 8 attempts, or straight away when the service says the invoice can't be issued as it is, for example because of invalid billing details.
+
+Retries are run by the **Retry invoices** system task, so cron must be running. See [Background Jobs & Queue](/advanced/queue).
+
+## On the order page
+
+Open an order under **Orders** in the admin panel. The **Invoice** section shows:
+
+- The status: **Issued**, **Pending** or **Failed**, with when the next attempt is due.
+- **Engine**: the invoicing engine used.
+- **Invoice number**.
+- **Attempts** and the **Last error**, if any.
+
+You can:
+
+- **Retry now**: try a pending or failed invoice again straight away. Fix the cause first, for example the engine's settings or the customer's billing details.
+- **Create invoice**: invoice a paid order that wasn't invoiced, for example one whose payment method the engine skips, or one placed before you set up invoicing.
+- **Download PDF**: download the issued invoice.
+
+The section is hidden when invoicing is off and the order has no invoice.
+
+{/* SCREENSHOT: Admin order page with the Invoice section, invoice issued
+<Frame><img src="https://cdn.aikeedo.com/docs/v5.2/invoicing-admin-order.png" alt="Invoice section on the admin order page" /></Frame> */}
+
+## What customers see
+
+Customers find their orders in the app under **Billing**. On an invoiced order, the **Invoice** section shows **Being prepared** until the invoice is issued, then the invoice number and **Download invoice**.
+
+The [purchase confirmation email](/email/emails#purchase-confirmation) waits for the invoice and arrives with the PDF attached. If the invoice isn't ready within an hour, the email is sent without it, and an **Invoice ready** email follows with the PDF once it is issued.
+
+{/* SCREENSHOT: Customer order page with Download invoice
+<Frame><img src="https://cdn.aikeedo.com/docs/v5.2/invoicing-customer-order.png" alt="Invoice section on the customer's order page" /></Frame> */}
+
+## Billing details on invoices
+
+Invoices use the billing details the customer enters at checkout, including the company name and tax ID of business customers. Turn on **Billing address** under **Settings → Billing** to collect them. See [Billing address](/billing/overview#billing-address).
+
+## Related Guides
+
+- [Billing Overview](/billing/overview) - Billing settings and checkout details
+- [Transactional Emails](/email/emails) - Purchase confirmation and invoice emails
+- [Tax Engines](/integrations/tax-engines/overview) - Tax on orders
+- [Invoicing Engine](/development/plugins/guides/invoicing-engine) - Build an engine for your invoicing service
+
+<Support />

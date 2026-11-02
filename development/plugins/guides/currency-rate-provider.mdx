@@ -4,7 +4,7 @@ sidebarTitle: "Currency rate providers"
 description: "Supply exchange rates to Aikeedo so payment gateways can charge in a currency other than the platform default."
 ---
 
-Aikeedo prices plans in one currency. When a payment gateway bills in a different one, it converts the amount through the configured rate provider. Without a provider, no conversion happens and everything is charged in the default currency.
+Aikeedo prices plans in one currency. When a payment gateway bills in a different one, it converts the amount through the configured rate provider. Without a provider, only currencies with a custom rate are converted, and any other currency is treated as equal to USD.
 
 ## The interface
 
@@ -19,6 +19,19 @@ interface RateProviderInterface
 ```
 
 `getRate()` returns the multiplier that converts an amount in `$from` into `$to`. It's called during checkout, so it must be fast and must not throw for a currency pair you support.
+
+Those two methods are the whole contract. `canConvert()` and `getProviderRates()`, which the admin panel and the MRR calculation use, belong to the core wrapper described below, not to your provider.
+
+## Custom rates override yours
+
+Aikeedo never hands your provider to the rest of the application directly. It wraps the selected provider in `Billing\Infrastructure\Currency\CustomRateProvider`, and that wrapper is what's bound to `RateProviderInterface`. Administrators set custom rates under **Settings → Exchange → Custom rates**, stored in `option.currency.rates` as units of each currency per 1 USD.
+
+For each conversion, the wrapper:
+
+1. Passes the pair to your provider unchanged when neither currency has a custom rate.
+2. Otherwise uses the custom rate for each side that has one, and asks your provider for the other side against USD, as `getRate(USD, $currency)`.
+
+So support USD as the `$from` currency for every currency you cover, even if your API quotes against another base. The custom rates page also shows your provider's rate next to each custom one, fetched the same way.
 
 ## Implementation
 
@@ -161,6 +174,7 @@ Show the API key field, and the timestamp of the last successful refresh, so adm
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Set a gateway to a currency other than the platform default and confirm the charge is converted.</span></div>
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The converted amount is plausible, and rounding lands on whole minor units.</span></div>
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Rates are fetched once and reused until they expire.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>The custom rates page shows your rate next to each currency, and a custom rate overrides yours.</span></div>
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>With an invalid API key, checkout still completes in the default currency.</span></div>
 </div>
 
@@ -173,3 +187,4 @@ The [Currency Beacon plugin](https://github.com/heyaikeedo/plugins-currency-beac
 - [Payment gateways](/development/plugins/guides/payments/overview)
 - [Billing internals](/development/core/billing-subsystem)
 - [Billing settings](/billing/overview)
+- [Exchange rates](/billing/exchange-rates)

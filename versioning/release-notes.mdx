@@ -13,25 +13,45 @@ description: Learn about the latest changes, breaking updates, and migration ins
 
 ## v5.2
 
-v5.2 lets you choose who searches the web and reads pages and files in chat, adds a background job queue and scheduler, and runs on PHP 8.5.
+v5.2 adds scheduled tasks and notifications, invoicing and business details at checkout, an Emails page, custom exchange rates, a background job queue and scheduler, and a choice of who searches the web and reads pages and files in chat. It also refreshes the model catalog, adds ten interface languages and runs on PHP 8.5.
 
 <Warning>
   **Back up your files and database before updating.** The standard update
-  process works and database migrations run automatically. After the update,
-  [turn web search on again](#web-search-was-renamed) and update every
-  installed plugin.
+  process works and database migrations run automatically. Updating from 5.1
+  [may show an error once](#updating-from-5-1-finishes-in-two-steps): reload
+  the page to finish. After the update, [turn web search on
+  again](#web-search-was-renamed), set credit rates for the [new OpenAI
+  speech and transcription models](#openai-speech-and-transcription-models-were-replaced),
+  and update every installed plugin.
 </Warning>
 
 ### What's new in v5.2
 
+- **Scheduled tasks** — users run chat instructions on a schedule, such as a morning briefing or a weekly summary. They set a task up with a form, from one of ten templates, or by asking in chat. Each plan sets how many tasks a workspace may have, and the workspace owner can see and delete every member's tasks. Off by default. See [Scheduled Tasks](/advanced/scheduled-tasks).
+- **Notifications** — a bell in the sidebar lists finished, failed and waiting replies, generations and scheduled task runs, and opens with `Ctrl + Shift + B`. Browser alerts reach users even with the app closed, with no setup. Admins can turn browser alerts off and set how long notifications are kept. See [Notifications](/advanced/notifications).
+- **Invoicing** — an invoicing engine plugin issues an invoice in your invoicing service for each paid order. Customers and admins download the PDF from the order page, failed invoices are retried, and admins can retry or create an invoice by hand. See [Invoicing](/billing/invoicing).
+- **Business details at checkout** — the billing address step asks for a phone number, checks the state or region and postal code against the country, pre-selects the customer's country, and lets businesses enter a company name and tax ID. See [Billing Address](/billing/overview#billing-address).
+- **Purchase confirmation email** — sent after every paid order, with a receipt, and the invoice PDF attached when the order is invoiced.
+- **Emails page** — **Settings → Email → Emails** lists every email Aikeedo and your plugins send. Turn each one off, or preview it with sample data. See [Transactional Emails](/email/emails).
+- **Custom exchange rates** — set fixed rates for particular currencies under **Settings → Finance → Exchange**, with or without a rate provider. See [Exchange Rates](/billing/exchange-rates).
 - **Web search providers** — choose Jina, Serper or Perplexity under **Settings → Features → Chat**. Results reach the model as a short cited list, capped by **Results per search** and **Search result size**, which cuts the input each search adds. See [Web Search & Web Pages](/advanced/web-search-and-reading).
 - **Web page readers** — pages can be read on your server, by Jina, or in a real browser by [Cloudflare Browser Rendering](/integrations/cloudflare-browser-rendering), with **Use only as fallback** so a paid reader is used only for pages your server can't read.
 - **File reading** — chat reads `.xlsx`, `.ods`, `.pptx` and `.rtf` files, and scanned PDFs through Jina or [Mistral OCR](/integrations/mistral-ocr). Small files go to the model in full, so it can summarise and compare them; larger ones are searched and read page by page. See [File Reading](/advanced/file-reading).
-- **Background jobs and scheduler** — slow work runs as queued jobs and recurring work as scheduled tasks, each with its own schedule, isolated from the others. **Settings → System → Queue** shows waiting and failed jobs, workers and every task. Cron is still all you need; a [background worker](/advanced/queue#running-a-background-worker) is optional. See [Background Jobs & Queue](/advanced/queue).
+- **Background jobs and scheduler** — slow work runs as queued jobs and recurring work as scheduled tasks, each with its own schedule, isolated from the others. **Settings → System → Queue** shows waiting and failed jobs, workers and every task, with searchable **Jobs** and **Workers** pages. Cron is still all you need; a [background worker](/advanced/queue#running-a-background-worker) is optional. See [Background Jobs & Queue](/advanced/queue).
 - **Queue Adapters plugin** — keeps background jobs in Redis, Amazon SQS, Azure Queue Storage or Cloudflare Queues instead of the database. Requires Aikeedo 5.2 or later. See [Queue Adapters](/integrations/queue-adapters/overview).
+- **Model catalog refresh** — adds Haiku 5.5, GPT 6.1 Terra, GPT 6 Sol, Gemini 4 Argon, Kimi K3.1 Pro, MiniMax M3.1 Flash, Mistral Large 4, Qwen 3.8 27B, Eleven v4, Eleven v4 Turbo, Flash v2.5, Simba 3.5, Simba 3.2, FLUX 3 Max, Kling 4.0, Hailuo H3 Max Turbo, Nano Banana 2.1, Krea 3 and Stable Diffusion 3.5 Large, Large Turbo and Medium.
+- **OpenAI speech and transcription** — Voiceover uses OpenAI's Realtime API with GPT Realtime 2.1 mini, and Transcriber uses GPT Transcribe. See [OpenAI](/integrations/openai#speech-and-transcription).
+- **Ten interface languages** — Azerbaijani, Bulgarian, Croatian, Hindi, Indonesian, Kazakh, Nepali, Slovak, Thai and Uzbek, for 40 in all. Enable them under **Settings → Languages**. See [Localization](/advanced/localization).
+- **Canvas and connectors** — Canvas keeps streaming while it writes long documents, and MCP App interfaces can be up to 8 MB.
 - **PHP 8.5** — Aikeedo runs on PHP 8.2 to 8.5. PHP deprecation notices are now logged instead of shown on the page.
 
 ### Changes to be aware of in v5.2
+
+#### Updating from 5.1 finishes in two steps
+
+The update now unpacks the new files first, then finishes in a separate step: migrations, plugins, translations and cache. The Update page does this on its own, showing **Finishing the update**.
+
+Because 5.1 runs the old updater, a 5.1 site may show an error once at the end of the upload. **Reload the page, or open any admin page.** Admin pages lead to the Update page until the update is finished, and it finishes there automatically. Use **Try again** if it stops. Cron does nothing until the update is finished.
 
 #### Web search was renamed
 
@@ -43,13 +63,32 @@ The chat capability is now **Web search**, and its settings were not carried ove
 
 Plugins that registered a tool under `google_search` should use `web_search`.
 
+#### OpenAI speech and transcription models were replaced
+
+- **Transcription**: Whisper (`whisper-1`) is removed, and Transcriber uses **GPT Transcribe** (`gpt-transcribe`). Set its credit rate, per second, under **Settings → Finance → Credit ratios**. A rate you set for `whisper-1` no longer applies. New transcriptions have no timestamps, so SRT and VTT downloads are available only for earlier ones.
+- **Speech**: TTS 1 and TTS 1 HD are replaced by **GPT Realtime 2.1 mini** (`gpt-realtime-2.1-mini`), on OpenAI's Realtime API. Set its credit rate, per character. Voices on the old models keep working, and Fable, Nova and Onyx are now spoken by Ballad, Coral and Cedar. Your server must be able to connect to `api.openai.com` on port 443.
+
+#### Retired models removed
+
+GPT 4o, GPT 4o mini, GPT 4.1, GPT 4.1 mini, Kling 1.6, Kling 1.6 Pro, Kling 2 Master, Kling 2.1 Master, Pika 2.2, Veo 3.1 (all versions), SD3 Large, SD3 Large Turbo, SD3 Medium, Perplexity Sonar Pro and Sonar Reasoning Pro, and Groq's Llama 3.1 8B and Llama 3.3 70B are removed. Reassign any plans, assistants or defaults that used them.
+
+ElevenLabs Turbo v2.5, Monolingual v1 and Multilingual v1, and Speechify Simba English and Simba Multilingual are removed too. Voices that used them now use, and are charged as, the models that replace them.
+
+#### Checkout asks for more billing details
+
+When **Billing address** is enabled under **Settings → Billing**, checkout now requires a phone number, and a company name and tax ID from customers buying as a business. See [Billing Address](/billing/overview#billing-address).
+
+#### API responses show less about other users
+
+Where an API response includes the user who created an item, such as a conversation, library item, assistant or voice, it now has only their `id`, `first_name`, `last_name` and `avatar`. Integrations that read other fields from it, such as the email address, need to change.
+
 #### Chat attachments are checked before they are stored
 
 Files attached in chat go through the same checks as other uploads, with a new **Max file size (MB)** setting under **Settings → Features → Chat → File reading**. Left empty, the server's PHP limit applies.
 
 #### Cron runs scheduled tasks and the queue
 
-Keep `cron.php` running every minute. It now runs the scheduled tasks that are due and, when no background worker is running, the waiting jobs. Plugins' cron listeners run as the **Run plugin cron listeners** task, each on its own: one that fails no longer stops the others, and the failure names its plugin.
+Keep `cron.php` running every minute. It now runs the scheduled tasks that are due and, when no background worker is running, the waiting jobs. Users' scheduled tasks, browser alerts, invoices and purchase emails all depend on it. Plugins' cron listeners run as the **Run plugin cron listeners** task, each on its own: one that fails no longer stops the others, and the failure names its plugin.
 
 #### Workers restart after updates
 
@@ -61,7 +100,9 @@ If you run a background worker, `app:update` and saving settings make it restart
   <Step title="Back up">Back up your files and database.</Step>
   <Step title="Update the core">
     Follow the standard [How to Update](/versioning/how-to-update) process.
-    Database migrations run automatically.
+    Database migrations run automatically. If the upload ends with an error,
+    reload the page so the update can finish. See [Updating from 5.1
+    finishes in two steps](#updating-from-5-1-finishes-in-two-steps).
   </Step>
   <Step title="Update every plugin">
     Update all installed plugins from the marketplace.
@@ -70,10 +111,19 @@ If you run a background worker, `app:update` and saving settings make it restart
     Choose a search provider, turn on **Web search** and enable it in each plan
     with **Update snapshots**. See [Web search was renamed](#web-search-was-renamed).
   </Step>
+  <Step title="Set credit rates and reassign models">
+    Under **Settings → Finance → Credit ratios**, set rates for GPT Transcribe,
+    GPT Realtime 2.1 mini and any provider you turn on. Reassign plans,
+    assistants and defaults that used [retired models](#retired-models-removed).
+  </Step>
   <Step title="Review the new settings">
-    Check **Web browsing** and **File reading** under **Settings → Features →
-    Chat**, and the credit rates for any provider you turn on under
-    **Settings → Finance → Credit ratios**.
+    - Check **Web browsing** and **File reading** under **Settings → Features → Chat**.
+    - Review **Settings → Email → Emails** and **Settings → Notifications**.
+    - To offer scheduled tasks, set each plan's **Scheduled tasks cap** first
+      (blank means unlimited), turn on **Scheduled tasks** under **Settings →
+      Features → Chat**, and import the **Scheduled task templates** under
+      **Settings → Starter content**.
+    - Enable any of the new languages under **Settings → Languages**.
   </Step>
   <Step title="Check cron">
     Open **Settings → System → Queue** and confirm the scheduled tasks have run.

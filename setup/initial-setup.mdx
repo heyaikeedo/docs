@@ -50,6 +50,10 @@ It is important that the cron job runs as the same user that your web server use
    ```
    Replace `/path/to/app/root/` with the actual path to your Aikeedo application's root directory.
 
+   <Tip>
+   Use the same PHP version as your website. If your server has several PHP versions, plain `php` may be a different one, so give the full path of the website's PHP binary, as above. Cron logs a warning when its PHP differs from the website's.
+   </Tip>
+
 <Note>
 If your server uses a different user for the web server (such as `apache` or `nginx`), substitute `www-data` with the appropriate username in the `sudo crontab -u USERNAME -e` command.
 </Note>

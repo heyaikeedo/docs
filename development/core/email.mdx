@@ -1,7 +1,7 @@
 ---
 title: "Email"
 sidebarTitle: "Email"
-description: "How Aikeedo sends transactional email: transports, templates and the events that trigger messages."
+description: "How Aikeedo sends transactional email: transports, templates, the registry of emails administrators can turn off, and what triggers each message."
 ---
 
 Email is sent through Symfony Mailer, with templates rendered by Twig. Which transport is used depends on what an administrator configured.
@@ -20,68 +20,229 @@ See [Mailer settings](/email/mailer) and [SMTP](/email/smtp) for the administrat
 ## Sending
 
 ```php
+use Presentation\Resources\Api\UserResource;
 use Shared\Infrastructure\Email\EmailService;
+use User\Infrastructure\Emails\WelcomeEmail;
 
 public function __construct(
     private EmailService $email,
+    private WelcomeEmail $welcome,
 ) {}
 
-$this->email->sendTemplate(
+$this->email->send(
+    $this->welcome,
     $user->getEmail()->value,
-    'welcome',
-    ['name' => $user->getFirstName()->value],
+    [
+        'user' => new UserResource($user),
+        'locale' => $user->getLanguage()->value,
+    ],
 );
 ```
 
-`sendTemplate()` takes one address or several, a template name, optional data and optional attachments. Every option is merged into the template data automatically, so templates can read `option.site.name`, brand settings and policy links without the caller passing them.
+`send(TransactionalEmailInterface $email, string|array $to, array $data = [], array $attachments = [])` sends a [registered email](#transactional-emails). It does nothing while an administrator has the email turned off, and otherwise renders the email's template with your data. The `locale` key picks the recipient's language. Attachments are `Shared\Infrastructure\Email\Attachment` objects:
+
+```php
+new Attachment($pdfBytes, 'receipt.pdf', 'application/pdf');
+```
+
+`sendTemplate(string|array $to, ?string $template = null, ?array $data = null, ?array $attachments = null)` is the lower-level call underneath. It renders and sends any template, with no on/off switch. Use `send()` for anything an administrator should be able to turn off.
+
+Both merge every option into the template data, so templates can read `option.site.name`, brand settings and policy links without the caller passing them. Both also catch transport errors and log them as "Failed to send email", so a mail failure never breaks the caller, and the caller can't tell it failed.
 
 The sender comes from `option.mail.from.address` and `option.mail.from.name`.
 
 ## Templates
 
-Templates live in `resources/emails` and are registered as the `@emails` Twig namespace.
+Templates live in `resources/emails` and are registered as the `@emails` Twig namespace. Each one extends `layout.twig` and defines a `subject` block and a `content` block.
 
-| Template | Sent when |
+| Template | Email |
 | --- | --- |
 | `layout.twig` | The shared shell the others extend |
-| `welcome.twig` | A user registers, or verifies their address |
-| `verify-email.twig` | A verification is requested, including after an address change |
-| `password-reset.twig` | A recovery request is created |
-| `workspace-invitation.twig` | Someone is invited to a workspace |
-| `export.twig` | A data export is ready |
+| `welcome.twig` | Welcome |
+| `verify-email.twig` | Email verification |
+| `password-reset.twig` | Password reset |
+| `workspace-invitation.twig` | Workspace invitation |
+| `purchase-confirmation.twig` | Purchase confirmation |
+| `invoice-ready.twig` | Invoice ready |
+| `export.twig` | Data export |
 
-See [Email templates](/advanced/email-templates) for more details.
+A translated copy of an `@emails` template can sit in `resources/emails/{locale}`. When the data passed to the email has a matching `locale`, that directory is searched first. See [Email templates](/advanced/email-templates) for more details.
+
+## Transactional emails
+
+Every email the application sends on its own is registered with the service collection under `Shared\Infrastructure\Email\TransactionalEmailInterface`. Registered emails are listed under **Settings → Email → Emails**, grouped by category, each with a **Preview** button and, unless it's always on, an on/off switch.
+
+| Method | Purpose |
+| --- | --- |
+| `getKey()` | A unique key of lowercase letters, digits and dashes. Prefix a plugin's keys with the plugin name. |
+| `getName()` | Translated name shown on the settings page |
+| `getDescription()` | Translated one-line description of when the email is sent, and to whom |
+| `getCategory()` | One of the `EmailCategory` constants, or a category of your own |
+| `getTemplate(?string $locale = null)` | The Twig template, such as `@emails/welcome.twig`. Receives the recipient's language, for emails that ship a translated copy of their own template. |
+| `isEnabledByDefault()` | Whether the email is sent before an administrator has saved the settings page |
+| `isAlwaysOn()` | Whether the email can't be turned off, because accounts need it to work |
+| `getLegacyOption()` | The option path of an on/off switch that existed before the Emails page, read until the page is saved. `null` for new emails. |
+| `getPreviewData(UserEntity $admin)` | Sample template data for the preview, shaped like what the sender passes. Nothing is sent. |
+
+`Shared\Infrastructure\Email\AbstractTransactionalEmail` supplies the defaults most emails want: on by default, can be turned off, no legacy option. Extend it and implement the rest.
+
+`EmailCategory` defines the built-in groups, shown in this order: `ACCOUNT` (`account`), `WORKSPACE` (`workspace`), `BILLING` (`billing`) and `ADMIN` (`admin`). Any other category string is listed after them, with a label made from the string.
+
+Switches are saved in the `emails` option, as `emails.<key>.enabled`. `Shared\Infrastructure\Email\EmailSettings` reads them:
+
+| Method | Purpose |
+| --- | --- |
+| `isEnabled(string\|TransactionalEmailInterface $email)` | Whether the email should be sent. A key nobody registered counts as enabled. |
+| `get(string $key)` | The registered email, or `null` |
+| `groups()` | Every registered email with its state, grouped by category, for the settings page |
+
+`EmailSettings` reads the database each time rather than the cached options, so a long-running queue worker stops sending an email as soon as it's turned off.
+
+### Core emails
+
+| Key | Name | Category | Always on |
+| --- | --- | --- | --- |
+| `welcome` | Welcome | Account | No |
+| `email-verification` | Email verification | Account | Yes |
+| `password-reset` | Password reset | Account | Yes |
+| `workspace-invitation` | Workspace invitation | Workspace | No |
+| `purchase-confirmation` | Purchase confirmation | Billing | No |
+| `invoice-ready` | Invoice ready | Billing | No |
+| `data-export` | Data export | Admin | Yes |
 
 ## What triggers mail
 
-Transactional mail is sent by event listeners rather than by request handlers:
+| Trigger | Email | Sent from |
+| --- | --- | --- |
+| `UserCreatedEvent` | Welcome, and email verification | Event listeners, in the request |
+| `EmailVerifiedEvent` | Welcome | Event listener, in the request |
+| `UserEmailUpdatedEvent` | Email verification for the new address | Event listener, in the request |
+| `PasswordRecoveryCreatedEvent` | Password reset | Event listener, in the request |
+| `InvitationCreatedEvent` | Workspace invitation | Event listener, in the request |
+| A paid order is fulfilled, or its invoice is issued or fails | Purchase confirmation | `SendPurchaseConfirmationJob`, a queued job |
+| An invoice is issued after the purchase confirmation went out | Invoice ready | `SendPurchaseConfirmationJob`, a queued job |
+| An administrator exports users, workspaces, orders or subscriptions | Data export, with the CSV attached | The export request |
 
-| Event | Message |
-| --- | --- |
-| `UserCreatedEvent` | Welcome, and verification |
-| `EmailVerifiedEvent` | Welcome |
-| `UserEmailUpdatedEvent` | Verification for the new address |
-| `PasswordRecoveryCreatedEvent` | Password reset |
-| `InvitationCreatedEvent` | Workspace invitation |
+Whether the welcome email waits for verification depends on the verification policy. The billing emails run in the background because attaching an invoice means fetching its PDF from the invoicing service. See [Billing](/development/core/billing-subsystem#purchase-confirmation-emails) for when each is sent.
 
-Because listeners run inside the request that dispatched the event, a slow or unreachable SMTP server slows that request down. Keep timeouts short, and prefer a nearby relay.
+Mail sent from a listener or request handler is sent inside that request, so a slow or unreachable SMTP server slows the request down. Keep timeouts short, and prefer a nearby relay.
 
 ## Sending from a plugin
 
-Inject the service and render your own template through your namespace:
+Register your email so administrators can preview it and turn it off. Start with the class:
 
-```php
-$this->email->sendTemplate(
-    $user->getEmail()->value,
-    '@acme-notes/emails/digest.twig',
-    ['notes' => $notes],
+```php src/DigestEmail.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Notes;
+
+use Override;
+use Shared\Infrastructure\Email\AbstractTransactionalEmail;
+use User\Domain\Entities\UserEntity;
+
+class DigestEmail extends AbstractTransactionalEmail
+{
+    public const KEY = 'acme-notes-digest';
+
+    #[Override]
+    public function getKey(): string
+    {
+        return self::KEY;
+    }
+
+    #[Override]
+    public function getName(): string
+    {
+        return p__('label', 'Weekly notes digest');
+    }
+
+    #[Override]
+    public function getDescription(): string
+    {
+        return __('Sent to each user on Monday, listing the notes they changed last week.');
+    }
+
+    #[Override]
+    public function getCategory(): string
+    {
+        return 'notes';   // listed after the built-in groups
+    }
+
+    #[Override]
+    public function getTemplate(?string $locale = null): string
+    {
+        return '@acme-notes/emails/digest.twig';
+    }
+
+    #[Override]
+    public function getPreviewData(UserEntity $admin): array
+    {
+        return [
+            'first_name' => $admin->getFirstName()->value,
+            'notes' => [
+                ['title' => 'Quarterly plan', 'updated' => '3 days ago'],
+                ['title' => 'Launch checklist', 'updated' => '5 days ago'],
+            ],
+        ];
+    }
+}
+```
+
+Register it in your plugin's `boot()`:
+
+```php src/Plugin.php
+use Shared\Infrastructure\Collections\ServiceCollectionInterface;
+use Shared\Infrastructure\Email\TransactionalEmailInterface;
+
+$this->loader->addPath(__DIR__ . '/../templates', 'acme-notes');
+
+$this->services->add(
+    DigestEmail::KEY,
+    DigestEmail::class,
+    TransactionalEmailInterface::class
 );
 ```
 
-Extend the shared layout so your message matches the rest of the installation's mail, and check how the template resolves in your installation before relying on a namespaced path.
+Write the template against the shared layout, so your message matches the rest of the installation's mail:
+
+```twig templates/emails/digest.twig
+{% extends "@emails/layout.twig" %}
+
+{% block subject %}
+	Your notes this week
+{% endblock %}
+
+{% block content %}
+	<p>Hi {{ first_name }},</p>
+
+	<ul>
+		{% for note in notes %}
+			<li>{{ note.title }}, {{ note.updated }}</li>
+		{% endfor %}
+	</ul>
+{% endblock %}
+```
+
+Then send it, from a job rather than a request when you send more than one:
+
+```php
+$this->email->send(
+    $this->digest,
+    $user->getEmail()->value,
+    [
+        'first_name' => $user->getFirstName()->value,
+        'notes' => $notes,
+        'locale' => $user->getLanguage()->value,
+    ],
+);
+```
+
+Keep the preview data shaped like what you send, so the preview shows what recipients get. A template that fails with the sample data reports its error in the preview instead of failing the page.
 
 <Warning>
-  Don't send bulk mail through this path. It's for transactional messages, sent one at a time, inside a request. Marketing sends belong in a dedicated platform; see [Event-driven integrations](/development/plugins/guides/event-driven-integration).
+  Don't send bulk mail through this path. It's for transactional messages, sent one at a time. Marketing sends belong in a dedicated platform; see [Event-driven integrations](/development/plugins/guides/event-driven-integration).
 </Warning>
 
 ## Testing
@@ -93,5 +254,7 @@ Extend the shared layout so your message matches the rest of the installation's 
 ## Related
 
 - [Events](/development/core/events)
+- [Background jobs and cron](/development/core/background-jobs-and-cron)
 - [Mailer settings](/email/mailer)
+- [Transactional emails settings](/email/emails)
 - [Email templates](/advanced/email-templates)

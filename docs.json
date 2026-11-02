@@ -31,6 +31,10 @@
   },
   "redirects": [
     {
+      "source": "/identity/:slug",
+      "destination": "/authentication/identity-providers/:slug"
+    },
+    {
       "source": "/get-started/introduction",
       "destination": "/overview/introduction"
     },
@@ -150,7 +154,8 @@
             "group": "Email",
             "pages": [
               "email/mailer",
-              "email/smtp"
+              "email/smtp",
+              "email/emails"
             ]
           },
           {
@@ -273,6 +278,8 @@
             "group": "Billing",
             "pages": [
               "billing/overview",
+              "billing/invoicing",
+              "billing/exchange-rates",
               "billing/unified-credit-system",
               "billing/plans-snapshots-subscriptions"
             ]
@@ -289,6 +296,8 @@
               "advanced/secure-urls",
               "advanced/byok",
               "advanced/connectors",
+              "advanced/scheduled-tasks",
+              "advanced/notifications",
               "advanced/web-search-and-reading",
               "advanced/file-reading",
               "advanced/queue",
@@ -369,6 +378,7 @@
                 ]
               },
               "development/plugins/guides/tax-engine",
+              "development/plugins/guides/invoicing-engine",
               "development/plugins/guides/storage-adapter",
               "development/plugins/guides/vector-store",
               "development/plugins/guides/ai-provider",

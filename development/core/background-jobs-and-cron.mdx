@@ -14,7 +14,9 @@ The queue lives in `src/Queue`, the scheduler in `src/Cron`.
 
 ## What cron does
 
-`cron.php` runs every minute and hands over to `Cron\Infrastructure\CronRunner`:
+`cron.php` runs every minute. It exits without doing anything when the application isn't installed yet, or while an update is unfinished: its files are unpacked, but the database may not have the new version's tables yet. Opening the admin area, or running `app:update:finalize`, finishes the update, and the next cron run goes ahead. The same check sends admin pages to the update page, through `PendingUpdateMiddleware`.
+
+Otherwise it hands over to `Cron\Infrastructure\CronRunner`:
 
 1. **The scheduler** runs every task that is due. Each task is claimed with a lease in the `scheduled_task` table, so two overlapping runs never run the same task twice, and each runs isolated: a failing task is recorded and the others still run.
 2. **The queue is worked for about 50 seconds**, unless a long-running worker that takes every queue is alive. At most two cron runs work the queue at the same time.
@@ -113,6 +115,35 @@ A run that was missed (cron didn't run, or ran late) happens once on the next ru
 
 Each task's last run, duration and error are shown under **Settings → System → Queue → Scheduled tasks**, and failures on the Status page.
 
+<Note>
+  These are not the **Scheduled tasks** users create in the app, which have the assistant carry out instructions on a schedule, each run in a conversation of its own. That feature is called a routine in code and lives in `src/Routine`, and its runs are started by one scheduler task, `routine.dispatch_due`, which queues a job for each routine that is due.
+</Note>
+
+### Core scheduled tasks
+
+Schedules are cron expressions in UTC.
+
+| Name | Label | Schedule |
+| --- | --- | --- |
+| `cron.event` | Run plugin cron listeners | Every minute |
+| `cache.prune` | Prune cache | `0 * * * *` |
+| `billing.renew_subscriptions` | Renew subscriptions | Every minute |
+| `billing.end_expired_subscriptions` | End expired subscriptions | Every minute |
+| `billing.calculate_mrr` | Calculate MRR | Every minute; recalculates at most once a day, hourly after an error |
+| `billing.retry_invoices` | Retry invoices | Every minute |
+| `billing.purchase_confirmations` | Send delayed purchase confirmations | `*/5 * * * *` |
+| `ai.end_failed_generations` | End stuck generations | `*/5 * * * *` |
+| `ai.purge_expired_library_items` | Delete expired private items | Every minute |
+| `ai.backfill_message_parts` | Convert legacy messages | Every minute |
+| `mcp.refresh_connector_tools` | Refresh connector tools | Every minute |
+| `mcp.prune_oauth_states` | Delete expired connector sign-ins | `0 * * * *` |
+| `import.queue_stalled` | Resume stalled imports | `*/5 * * * *` |
+| `queue.prune_failed_jobs` | Delete old failed jobs | `30 4 * * *` |
+| `notification.prune` | Delete old notifications | `45 4 * * *` |
+| `routine.dispatch_due` | Run due scheduled tasks | Every minute |
+
+`cron.event` dispatches `Cron\Domain\Events\CronEvent` for plugins that still listen to it. Core no longer listens to it. See [Plugin events and scheduled work](/development/plugins/events-and-cron).
+
 ## Queue adapters
 
 The adapter is where waiting jobs are kept, chosen with the `queue.adapter` option:
@@ -128,10 +159,12 @@ Adapters implement `Queue\Infrastructure\Adapters\QueueAdapterInterface` and are
 
 | Command | What it does |
 | --- | --- |
-| `app:queue:work` | Runs jobs until stopped. Options include `--queue`, `--sleep`, `--time-limit`, `--memory`, `--max-jobs` and `--stop-when-empty`. |
+| `app:queue:work` | Runs jobs until stopped. Options include `--queue`, `--sleep`, `--time-limit`, `--memory`, `--max-jobs`, `--stop-when-empty`, `--cron` and `--allow-root`. |
 | `app:schedule:run` | Runs the scheduled tasks that are due, without working the queue. |
 
 Workers send a heartbeat, so the Queue page lists them. They restart on their own after `app:update` and after settings are saved, and they exit after `--time-limit`, `--memory` or `--max-jobs` for the process manager to start them again.
+
+A worker started as root refuses to run when the application belongs to another user, unless you pass `--allow-root`. `--cron` marks a worker as started by cron rather than kept running, so it isn't counted as a long-running worker. See [Console commands](/development/core/console-commands) for every option and its default.
 
 ## Provider webhooks
 

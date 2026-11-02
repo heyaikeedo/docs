@@ -6,7 +6,7 @@ description: "Add a tax calculation engine to Aikeedo so orders are taxed accord
 
 import { OfficialPlugins } from '/snippets/official-plugins.mdx';
 
-A tax engine calculates the tax lines for an order at checkout. Aikeedo ships a null engine that charges nothing, and administrators select an engine under **Settings → Tax engines**.
+A tax engine calculates the tax lines for an order at checkout. Aikeedo ships a null engine that charges nothing, and administrators select an engine under **Settings → Billing → Tax**.
 
 ## When it runs
 
@@ -31,12 +31,14 @@ interface TaxEngineInterface
 
 ```php
 new TaxLine(
-    name: 'VAT (20%)',   // shown to the customer
-    rate: 20.0,          // percentage, or 0 for a fixed amount
+    name: 'VAT',         // shown to the customer
+    rate: 0.2,           // a fraction: 0.2 is 20%. 0 for a fixed amount
     amount: new TaxAmount(1999),  // minor units
     kind: 'percent',     // 'percent' or 'fixed'
 );
 ```
+
+For a `percent` line, checkout and the purchase emails show the rate after the name, as in "VAT (20%)", so don't repeat it in `name`.
 
 `TaxResult::getTaxTotal()` sums the lines, so return several when a jurisdiction has more than one component, such as a state and a city tax.
 
@@ -108,8 +110,8 @@ class FlatTaxEngine implements TaxEngineInterface
 
         return new TaxResult(
             new TaxLine(
-                name: sprintf('%s (%s%%)', $this->label ?: 'Tax', $rate),
-                rate: (float) $rate,
+                name: $this->label ?: 'Tax',
+                rate: $rate / 100,   // stored as a fraction
                 amount: new TaxAmount($amount),
                 kind: 'percent',
             )
@@ -122,9 +124,35 @@ class FlatTaxEngine implements TaxEngineInterface
 
 - **Return an empty `TaxResult()` when you can't calculate**, including when an external service fails. Throwing blocks checkout entirely.
 - **Work in minor units.** Round once, at the end.
-- **Decide your base.** Tax the discounted amount, or the pre-discount amount, according to the rules you're implementing, and document which you chose.
+- **Respect the tax base.** Administrators choose it under **Settings → Billing → Tax**, stored in `option.billing.tax_base`: `discounted_line` (the default) taxes the amount after the coupon, and `list_price` taxes the full plan price. Read it, or document which base your engine always uses.
 - **Handle a missing address.** Many workspaces have none, and a plan may be sold without one.
 - **Don't call a slow API without a timeout.** Order creation waits for you.
+
+## Business buyers
+
+Checkout lets the customer buy as a business. The workspace address, `Workspace\Domain\ValueObjects\Address`, carries what you need for B2B rules such as a reverse charge on cross-border sales:
+
+| Property | Type | Meaning |
+| --- | --- | --- |
+| `country` | `?string` | Two-letter country code |
+| `isBusiness` | `bool` | The workspace buys as a business rather than an individual |
+| `companyName` | `?string` | The business's name. Always `null` when `isBusiness` is `false`. |
+| `taxId` | `?string` | A tax identification number, such as a VAT number. Required for business buyers, optional for individuals. |
+
+```php
+$address = $order->getWorkspace()->getAddress();
+
+if (
+    $address?->isBusiness
+    && $address->taxId
+    && $address->country !== $this->homeCountry
+) {
+    // Reverse charge: the buyer accounts for the tax.
+    return new TaxResult();
+}
+```
+
+Aikeedo only checks the tax ID's format: up to 32 letters, digits, spaces, dashes or slashes. If your rules depend on a valid number, check it with the tax authority's service yourself, and cache the result.
 
 ## Register it
 
@@ -151,11 +179,11 @@ public function boot(Context $context): void
 }
 ```
 
-The engine appears under **Settings → Tax engines**, where an administrator selects it. The selected key is stored in `option.billing.tax_engine`.
+The engine appears in the **Tax engine** select under **Settings → Billing → Tax**, where an administrator selects it. The selected key is stored in `option.billing.tax_engine`. Every installed engine is also listed under **Settings → Finance → Tax engines**, which links to each engine's settings page.
 
 ## The settings page
 
-The tax engines list links each engine to `/admin/settings/tax-engines/{key}`, so declare that route:
+Both the **Configure selected engine** link on the billing page and the Tax engines list point to `/admin/settings/tax-engines/{key}`, so declare that route:
 
 ```php
 #[Route(path: '/settings/tax-engines/flat-tax', method: RequestMethod::GET)]
@@ -232,5 +260,6 @@ If you don't need a custom engine, these official ones are available on the [Aik
 ## Related
 
 - [Payment gateways](/development/plugins/guides/payments/overview)
+- [Invoicing engines](/development/plugins/guides/invoicing-engine)
 - [Tax engine settings](/integrations/tax-engines/overview)
 - [Billing internals](/development/core/billing-subsystem)
