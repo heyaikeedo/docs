@@ -11,6 +11,39 @@ description: Learn about the latest changes, breaking updates, and migration ins
   releases.
 </Note>
 
+## v5.2.1
+
+v5.2.1 fixes how fal.ai image and video models are charged.
+
+<Warning>
+  After updating, check the credit ratios of the [fal.ai models whose unit
+  changed](#fal-ai-ratios-use-the-units-fal-ai-reports) under **Settings →
+  Finance → Credit ratios**. Saved ratios are not converted.
+</Warning>
+
+### Changes to be aware of in v5.2.1
+
+#### fal.ai ratios use the units fal.ai reports
+
+Aikeedo charges fal.ai models by multiplying the usage fal.ai reports by your credit ratio. For some models, the **Credit ratios** page showed a different unit from the one fal.ai reports, so a ratio set for the unit on the page charged the wrong amount. The page now shows the unit fal.ai reports:
+
+| Model | Unit before | Unit now |
+| --- | --- | --- |
+| Seedance 2.5, Seedance 2.0, Seedance 2.0 (Fast) | seconds | ktokens (1,000 video tokens) |
+| Minimax, Minimax Director, Minimax Live | seconds | video |
+| FLUX.2 [pro], FLUX.2 [flex], FLUX.2 [dev], Krea 3 | image | megapixels |
+| FLUX 1.1 [pro/ultra] | megapixels | image |
+| Nano Banana 2.1 | image | USD |
+| Seedream 5.0 Pro | image | image (≤1536px), where a 2K image counts as 2 |
+
+If you set a ratio for one of these models for the old unit, enter it again for the new one. For example, a per-second ratio for Seedance charged about 20 times too much for a 720p video. The [Aikeedo Price Calculator](/overview/commercial-resources#using-the-price-calculator) gives the ratio for each of these units.
+
+The credits Aikeedo reserves before a generation starts use the new units too.
+
+#### Images with fractional fal.ai usage are charged in full
+
+fal.ai reports fractional usage for some images: Nano Banana 2.1 reports its cost in dollars, and Nano Banana 2 counts a 2K image as 1.5 images. Aikeedo rounded this down, so Nano Banana 2.1 images cost no credits and 2K Nano Banana 2 images were charged as one image. They are now charged in full. If fal.ai reports no usage, Aikeedo charges the credits it reserved for the image.
+
 ## v5.2
 
 v5.2 adds scheduled tasks and notifications, invoicing and business details at checkout, an Emails page, custom exchange rates, a background job queue and scheduler, and a choice of who searches the web and reads pages and files in chat. It also refreshes the model catalog, adds ten interface languages and runs on PHP 8.5.
