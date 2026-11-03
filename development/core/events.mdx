@@ -137,6 +137,8 @@ All classes live under `{Module}\Domain\Events`.
 | `SubscriptionCreatedEvent` | `$subscription` | A subscription starts |
 | `SubscriptionActivatedEvent` | `$subscription` | A subscription becomes active |
 | `SubscriptionUsageResetEvent` | `$subscription` | Usage resets, every 30 days |
+| `InvoiceIssuedEvent` | `$invoice` | An order's invoice is created and approved in the invoicing service |
+| `InvoiceFailedEvent` | `$invoice`, `$isFinal` | An attempt to issue an invoice fails. `$isFinal` is `true` when no further attempt is scheduled. |
 | `PlanCreatedEvent`, `PlanUpdatedEvent`, `PlanDeletedEvent` | The plan |
 | `CouponCreatedEvent`, `CouponUpdatedEvent`, `CouponDeletedEvent` | The coupon |
 | `CreditUsageEvent` | `$workspace`, `$count` | Credits are consumed |
@@ -163,7 +165,7 @@ All classes live under `{Module}\Domain\Events`.
 
 | Event | Payload |
 | --- | --- |
-| `Cron\Domain\Events\CronEvent` | None. Dispatched by `cron.php`. |
+| `Cron\Domain\Events\CronEvent` | None. Dispatched every minute by the **Run plugin cron listeners** scheduled task (`cron.event`). |
 
 ## What the core listens to
 
@@ -174,10 +176,12 @@ All classes live under `{Module}\Domain\Events`.
 | `UserEmailUpdatedEvent` | Send a verification email |
 | `PasswordRecoveryCreatedEvent` | Send the recovery email |
 | `InvitationCreatedEvent` | Send the invitation email |
-| `OrderFulfilledEvent` | Track an affiliate conversion |
+| `OrderFulfilledEvent` | Track an affiliate conversion, create the order's invoice, queue the purchase confirmation |
+| `InvoiceIssuedEvent`, `InvoiceFailedEvent` | Queue the purchase confirmation or the invoice-ready email |
 | `SubscriptionUsageResetEvent` | Track a recurring affiliate conversion |
 | `CreditUsageEvent`, `SubscriptionCreatedEvent`, `OrderCreatedEvent` | Record statistics |
-| `CronEvent` | Renew subscriptions, end cancelled ones, calculate MRR, end failed generations, prune caches, purge expired library items, record the last run |
+
+Core doesn't listen to `CronEvent`. Renewing subscriptions, ending expired ones, calculating MRR, retrying invoices, pruning caches and the rest run as scheduled tasks, and the event is dispatched only for plugins that still listen to it. See [Background jobs and cron](/development/core/background-jobs-and-cron#core-scheduled-tasks).
 
 Most other events have no core listener: they exist so that plugins can react.
 

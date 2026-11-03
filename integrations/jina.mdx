@@ -1,0 +1,56 @@
+---
+title: Jina
+sidebarTitle: Jina
+description: 'Use Jina for web search, for reading web pages built with JavaScript, and for reading scanned PDFs in chat. One API key covers all three.'
+---
+
+import Support from '/snippets/support.mdx';
+
+## Introduction
+
+[Jina](https://jina.ai) provides three services Aikeedo can use in chat:
+
+- **Search**: a [web search provider](/advanced/web-search-and-reading#web-search).
+- **Reader for web pages**: a [web page reader](/advanced/web-search-and-reading#web-page-reader) that also renders pages built with JavaScript.
+- **Reader for files**: a [file reader](/advanced/file-reading#file-reader) that also reads scanned PDFs with OCR.
+
+You can use any of them on its own. All three share one API key.
+
+## Setting up
+
+<Steps>
+  <Step title="Get an API key">
+    Sign in to Jina and open the [API key manager](https://jina.ai/api-dashboard/key-manager). Copy your key.
+  </Step>
+  <Step title="Add it to Aikeedo">
+    Go to **Settings → Integrations → Jina**, paste the key into **API Key**, and click **Save changes**.
+  </Step>
+  <Step title="Choose where to use it">
+    In **Settings → Features → Chat**, pick Jina as the **Search provider**, the **Web page reader**, the **File reader**, or any of them.
+  </Step>
+</Steps>
+
+### Self-hosted reader
+
+If you run Jina's reader yourself, enter its addresses under **Self-hosted reader**: the **Search URL** (normally `https://s.jina.ai/`) and the **Reader URL** (normally `https://r.jina.ai/`). Leave them empty to use the hosted Jina APIs.
+
+## Credits
+
+Users are charged at the **Jina Search** rate per search and at the **Jina Reader** rate per token read, under **Settings → Finance → Credit ratios**. Pages and files read on your server are not charged.
+
+<Tip>
+  Leave **Use only as fallback** on for the web page and file readers. Jina is then called only for the pages and files your server can't read, which keeps Jina usage low.
+</Tip>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Jina isn't offered as a provider, or the setting shows a warning">
+    Save the API key under **Settings → Integrations → Jina** first.
+  </Accordion>
+  <Accordion title="Requests fail with an authentication or quota error">
+    Check the key and your balance in the Jina dashboard.
+  </Accordion>
+</AccordionGroup>
+
+<Support />

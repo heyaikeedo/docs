@@ -1,6 +1,6 @@
 ---
 title: Starter Content
-description: 'Import the AI models, LLM servers, Writer templates and image and video templates that ship with Aikeedo, during installation, from the admin area or from the command line.'
+description: 'Import the AI models, LLM servers, Writer templates, image and video templates and scheduled task templates that ship with Aikeedo, during installation, from the admin area or from the command line.'
 ---
 
 Aikeedo ships with a catalog of AI models, ready-made OpenAI-compatible LLM servers, templates and the categories they are filed under. You can bring them in while installing, and import or refresh them at any time afterwards.
@@ -11,12 +11,13 @@ Aikeedo ships with a catalog of AI models, ready-made OpenAI-compatible LLM serv
 | --- | --- | --- |
 | LLM servers | `llm-servers` | OpenAI-compatible providers such as Groq, OpenRouter and Together AI, ready for your API key |
 | Models | `models` | Models for the built-in integrations, and for the LLM servers and Ollama |
-| Categories | `categories` | Groups the Writer templates are filed under |
+| Categories | `categories` | Groups the Writer templates and scheduled task templates are filed under |
 | Writer templates | `writer-templates` | 137 prompt templates for the Writer tool |
 | Image templates | `image-templates` | 39 starting points for Imagine, with preview artwork |
 | Video templates | `video-templates` | 24 starting points for Video, with preview artwork |
+| Scheduled task templates | `routine-templates` | 10 suggestions offered when users create a [scheduled task](/advanced/scheduled-tasks), in the Productivity and Personal categories |
 
-Sets are always imported in this order. LLM servers come before models because a server's models can only be imported once the server exists, and categories come before Writer templates because templates reference them.
+Sets are always imported in this order. LLM servers come before models because a server's models can only be imported once the server exists, and categories come before Writer templates and scheduled task templates because templates reference them.
 
 <Note>
   The shipped image and video templates are unlocked and have no recommended

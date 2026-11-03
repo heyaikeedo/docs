@@ -26,7 +26,7 @@ Using a currency rate provider like CurrencyAPI is **highly recommended** for se
 4. **Automatic Conversion**: Seamlessly convert between currencies during checkout
 
 <Warning>
-The default currency rate provider is set to "None" (null provider). Without a currency rate provider, features like MRR calculation will not work correctly, and multi-currency support will be limited.
+The default currency rate provider is set to "None" (null provider). Without a currency rate provider, only currencies you set a [custom rate](/billing/exchange-rates#custom-rates) for are converted, so MRR calculation and multi-currency support are limited to those.
 </Warning>
 
 ## How CurrencyAPI Works in Aikeedo
@@ -81,10 +81,10 @@ The free tier offers 300 requests per month, which is more than sufficient for A
 <Step title="Configure Aikeedo">
   1. Log in to your Aikeedo admin panel
   2. Navigate to **Settings > Billing**
-  3. Locate the "Currency Rate Provider" dropdown
-  4. Select **CurrencyAPI** from the options (default is "None")
-  5. Enter your CurrencyAPI API key in the "API Key" field
-  6. Click "Save changes" to activate the integration
+  3. Locate the "Currency rate provider" dropdown
+  4. Select **CurrencyAPI** from the options (default is "None") and click "Save changes"
+  5. Click **Configure selected provider**. The same page is under **Settings > Finance > Exchange**, by clicking CurrencyAPI
+  6. Enter your CurrencyAPI API key and click "Save changes"
   
   <Note>
   The default currency rate provider is "None" (null provider). Changing it to CurrencyAPI enables proper MRR calculations and multi-currency support.
@@ -249,21 +249,25 @@ With updates every 4 hours, Aikeedo balances rate accuracy with API efficiency, 
 
 The default setting is "None" (null provider), which means:
 
-- All transactions use the default currency only
-- No automatic conversion occurs
-- Users must pay in the currency you specify
-- **MRR calculations and revenue analytics will not work correctly**
-- Multi-currency support is disabled
+- No rates are fetched automatically
+- Only currencies you set a [custom rate](/billing/exchange-rates#custom-rates) for are converted, at the rate you set
+- Any other currency is treated as equal to USD, one to one
+- **MRR calculations and revenue analytics are only correct for USD and currencies with a custom rate**
 
 <Warning>
-When set to "None," attempting to use currencies not supported by your payment gateway will result in checkout errors. Additionally, features that depend on currency conversion (like MRR calculation) will not function properly.
+When set to "None," currencies without a custom rate are converted one to one with USD, so prices and revenue in those currencies will be wrong. Set a custom rate for each currency you use, or use a rate provider.
 </Warning>
+
+## Custom Rates
+
+You can also set fixed rates for particular currencies, with or without CurrencyAPI. A custom rate always overrides the rate CurrencyAPI provides for that currency, and is never updated automatically. See [Exchange Rates](/billing/exchange-rates).
 
 **Recommendation:** Even if you only accept one currency, setting up CurrencyAPI is highly recommended for accurate financial reporting and future flexibility. The free tier is sufficient and requires no ongoing costs.
 
 ## Related Guides
 
 - [Billing Overview](/billing/overview) - Configure default currency and billing settings
+- [Exchange Rates](/billing/exchange-rates) - Rate providers and custom rates
 - [Stripe Integration](/integrations/payment-gateways/stripe) - Set up Stripe payment gateway
 - [PayPal Integration](/integrations/payment-gateways/paypal) - Set up PayPal payment gateway
 - [Plans & Subscriptions](/billing/plans-snapshots-subscriptions) - Create pricing plans

@@ -35,7 +35,7 @@ Reserving before the call stops a workspace from starting more work than its bal
 use Ai\Domain\Exceptions\ModelNotAccessibleException;
 use Ai\Domain\ValueObjects\Model;
 
-$model = new Model('gpt-4o');
+$model = new Model('gpt-5.4-mini');
 
 if (!$workspace->isModelGranted($model)) {
     throw new ModelNotAccessibleException($model->value);

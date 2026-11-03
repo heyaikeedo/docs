@@ -1,0 +1,52 @@
+---
+title: Cloudflare Browser Rendering
+sidebarTitle: Cloudflare
+description: 'Read web pages in chat through Cloudflare Browser Rendering, which loads them in a real browser so pages built with JavaScript come through.'
+---
+
+import Support from '/snippets/support.mdx';
+
+## Introduction
+
+Cloudflare Browser Rendering loads web pages in a real browser and returns their text. As the [web page reader](/advanced/web-search-and-reading#web-page-reader), it gets the content of pages built with JavaScript, which often come back empty when read directly.
+
+## Setting up
+
+<Steps>
+  <Step title="Find your account ID">
+    Your account ID is shown on the Account home page of the [Cloudflare dashboard](https://dash.cloudflare.com), and in the address after `dash.cloudflare.com/`.
+  </Step>
+  <Step title="Create an API token">
+    Open [API Tokens](https://dash.cloudflare.com/profile/api-tokens) and create a custom token with the **Browser Run - Edit** permission (**Browser Rendering - Edit** on older dashboards).
+  </Step>
+  <Step title="Add them to Aikeedo">
+    Go to **Settings → Integrations → Cloudflare**, enter the **Account ID** and **API Token** under **Browser Rendering**, and click **Save changes**.
+  </Step>
+  <Step title="Choose it as the web page reader">
+    In **Settings → Features → Chat**, under **Web browsing**, choose **Cloudflare** as the **Web page reader**. Leave **Use only as fallback** on to send only the pages your server can't read.
+  </Step>
+</Steps>
+
+## Plans and limits
+
+- **Workers Free plan:** Cloudflare reads one page every 10 seconds. Pages over that limit are read on your server instead.
+- **Billing:** Cloudflare bills browser time beyond the hours your plan includes.
+
+Users are charged per page read at the **Cloudflare Browser Rendering** rate, under **Settings → Finance → Credit ratios**.
+
+<Note>
+  The [Queue Adapters](/integrations/queue-adapters/cloudflare-queues) plugin can use the same account. If you leave its account ID and token empty, it uses these, and the token then also needs the Queues permission.
+</Note>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Pages are still read on the server">
+    With **Use only as fallback** on, Cloudflare is used only for pages your server can't load or reads too thin. On the Workers Free plan, pages over the rate limit are also read on your server.
+  </Accordion>
+  <Accordion title="Requests fail with an authentication error">
+    Check that the token has the **Browser Run - Edit** permission and belongs to the account ID you entered.
+  </Accordion>
+</AccordionGroup>
+
+<Support />

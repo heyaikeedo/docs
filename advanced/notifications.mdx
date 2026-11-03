@@ -1,0 +1,117 @@
+---
+title: Notifications
+sidebarTitle: Notifications
+description: 'Tell users when a reply or a generation finishes, fails or needs their input, in the app and through browser alerts, even with the app closed.'
+---
+
+import Support from '/snippets/support.mdx';
+
+## Introduction
+
+Long replies and generations can take a while. Aikeedo tells users when one is done, so they can leave the page and come back when it's ready.
+
+Users are notified when:
+
+- A **chat response** is ready, fails, or needs their input, such as an approval for a [connector](/advanced/connectors) tool.
+- An **image**, **video**, **speech**, **transcription** or **isolated voice** is ready, or its generation fails.
+- A [scheduled task](/advanced/scheduled-tasks) finishes a run, or a run fails.
+
+Users are not notified about items they are already looking at, items created in [private mode](/advanced/private-mode), or generations that stalled for more than a day. Opening an item, running it again or answering it marks its notifications as read.
+
+Notifications work without any setup. Browser alerts can be turned off and retention changed under **Settings → Notifications**.
+
+## The bell
+
+Every notification appears under the bell in the sidebar, and in the header on mobile. A dot on the bell means there are unread notifications.
+
+The list shows the newest first and loads more as the user scrolls. Clicking a notification opens the item. **Mark all as read** clears the dot.
+
+Users can also open the list with `Ctrl + Shift + B` (`⌘ + Shift + B` on Mac). See [Keyboard Shortcuts](/advanced/keyboard-shortcuts).
+
+{/* SCREENSHOT: The bell open, with a few read and unread notifications
+<Frame><img src="https://cdn.aikeedo.com/docs/v5.2/notifications-bell.png" alt="Notifications list under the bell" /></Frame> */}
+
+## Browser alerts
+
+Browser alerts reach users outside the app, even when every tab is closed. Each user allows them for their own browser. They can do this in several places:
+
+- **Settings → General → Notifications → Browser alerts → Allow** in the app.
+- **Notify me**, offered while a reply or generation is running, with *You can leave this page*.
+- **Enable** on the banner at the top of the bell's list.
+- Turning on any of the notification switches in their settings.
+
+The browser then asks the user to allow notifications for your site. To stop alerts later, users revoke the permission in the browser's site settings. Signing out also stops alerts on that browser.
+
+Clicking an alert opens the item. Alerts show the app icon from the [PWA settings](/website-basics/pwa), or the favicon if it isn't an SVG.
+
+### Requirements
+
+- **HTTPS.** Browsers only allow alerts on secure sites.
+- **A supporting browser.** Current desktop browsers support them. On iPhone and iPad, alerts work only once the app is added to the Home Screen as a [PWA](/website-basics/pwa). Where alerts aren't supported, users still get notifications under the bell.
+- **Cron or a background worker.** Alerts are sent as [background jobs](/advanced/queue), so they arrive within a minute with cron alone, or at once with a worker.
+
+There is nothing else to set up. The keys browsers need to accept alerts from your site are created the first time a user allows alerts, and stored in your database.
+
+{/* SCREENSHOT: A browser alert for a finished reply, with the app icon
+<Frame><img src="https://cdn.aikeedo.com/docs/v5.2/notifications-browser-alert.png" alt="Browser alert for a finished reply" /></Frame> */}
+
+## User settings
+
+Each user chooses what they are notified about under **Settings → General → Notifications** in the app. All of these are on by default:
+
+| Setting | Notifies about |
+| --- | --- |
+| **Response completions** | Chat responses that are ready or failed |
+| **Media generation completions** | Images, videos, speech, transcriptions and isolated voices |
+| **Scheduled tasks** | Scheduled task runs that finished or failed. Shown only when scheduled tasks are turned on. |
+| **Requests for input** | Chats and runs waiting for an answer or an approval |
+
+The **Browser alerts** row shows whether alerts are allowed in this browser, with **Allow** if they aren't yet.
+
+{/* SCREENSHOT: App Settings → General → Notifications
+<Frame><img src="https://cdn.aikeedo.com/docs/v5.2/notifications-user-settings.png" alt="Notification settings in the app" /></Frame> */}
+
+## Admin settings
+
+Go to **Settings → Notifications**.
+
+### Browser alerts
+
+**Status** turns browser alerts on or off for the whole site. It is on by default. When it is off, the app never asks for the browser's permission and sends no alerts. Notifications still appear under the bell.
+
+### Retention
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| **Read notifications** | 30 days | Read notifications older than this are deleted. |
+| **All notifications** | 90 days | Any notification older than this is deleted, read or not. |
+
+Old notifications are deleted once a day by the **Delete old notifications** system task, which runs from cron.
+
+{/* SCREENSHOT: Admin Settings → Notifications
+<Frame><img src="https://cdn.aikeedo.com/docs/v5.2/notifications-admin.png" alt="Notifications settings in the admin panel" /></Frame> */}
+
+## OneSignal
+
+Browser alerts are built in and don't need [OneSignal](/integrations/onesignal). If you already use OneSignal, it keeps working alongside them.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Users don't get browser alerts">
+    Check that:
+
+    - The site is served over HTTPS.
+    - **Browser alerts** is enabled under **Settings → Notifications**.
+    - The user allowed alerts in this browser, and the operating system allows notifications from the browser.
+    - Cron is running every minute. Alerts are sent as background jobs, so they wait for cron or a worker.
+  </Accordion>
+  <Accordion title='"Blocked in this browser"'>
+    The user once refused alerts, so the browser no longer asks. They need to allow notifications for your site in the browser's site settings, then reload the page.
+  </Accordion>
+  <Accordion title="A notification didn't appear for something the user was watching">
+    That's expected. Items the user has on screen when they finish are marked as read instead.
+  </Accordion>
+</AccordionGroup>
+
+<Support />

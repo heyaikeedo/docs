@@ -85,7 +85,7 @@ To add a server yourself:
    - **Register with the server automatically** works with most servers.
    - **Use a client registered with the server** is for servers that do not register clients automatically. Register an application with the service, using the redirect URI shown on the page, and enter its **Client ID** and **Client secret**.
 6. Under **Request headers**, declare any headers the server needs, such as an API key. Give a header a **Shared value** to send the same value for every user. Leave it empty and each user enters their own when they connect. Values are encrypted and never shown again.
-7. Under **Tools**, **Tool limit** caps how many of the server's tools are stored.
+7. Under **Tools**, **Tool limit** caps how many of the server's tools the model can use, up to 128. Leave it blank for the maximum. Tools that only the server's own interfaces call don't count towards the limit and are always kept.
 8. Click **Save changes**, then allow the connector on your plans.
 
 The **Connectors** list also shows the custom connectors workspaces have added. Filter by **Type** to see them. You can open, switch off or delete any of them.

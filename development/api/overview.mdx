@@ -190,7 +190,7 @@ id: 1726480000.2345
 curl -N -X POST https://your-domain.com/api/ai/conversations/CONVERSATION_ID/messages \
   -H "X-Api-Key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model": "gpt-4o", "content": "Write a haiku about the sea."}'
+  -d '{"model": "gpt-5.4-mini", "content": "Write a haiku about the sea."}'
 ```
 
 ```javascript Node.js
@@ -204,7 +204,7 @@ const res = await fetch(
       'X-Api-Key': process.env.AIKEEDO_API_KEY,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ model: 'gpt-4o', content: 'Write a haiku about the sea.' }),
+    body: JSON.stringify({ model: 'gpt-5.4-mini', content: 'Write a haiku about the sea.' }),
   },
 );
 
@@ -226,7 +226,7 @@ import requests
 
 url = f"https://your-domain.com/api/ai/conversations/{conversation_id}/messages"
 headers = {"X-Api-Key": os.environ["AIKEEDO_API_KEY"]}
-payload = {"model": "gpt-4o", "content": "Write a haiku about the sea."}
+payload = {"model": "gpt-5.4-mini", "content": "Write a haiku about the sea."}
 
 with requests.post(url, json=payload, headers=headers, stream=True) as res:
     event = None

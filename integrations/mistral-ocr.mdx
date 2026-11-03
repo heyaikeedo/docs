@@ -1,0 +1,48 @@
+---
+title: Mistral OCR
+sidebarTitle: Mistral OCR
+description: 'Read scanned PDFs and images in chat with Mistral OCR, which keeps tables and layout as Markdown.'
+---
+
+import Support from '/snippets/support.mdx';
+
+## Introduction
+
+Mistral OCR reads PDFs and images, including scans, tables and handwriting, and keeps their layout as Markdown. As the [file reader](/advanced/file-reading#file-reader), it lets users ask about documents your server can't get text from. Other file types are always read on your server.
+
+## Setting up
+
+<Steps>
+  <Step title="Get an API key">
+    Sign in to the Mistral console and open [API keys](https://console.mistral.ai/api-keys). Create a key and copy it.
+  </Step>
+  <Step title="Add it to Aikeedo">
+    Go to **Settings → Integrations → Mistral**, paste the key into **API Key**, and click **Save changes**.
+  </Step>
+  <Step title="Choose it as the file reader">
+    In **Settings → Features → Chat**, under **File reading**, choose **Mistral OCR** as the **File reader**. Leave **Use only as fallback** on to send only the files your server can't read.
+  </Step>
+</Steps>
+
+## Credits and privacy
+
+Users are charged per page at the **Mistral OCR** rate, under **Settings → Finance → Credit ratios**.
+
+<Warning>
+  Files read by Mistral OCR are sent to Mistral. With **Use only as fallback** off, every PDF and image users attach is sent.
+</Warning>
+
+Mistral OCR also reads files added to knowledge bases.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Scanned PDFs are still not read">
+    Check that **Mistral OCR** is the **File reader** and the API key is saved. With **Use only as fallback** on, only files your server gets no text from are sent.
+  </Accordion>
+  <Accordion title="Requests fail with an authentication or quota error">
+    Check the key and your plan in the Mistral console.
+  </Accordion>
+</AccordionGroup>
+
+<Support />

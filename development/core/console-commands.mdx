@@ -66,15 +66,61 @@ Rebuilds the browser translation catalogs under the web root.
 | `--lang`, `-l` | Specific languages |
 | `--enabled`, `-e` | Only the enabled ones |
 
+### `app:make:module`
+
+Scaffolds a new core module under `src/`. It asks for the module name interactively and refuses a name that already exists. This is for work on the application itself; plugins don't use it.
+
+### `app:generate-key`
+
+Writes a new `APP_ENCRYPTION_KEY` into `.env`. Stored credentials are encrypted with this key.
+
+| Option | Purpose |
+| --- | --- |
+| `--force` | Replace a key that is already set, after a confirmation |
+
+New installations get a key from the installer, so this is for installations that predate encryption. Without `--force`, an existing key is left alone.
+
+<Warning>
+  Replacing a key that is in use makes every value encrypted with it permanently unreadable, and every connected service has to be set up again. Back the key up together with the database.
+</Warning>
+
+### `app:queue:work`
+
+Runs queued background jobs until it is stopped or reaches a limit.
+
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `--queue` | All queues | Queues to work, comma separated, the first one first |
+| `--sleep` | `3` | Seconds to wait when there is nothing to do |
+| `--time-limit` | `0` | Seconds after which no new job is started; `0` for none |
+| `--memory` | `256` | Megabytes of memory after which the worker exits |
+| `--max-jobs` | `0` | Jobs after which the worker exits; `0` for no limit |
+| `--stop-when-empty` | Off | Exit as soon as the queues are empty |
+| `--cron` | Off | Mark the worker as started by cron rather than kept running. It's listed as a cron worker on the Queue page and counts toward the limit of two cron runs working the queue at once. |
+| `--allow-root` | Off | Run as root although the application belongs to another user |
+
+The worker compares its user with the owner of `var/`, which is taken to be the web server's user. As another user it warns. As root it refuses to start unless `--allow-root` is passed, because root-owned cache and upload files can't be changed by the web server afterwards. The worker exits with a non-zero status when its database connection breaks, so the process manager starts a fresh one. See [Background jobs and cron](/development/core/background-jobs-and-cron).
+
+### `app:schedule:run`
+
+Runs the scheduled tasks that are due, without working the queue. `cron.php` does this every minute; the command is for running it by hand. It exits with a non-zero status when a task fails, and `-v` prints each task.
+
 ### `app:update`
 
-Applies an update archive: backs up what must survive, extracts the release, runs migrations, reinstalls plugins, restores translations.
+Unpacks an update archive. It only backs up the files the installation keeps, extracts the release over the installation, and resets OPcache so the next request doesn't run cached copies of the old files. It then starts `app:update:finalize` in a new PHP process, which loads only the new code.
 
-| Argument | Purpose |
+| Argument or option | Purpose |
 | --- | --- |
 | `file` | Path to the update archive |
+| `--unpack-only` | Stop after unpacking, and finish later with `app:update:finalize` |
 
-Most installations update through the admin panel, which runs the same process. See [How to update](/versioning/how-to-update).
+If the finishing step fails, the files are unpacked but the update isn't finished, and the command says so. Most installations update through the admin panel, which runs the same process. See [How to update](/versioning/how-to-update).
+
+### `app:update:finalize`
+
+Finishes an update whose files are unpacked. It restores the files the update backed up, merging translation catalogs so the release's new strings and the installation's own translations are both kept, then runs database migrations and data migrations, reinstalls plugins, rebuilds translations, copies public files to a custom web root if one is configured, clears the cache, asks workers to restart, and records the new version.
+
+`app:update` runs it for you. Run it by hand to finish an update that stopped halfway. When no update is waiting, it says so and changes nothing. Until an update is finished, `cron.php` does nothing and admin pages redirect to the update page, which finishes it too.
 
 ## Doctrine commands
 
@@ -91,6 +137,7 @@ Most installations update through the admin panel, which runs the same process. 
 | `migrations:dump-schema`, `migrations:rollup` | Squash history |
 | `migrations:sync-metadata-storage` | Repair the tracking table |
 | `migrations:up-to-date` | Exit code friendly check, useful in deployment scripts |
+| `migrations:version` | Mark a migration as applied or not, without running it |
 
 ### ORM
 
@@ -122,7 +169,7 @@ Most installations update through the admin panel, which runs the same process. 
 
 ## Plugins and commands
 
-Plugins can't register console commands: the command map is static. Expose the action as an admin endpoint, or run it from the cron event instead. See [Data and persistence](/development/plugins/data-and-persistence).
+Plugins can't register console commands: the command map in `config/commands.php` is static. Expose the action as an admin endpoint, or register a scheduled task instead. See [Background jobs and cron](/development/core/background-jobs-and-cron) and [Data and persistence](/development/plugins/data-and-persistence).
 
 ## Related
 

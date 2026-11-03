@@ -53,7 +53,7 @@ With this feature enabled, Stripe handles both tax calculation and collection en
 ## How tax is applied
 
 1. A customer proceeds to checkout with a billing address on file.
-2. Aikeedo calls the active tax engine with the order amount and billing address.
+2. Aikeedo calls the active tax engine with the order amount and billing address. The address includes whether the customer is buying as a business, with their company name and tax ID, so engines can apply rules such as reverse charge. See [Billing Address](/billing/overview#billing-address).
 3. The tax engine returns one or more tax lines (name, rate, amount).
 4. The tax lines are displayed to the customer and included in the total.
 5. The payment gateway collects the full amount, including tax.

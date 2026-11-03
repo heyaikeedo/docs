@@ -1,0 +1,161 @@
+---
+title: Scheduled Tasks
+sidebarTitle: Scheduled Tasks
+description: 'Let users run chat instructions on a schedule, such as a morning briefing or a weekly summary, and control which plans include them.'
+---
+
+import Support from '/snippets/support.mdx';
+
+## Introduction
+
+Scheduled tasks let users write instructions once and have them run on a schedule: a morning briefing every weekday, a summary of the week every Friday, a reminder once on a set date.
+
+Each run sends the instructions to the assistant as a new chat, as if the user had typed them. The reply appears in the user's library like any other chat, and the user is [notified](/advanced/notifications) when it finishes or fails.
+
+Users can set up a task with a form, or just ask for one in chat.
+
+<Note>
+  These are different from the system tasks on the **Queue** page, which also appear under **Scheduled tasks** there. Those are the app's own recurring work, such as renewing subscriptions. See [Background Jobs & Queue](/advanced/queue).
+</Note>
+
+## Turning it on
+
+Scheduled tasks are off by default. Go to **Settings → Features → Chat** and, under **Other Features**, turn on **Scheduled tasks**. Chat must also be on.
+
+Runs start from the [cron job](/setup/initial-setup#setting-up-the-cron-job) and are carried out as [background jobs](/advanced/queue), so cron must be running. Tasks don't run without it.
+
+{/* SCREENSHOT: Settings → Features → Chat, Other Features section with the Scheduled tasks switch on
+<Frame><img src="https://cdn.aikeedo.com/docs/v5.2/scheduled-tasks-admin-switch.png" alt="Scheduled tasks switch in the Chat settings" /></Frame> */}
+
+## Plans
+
+Open a plan, go to **Entitlements**, and under **Quota** set the **Scheduled tasks cap**:
+
+- **Blank**: unlimited.
+- **A number**: how many tasks a workspace can have. Paused and ended tasks count.
+- **`0`**: the plan doesn't include scheduled tasks.
+
+Every member's tasks count towards the workspace's cap.
+
+<Warning>
+  The cap is blank on existing plans, which means unlimited. Set a cap on each plan before you turn the feature on if you don't want every plan to include unlimited tasks.
+</Warning>
+
+<Note>
+  Existing subscriptions keep the plan settings they were created with. After changing a plan, use **Update snapshots** to apply the change to current subscribers. See [Plans, Snapshots & Subscriptions](/billing/plans-snapshots-subscriptions).
+</Note>
+
+When a workspace has more tasks than a plan allows, checkout for that plan stops with **Scheduled task limit exceeded** and a **View scheduled tasks** button, so the owner can delete some first.
+
+The **Scheduled** item stays in the sidebar whatever the plan allows. On a plan without tasks, the page says scheduled tasks are not included in the plan and offers **View plans**.
+
+{/* SCREENSHOT: Plan → Entitlements → Quota with the Scheduled tasks cap field
+<Frame><img src="https://cdn.aikeedo.com/docs/v5.2/scheduled-tasks-plan-cap.png" alt="Scheduled tasks cap in a plan's quota" /></Frame> */}
+
+## Credits and models
+
+Each run is charged to the workspace like a chat reply. A run uses the workspace's own API keys if it has [brought its own](/advanced/byok).
+
+Before it starts, a run checks that the plan includes scheduled tasks and the chosen model, that the workspace has credits left, and that it is within its usage limit. If not, the run fails with the reason, and the user is notified.
+
+## What users see
+
+Users find their tasks under **Scheduled** in the sidebar. The list can be filtered by **Type** (how often a task repeats) and **Status** (**Active**, **Paused** or **Ended**). Each row shows when the task runs next, and its menu has **Run now**, **Pause** or **Resume**, **Edit** and **Delete**.
+
+**New task** offers three ways to start:
+
+- **Create with chat** opens a new chat with the start of a request filled in.
+- **Set up manually** opens the form.
+- **Suggested** lists a few [templates](#templates), and **View all templates** opens the rest.
+
+{/* SCREENSHOT: Scheduled list page with the New task menu open
+<Frame><img src="https://cdn.aikeedo.com/docs/v5.2/scheduled-tasks-list.png" alt="Scheduled tasks list with the New task menu" /></Frame> */}
+
+### The task form
+
+| Field | What it does |
+| --- | --- |
+| **Name** | The task's name, also used as the title of each run's chat. |
+| **Instructions** | What to send to the assistant on each run. |
+| **Repeat** | **Once**, **Daily**, **Weekdays** (Monday to Friday), **Weekly**, **Monthly** or **Yearly**. |
+| **Days of the week** | For weekly tasks: the days to run on. |
+| **Date** | For tasks that run once or yearly. |
+| **Starts on** | For monthly tasks: the day of the month. In shorter months, the task runs on the last day. |
+| **Set time** | The time to run, in the user's timezone. |
+| **Select model** | The default chat model, or a specific one. Models outside the plan are marked **Upgrade**. |
+| **Permissions** | **Auto** runs without asking. **Ask** lets a run pause to ask a question or for an approval. |
+| **End repeat** | **Never**, or **On date**. Not shown for tasks that run once. |
+
+The timezone is taken from the user's browser each time the task is saved. When someone in another timezone views the task, the schedule shows the task's own timezone.
+
+{/* SCREENSHOT: New scheduled task form with Weekly selected and two days picked
+<Frame><img src="https://cdn.aikeedo.com/docs/v5.2/scheduled-tasks-form.png" alt="New scheduled task form" /></Frame> */}
+
+### The task page
+
+A task's page has two tabs:
+
+- **Overview**: the instructions, schedule, model and permissions, with **Run now**, **Pause**/**Resume**, **Edit** and **Delete**.
+- **History**: every run, when it ran and whether it ran on schedule or from **Run now**. A run that didn't complete shows **Queued**, **Running**, **Needs your input** or **Failed**, with the error. Each run links to its chat.
+
+The chat of each run says which task started it.
+
+Deleting a task removes it and its history. The chats of its past runs stay in the library.
+
+{/* SCREENSHOT: Task page, History tab with a few runs
+<Frame><img src="https://cdn.aikeedo.com/docs/v5.2/scheduled-tasks-history.png" alt="A scheduled task's run history" /></Frame> */}
+
+### Creating a task in chat
+
+Users can ask for a task in any chat, for example *"every Friday at 4pm, summarize my week"*. The assistant creates it straight away, asking first only if the request is unclear. A card in the chat shows the task's name, schedule, permission and instructions, with a link to the task.
+
+A task created in chat uses the chat's model and the user's timezone. Creating it costs no extra credits.
+
+Tasks can't be created in [private mode](/advanced/private-mode), or from inside a task's own run.
+
+{/* SCREENSHOT: Chat with the scheduled task card after asking for a weekly summary
+<Frame><img src="https://cdn.aikeedo.com/docs/v5.2/scheduled-tasks-chat-card.png" alt="Scheduled task card in a chat" /></Frame> */}
+
+## How runs work
+
+- The system task **Run due scheduled tasks** checks every minute for tasks that are due, and queues a run for each.
+- If a task came due several times while cron wasn't running, it runs once and then carries on from the current time. Missed runs are not repeated.
+- **Run now** queues a run straight away, whatever the schedule.
+- With **Auto**, the assistant isn't offered tools that would have to wait for the user. With **Ask**, a run can stop at **Needs your input**, and the user is notified to answer in the run's chat.
+- A paused task doesn't run until it is resumed. A task that runs once, or whose end date has passed, is **Ended** after its last run.
+
+## Workspaces
+
+Tasks belong to the member who created them. Only that member can open, change or run them.
+
+The workspace owner sees a **Scheduled tasks** section on the workspace overview, with **View all** listing every member's tasks. The owner can delete any of them, for example to make room under a smaller plan's cap.
+
+## Templates
+
+Templates are the suggestions users see when they create a task. Manage them under **Templates** in the admin panel, with the type **Scheduled task template**.
+
+Like other [templates](/advanced/prompt-templates), a template has a title, description, category and **Recommended model**. Its **Prompt** becomes the task's instructions, and its **Schedule** section sets the **Repeat** (**Daily**, **Weekdays**, **Weekly** or **Monthly**), the **Time** and, for weekly ones, the **Days of the week**. Times are in each user's own timezone. Users can change anything before they save the task.
+
+Aikeedo ships ten templates, such as **Morning briefing**, **Weekly work summary** and **Evening reflection**, in two categories, **Productivity** and **Personal**. Import them from **Settings → Starter content** with the **Scheduled task templates** set. See [Starter Content](/advanced/seed-data).
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Tasks don't run">
+    Check that cron is running every minute. The **Status** page warns when cron hasn't run recently, and **Settings → System → Queue** shows when **Run due scheduled tasks** last ran.
+  </Accordion>
+  <Accordion title="Users don't see Scheduled in the sidebar">
+    Check that **Scheduled tasks** and Chat are both turned on under **Settings → Features → Chat**.
+  </Accordion>
+  <Accordion title='"Scheduled tasks are not available on your plan"'>
+    The workspace's plan has a **Scheduled tasks cap** of `0`. Raise it, then use **Update snapshots**.
+  </Accordion>
+  <Accordion title='"Your workspace has run out of credits"'>
+    Runs are charged like chat replies. The workspace needs credits, or a plan with more.
+  </Accordion>
+  <Accordion title="A run is stuck at Needs your input">
+    The task's permission is **Ask**, and the assistant asked a question or for an approval. The user answers in the run's chat. Choose **Auto** for tasks that should never wait.
+  </Accordion>
+</AccordionGroup>
+
+<Support />

@@ -88,10 +88,21 @@ OpenAI integration enhances the following Aikeedo tools:
 1. **Chat**: Engage in intelligent conversations, with Canvas documents and clarifying questions.
 2. **Writer**: Answer a template's questions and continue the result in chat.
 3. **Imagine**: Create and edit images from text descriptions and reference images.
-4. **Transcriber**: Convert audio to text with high accuracy.
-5. **Voiceover**: Transform text into natural-sounding speech.
+4. **Transcriber**: Convert audio to text with high accuracy, using GPT Transcribe.
+5. **Voiceover**: Transform text into natural-sounding speech, using GPT Realtime 2.1 mini.
 6. **Classifier**: Categorize and analyze text content.
 7. **Utilities**: Generate titles and enhance prompts.
+
+### Speech and transcription
+
+- **Voiceover** generates OpenAI speech through OpenAI's Realtime API, with the **GPT Realtime 2.1 mini** model. It replaces TTS 1 and TTS 1 HD, which were removed in v5.2. The voices are Alloy, Ash, Ballad, Cedar, Coral, Echo, Marin, Sage, Shimmer and Verse. Voices created with the old models keep working: Fable, Nova and Onyx are now spoken by Ballad, Coral and Cedar.
+- **Transcriber** uses **GPT Transcribe**, which replaces Whisper (`whisper-1`), removed in v5.2. Transcripts made with GPT Transcribe have no timestamps, so the SRT and VTT downloads are available only for transcriptions made earlier with Whisper.
+
+Set a credit rate for both models under **Settings → Finance → Credit ratios**. GPT Realtime 2.1 mini is charged per character and GPT Transcribe per second of audio.
+
+<Note>
+  The Realtime API runs over a secure WebSocket connection. Your server must be able to open outbound connections to `api.openai.com` on port 443.
+</Note>
 
 ## Best Practices
 

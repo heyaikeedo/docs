@@ -31,6 +31,10 @@
   },
   "redirects": [
     {
+      "source": "/identity/:slug",
+      "destination": "/authentication/identity-providers/:slug"
+    },
+    {
       "source": "/get-started/introduction",
       "destination": "/overview/introduction"
     },
@@ -150,7 +154,8 @@
             "group": "Email",
             "pages": [
               "email/mailer",
-              "email/smtp"
+              "email/smtp",
+              "email/emails"
             ]
           },
           {
@@ -210,7 +215,11 @@
                   "integrations/falai",
                   "integrations/stabilityai",
                   "integrations/clipdrop",
-                  "integrations/serper"
+                  "integrations/serper",
+                  "integrations/jina",
+                  "integrations/perplexity",
+                  "integrations/cloudflare-browser-rendering",
+                  "integrations/mistral-ocr"
                 ]
               },
               {
@@ -238,6 +247,16 @@
                 ]
               },
               {
+                "group": "Queue Adapters",
+                "pages": [
+                  "integrations/queue-adapters/overview",
+                  "integrations/queue-adapters/redis",
+                  "integrations/queue-adapters/amazon-sqs",
+                  "integrations/queue-adapters/azure-queue-storage",
+                  "integrations/queue-adapters/cloudflare-queues"
+                ]
+              },
+              {
                 "group": "Other",
                 "pages": [
                   "integrations/onesignal",
@@ -259,6 +278,8 @@
             "group": "Billing",
             "pages": [
               "billing/overview",
+              "billing/invoicing",
+              "billing/exchange-rates",
               "billing/unified-credit-system",
               "billing/plans-snapshots-subscriptions"
             ]
@@ -275,6 +296,11 @@
               "advanced/secure-urls",
               "advanced/byok",
               "advanced/connectors",
+              "advanced/scheduled-tasks",
+              "advanced/notifications",
+              "advanced/web-search-and-reading",
+              "advanced/file-reading",
+              "advanced/queue",
               "advanced/private-mode",
               "advanced/keyboard-shortcuts"
             ]
@@ -352,6 +378,7 @@
                 ]
               },
               "development/plugins/guides/tax-engine",
+              "development/plugins/guides/invoicing-engine",
               "development/plugins/guides/storage-adapter",
               "development/plugins/guides/vector-store",
               "development/plugins/guides/ai-provider",

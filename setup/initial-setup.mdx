@@ -11,7 +11,7 @@ After successfully installing Aikeedo, complete these crucial technical setup st
 
 A cron job is essential for automating recurring tasks in Aikeedo, particularly for renewing subscription usages.
 
-It also keeps [connectors](/advanced/connectors) up to date, refreshing each connection's list of tools every few hours.
+Each run starts the scheduled tasks that are due, such as renewing subscriptions and keeping [connectors](/advanced/connectors) up to date. It also runs waiting background jobs, such as imports, when no background worker is running. You can follow every task and job under **Settings → System → Queue**. See [Background Jobs & Queue](/advanced/queue).
 
 ### Frequency and Interval
 
@@ -19,7 +19,7 @@ It also keeps [connectors](/advanced/connectors) up to date, refreshing each con
 - **Recommended Interval:** The cron task should run once per minute for optimal performance.
 
 <Note>
-Some servers may limit cron tasks to a minimum interval of 15 minutes. In such cases, subscriptions will still renew, but there might be a slight delay of up to 15 minutes.
+Some servers may limit cron tasks to a minimum interval of 15 minutes. In such cases, subscriptions will still renew, but there might be a slight delay of up to 15 minutes. Background jobs wait just as long, unless you run a [background worker](/advanced/queue#running-a-background-worker).
 </Note>
 
 ### Configuring the Cron Task
@@ -49,6 +49,10 @@ It is important that the cron job runs as the same user that your web server use
    * * * * * /usr/bin/php /path/to/app/root/cron.php
    ```
    Replace `/path/to/app/root/` with the actual path to your Aikeedo application's root directory.
+
+   <Tip>
+   Use the same PHP version as your website. If your server has several PHP versions, plain `php` may be a different one, so give the full path of the website's PHP binary, as above. Cron logs a warning when its PHP differs from the website's.
+   </Tip>
 
 <Note>
 If your server uses a different user for the web server (such as `apache` or `nginx`), substitute `www-data` with the appropriate username in the `sudo crontab -u USERNAME -e` command.
