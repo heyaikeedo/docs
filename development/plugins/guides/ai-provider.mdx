@@ -10,10 +10,10 @@ Aikeedo resolves AI work through a factory: it asks for a capability interface a
 
 <Tabs>
   <Tab title="A new provider">
-    Your provider has its own API. Implement the capability interfaces you support, register them, and add your models to the registry.
+    Your provider has its own API. Implement the capability interfaces you support, register them, and add your models to the model registry.
   </Tab>
   <Tab title="An OpenAI-compatible server">
-    The provider speaks the OpenAI API. No plugin is needed: administrators add the server under **Settings → AI models** and import its models. Point your users there instead of writing code.
+    The provider speaks the OpenAI API. No plugin is needed: administrators add the server and its chat and embedding models from **Settings → Models**, or import the catalog's models for it. Point your users there instead of writing code. See [Models](/advanced/models).
   </Tab>
 </Tabs>
 
@@ -47,6 +47,8 @@ Implement only what your provider actually does. A provider can be chat-only, or
 
 ## A text completion service
 
+Extend `Ai\Infrastructure\Services\AbstractBaseService`. It answers `supportsModel()` and `getSupportedModels()` from the model registry: a service's models are the models switched on in the registry for its provider key and type. You don't keep a list of models in code.
+
 ```php src/Services/AcmeTextCompletionService.php
 <?php
 
@@ -59,34 +61,24 @@ use Ai\Domain\Completion\TextCompletionResponse;
 use Ai\Domain\Completion\TextCompletionServiceInterface;
 use Ai\Domain\Exceptions\ApiException;
 use Ai\Domain\ValueObjects\Model;
+use Ai\Domain\ValueObjects\Usage;
+use Ai\Infrastructure\Services\AbstractBaseService;
 use Ai\Infrastructure\Services\CostCalculator;
-use Billing\Domain\ValueObjects\CreditCount;
-use Generator;
+use Ai\Infrastructure\Services\RunsModels;
 use Override;
+use Shared\Infrastructure\Services\ModelRegistry;
 use Throwable;
-use Traversable;
 
-class AcmeTextCompletionService implements TextCompletionServiceInterface
+#[RunsModels(type: 'llm', provider: 'acme')]
+class AcmeTextCompletionService extends AbstractBaseService implements TextCompletionServiceInterface
 {
-    private const MODELS = ['acme-large', 'acme-small'];
-
     public function __construct(
         private Client $client,
         private CostCalculator $calculator,
-    ) {}
-
-    #[Override]
-    public function supportsModel(Model $model): bool
-    {
-        return in_array($model->value, self::MODELS, true);
-    }
-
-    #[Override]
-    public function getSupportedModels(): Traversable
-    {
-        foreach (self::MODELS as $model) {
-            yield new Model($model);
-        }
+        ModelRegistry $registry,
+    ) {
+        // Serve the registry's `llm` models of the `acme` provider.
+        parent::__construct($registry, 'acme', 'llm');
     }
 
     #[Override]
@@ -98,7 +90,8 @@ class AcmeTextCompletionService implements TextCompletionServiceInterface
     ): TextCompletionResponse {
         try {
             $resp = $this->client->post('/v1/completions', [
-                'model' => $model->value,
+                // The id Acme's API knows the model by, not its slug
+                'model' => $this->upstream($model),
                 'system' => $instructions,
                 'prompt' => $input,
                 'max_tokens' => $maxTokens,
@@ -107,10 +100,9 @@ class AcmeTextCompletionService implements TextCompletionServiceInterface
             throw new ApiException($th->getMessage(), previous: $th);
         }
 
-        $cost = $this->calculator->calculate(
-            $resp->usage->input_tokens,
+        $cost = $this->calculator->cost(
             $model,
-            CostCalculator::INPUT
+            Usage::tokens($resp->usage->input_tokens, $resp->usage->output_tokens)
         );
 
         return new TextCompletionResponse(trim($resp->text), $cost);
@@ -122,6 +114,40 @@ class AcmeTextCompletionService implements TextCompletionServiceInterface
   Throw `Ai\Domain\Exceptions\ApiException` when the provider fails. Aikeedo surfaces it to the user instead of a generic error.
 </Note>
 
+### What AbstractBaseService gives you
+
+```php
+public function __construct(
+    ModelRegistry $registry,
+    ?string $service = null,   // the provider key in the registry
+    ?string $type = null,      // the model type, such as 'llm' or 'image'
+    ?array $filters = null,    // optional dot-path filters; 'model.*' keys apply to the model
+)
+```
+
+| Helper | Returns |
+| --- | --- |
+| `isAvailable(): bool` | Override to return `false` while a feature the service depends on is off. The service then has no models. |
+| `getModelConfig(Model $model): ?array` | The model's registry entry: its config, capabilities, rates and settings |
+| `resolveKey(Model $model): ?string` | The slug of the model serving the given key |
+| `upstream(Model $model): string` | The id the provider's API knows the model by (`route_key`) |
+| `supportsStreaming(Model $model): bool` | Whether the model's `capabilities.streaming` allows streaming |
+
+Models are known by their **slug**. A model also answers to its aliases (older keys), the ids it `replaces`, and its provider's id for it, so a library item saved under an older key still finds the model that serves it now. Always send `upstream($model)` to the provider, never `$model->value`.
+
+### `#[RunsModels]`
+
+`Ai\Infrastructure\Services\RunsModels` marks a service that runs **any** registry model of a type for a provider, sending the model's id and settings as the registry has them, with nothing in its code naming particular models:
+
+```php
+#[RunsModels(type: 'llm', provider: 'acme')]
+#[RunsModels(type: 'embedding', provider: 'acme')]  // repeatable
+```
+
+Its signature is `RunsModels(string $type, ?string $provider = null, ?ProviderKind $kind = null)`. Name the provider by its key, or pass `kind: ProviderKind::SERVER` for a service that runs every OpenAI-compatible server's models.
+
+With the attribute, administrators can add models of that type to your provider by hand on the **Models** page, and edit their settings. Leave it off when your service only works with the models it names in code: those models then stay as you define them.
+
 ## A streaming chat service
 
 `MessageServiceInterface::generateMessage()` returns a generator of stream parts. Yield deltas as they arrive, and finish with a usage part carrying the cumulative cost:
@@ -129,6 +155,7 @@ class AcmeTextCompletionService implements TextCompletionServiceInterface
 ```php
 use Ai\Domain\ValueObjects\Stream\TextDeltaPart;
 use Ai\Domain\ValueObjects\Stream\UsagePart;
+use Ai\Domain\ValueObjects\Usage;
 
 public function generateMessage(
     Model $model,
@@ -136,34 +163,39 @@ public function generateMessage(
     ?array $params = null
 ): Generator {
     $stream = $this->client->stream('/v1/chat', [
-        'model' => $model->value,
+        'model' => $this->upstream($model),
+        'stream' => $this->supportsStreaming($model),
         'messages' => $this->history->build($message),
     ]);
 
     $inputTokens = 0;
     $outputTokens = 0;
+    $cachedTokens = 0;
 
     foreach ($stream as $event) {
         if ($event->type === 'delta') {
-            $outputTokens += 1;
             yield new TextDeltaPart($event->text);
         }
 
         if ($event->type === 'usage') {
             $inputTokens = $event->input_tokens;
             $outputTokens = $event->output_tokens;
+            $cachedTokens = $event->cached_tokens ?? 0;
         }
     }
 
-    $cost = new CreditCount(
-        $this->calculator->calculate($inputTokens, $model, CostCalculator::INPUT)->value
-        + $this->calculator->calculate($outputTokens, $model, CostCalculator::OUTPUT)->value
+    $cost = $this->calculator->cost(
+        $model,
+        Usage::tokens($inputTokens, $outputTokens, cachedInput: $cachedTokens),
+        $params ?? []
     );
 
     // Cumulative total; the handler overwrites its tracked cost with the last one.
     yield new UsagePart($cost);
 }
 ```
+
+Pass the request's parameters as the third argument to `cost()`, so rates with conditions, such as a price per resolution, apply.
 
 ## Register the services
 
@@ -184,13 +216,11 @@ public function boot(Context $context): void
 }
 ```
 
-Registration is lazy: the class is only built when a model needs it. The factory returns the **first** registered service that implements the requested interface and supports the model, so keep `supportsModel()` strict.
+Registration is lazy: the class is only built when a model needs it. The factory returns the **first** registered service that implements the requested interface and supports the model. The Models page reads `#[RunsModels]` from the registered classes without building them.
 
 ## Make your models selectable
 
-Services answer "can I handle this model". What users pick from comes from the model registry, which is `config/registry/base.json` merged with the installation's own `config/registry/registry.json`.
-
-A plugin adds its models by writing to that registry, which is exactly how custom servers are stored. Do it in the install or activate hook, not on every boot:
+Services answer "can I handle this model". What users pick from comes from the model registry, which lives in the database since 5.3. A plugin adds its provider and models by editing the registry's `directory` and saving it. Do it in the install or activate hook, not on every boot:
 
 ```php src/Plugin.php
 use Plugin\Domain\Hooks\ActivateHookInterface;
@@ -204,8 +234,8 @@ public function activate(Context $context): void
 {
     $directory = $this->registry['directory'];
 
-    foreach ($directory as $service) {
-        if (($service['key'] ?? null) === 'acme') {
+    foreach ($directory as $provider) {
+        if (($provider['key'] ?? null) === 'acme') {
             return; // already registered
         }
     }
@@ -213,21 +243,17 @@ public function activate(Context $context): void
     $directory[] = [
         'key' => 'acme',
         'name' => 'Acme AI',
-        // Required for entries that aren't in base.json, or the merge drops them.
-        'custom' => true,
         'models' => [
             [
-                'type' => 'chat',
-                'key' => 'acme-large',
+                'type' => 'llm',
+                'key' => 'acme-large',          // the id Acme's API knows it by
                 'name' => 'Acme Large',
                 'description' => 'General purpose chat model',
-                'custom' => true,
-                'enabled' => true,
-                'multiplier' => 1000,
+                'enabled' => false,             // the admin turns it on once it has a price
                 'modalities' => ['input' => ['text'], 'output' => ['text']],
                 'rates' => [
-                    ['key' => 'acme-large-input', 'type' => 'input', 'unit' => 'token'],
-                    ['key' => 'acme-large-output', 'type' => 'output', 'unit' => 'token'],
+                    ['key' => 'acme-large-input', 'type' => 'input', 'unit' => 'token', 'cost' => 0.000002],
+                    ['key' => 'acme-large-output', 'type' => 'output', 'unit' => 'token', 'cost' => 0.000008],
                 ],
             ],
         ],
@@ -238,33 +264,38 @@ public function activate(Context $context): void
 }
 ```
 
-<Warning>
-  Entries that don't exist in `base.json` survive the merge only when they're marked `"custom": true`. Without that flag your service and models disappear on the next boot.
-</Warning>
+`save()` writes the array to the registry tables. A new model gets a slug made from its `key`, and the `key` becomes the route's id at the provider. Read back, the model's `key` is its slug and `route_key` is that id. A provider and models that aren't in the bundled catalog get the origin **Custom**, so app updates never change or remove them.
 
 Key fields:
 
 | Field | Meaning |
 | --- | --- |
-| `key` | The model identifier your `supportsModel()` matches |
-| `type` | The capability, such as `chat`, `image`, `video`, `speech`, `transcription`, `embedding` |
-| `multiplier` | Used by `CostCalculator::estimate()` as a pre-flight cost |
-| `rates` | Rate keys administrators price under **Settings → Credit rates** |
-| `modalities`, `specs`, `config` | What the model accepts, and what the UI offers for it |
+| `key` | On a new model, the id your provider's API knows it by |
+| `type` | The model type: `llm`, `image`, `video`, `tts`, `transcription`, `embedding`, `classification`, `voice-isolation`, `voice-cloning` |
+| `enabled` | Whether users can pick it. Leave it off, so administrators price it first. |
+| `rates` | One per thing the model bills by: `key`, `type` (a `RateType` value, omitted for the default rate), `unit`, optional `conditions`, and `cost`, the provider's price in US dollars per unit |
+| `multiplier` | The model's typical quantity, used by `CostCalculator::estimate()` when the request doesn't say. It isn't a price. |
+| `modalities`, `specs`, `capabilities`, `config` | What the model accepts, and what the UI offers for it |
 
-Remove your entries again in the uninstall hook, so the registry doesn't keep models nothing can serve.
+Credits per unit follow from each rate's `cost`, the markup and the installation's credits per US dollar, unless the administrator fixes the credits. See [Credit pricing](/billing/credit-pricing).
+
+Remove your entries again in the uninstall hook, then call `save()`, so the registry doesn't keep models nothing can serve.
+
+## Hubs
+
+fal.ai and WaveSpeed are hubs: marketplaces serving other developers' models, from which administrators add models by the hub's id. Each implements `Ai\Domain\Hubs\ModelHubInterface` (`getKey()`, `lookup()`, `define()`, `assemble()`, `requests()`, `units()`, `baseUrl()`). The core lists its hubs in `Ai\Infrastructure\Services\ModelHubs`, which plugins can't extend in 5.3. To add a marketplace, register its services with `#[RunsModels]` as above, and administrators add its models by hand.
 
 ## Credits
 
-Aikeedo charges the workspace based on what your service reports. Use `CostCalculator` with the rate keys you declared, and return the cost on the response or as a `UsagePart`. See [AI models and credits](/development/plugins/ai-models-and-credits).
+Aikeedo charges the workspace based on what your service reports. Build a `Usage` from the provider's response, price it with `CostCalculator::cost()`, and return the cost on the response or as a `UsagePart`. See [AI models and credits](/development/plugins/ai-models-and-credits).
 
 ## Testing
 
 <div className="flex flex-col gap-2">
-  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Your models appear under **Settings → AI models** and can be enabled.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Your models appear under **Settings → Models**, with origin **Custom**, and can be turned on.</span></div>
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>A plan that grants the model lets a user select it in chat.</span></div>
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Streaming shows text arriving progressively, not all at once at the end.</span></div>
-  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Credits are deducted, and the amount matches the configured rates.</span></div>
+  <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>With credits per US dollar set, credits are deducted, and the amount matches the model's prices on its **Pricing** tab.</span></div>
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>A provider error shows a readable message instead of a `500`.</span></div>
   <div className="flex gap-2 items-start"><span className="flex h-[1lh] shrink-0 items-center"><Icon icon="square-rounded-check" size="18" /></span><span>Deactivating the plugin leaves the installation working, with your models simply unavailable.</span></div>
 </div>

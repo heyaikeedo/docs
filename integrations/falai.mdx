@@ -1,72 +1,82 @@
 ---
-title: Fal AI Integration
-sidebarTitle: Fal AI
-description: Enhance your Aikeedo platform with Fal AI's advanced image generation capabilities. This guide walks you through setting up and leveraging Fal AI's powerful models for creating unique and high-quality images.
+title: fal.ai Integration
+sidebarTitle: fal.ai
+description: Connect fal.ai to Aikeedo and offer its image and video models in Imagine and Video, including any fal.ai model you add by its endpoint id.
 ---
 
-## Introduction
+[fal.ai](https://fal.ai/) is a hub of image and video models from many developers, such as Veo, Seedance, Seedream and FLUX. Aikeedo ships with a set of fal.ai models, and you can add any other fal.ai image or video model by its endpoint id.
 
-Aikeedo's Fal AI integration unlocks advanced image generation capabilities for your platform. With access to Fal AI's cutting-edge models, you can significantly enhance your Imagine tool, allowing users to create unique and high-quality images from text descriptions.
+## Connect fal.ai
 
-## Setting Up the Integration
-
-Follow these steps to connect Fal AI with your Aikeedo platform:
-
-### Step 1: Obtain Your Fal AI API Key
-
-1. If you don't have a Fal AI account, [sign up here](https://www.fal.ai/).
-2. Once logged in, navigate to your Fal AI dashboard.
-3. In the top navigation menu, click on "API Keys".
-4. You'll see a list of your existing API keys. If you don't have any, or want to create a new one, click the "Add Key" button in the top right corner.
-5. Copy the API key to your clipboard — you'll need this for Aikeedo.
+<Steps>
+  <Step title="Create an API key">
+    Sign in to [fal.ai](https://fal.ai/), open **API Keys** in your dashboard and click **Add Key**. Copy the key.
+  </Step>
+  <Step title="Enter the key in Aikeedo">
+    Go to **Settings → FalAI**, paste the key into **API Secret** and click **Save changes**.
+  </Step>
+  <Step title="Switch the models on">
+    Go to **Settings → Models**, filter by the **FalAI** provider, check the prices and switch on the models you want to offer.
+  </Step>
+</Steps>
 
 <Note>
-  Keep your API key secure and confidential. It grants access to Fal AI services and should not be shared publicly. Fal AI masks part of the key in the dashboard for security reasons.
+  Keep your API key secret. It gives access to your fal.ai account and its balance.
 </Note>
 
-### Step 2: Configure Aikeedo
+## Models
 
-1. Log in to your Aikeedo admin panel.
-2. Navigate to **Settings > FalAI**.
-3. In the "API" section, enter your Fal AI API Secret in the "API Secret" field.
-4. Click **Save changes** to activate the integration.
+The fal.ai models in the catalog include Veo 3.1, Veo 3.1 Fast and Veo 3.1 Lite, Gemini Omni Flash 1.2, Seedance 2.5 Flash, Seedream 5.5 and FLUX.2 [flash].
 
-<Check>
-  Great job! Fal AI is now integrated with your Aikeedo platform.
-</Check>
+Updates add fal.ai's default models switched off. The other catalog models are under **More → Import models** on the Models page. See [Import models](/advanced/models#import-models).
 
+### Add any fal.ai model
 
-## Aikeedo Tools Powered by Fal AI
+<Steps>
+  <Step title="Start a new model">
+    Go to **Settings → Models** and click **Add model**. Choose **FalAI** as the provider.
+  </Step>
+  <Step title="Look the model up">
+    Type the endpoint id, such as `fal-ai/flux-2/flash`, or paste the model's page link from fal.ai. Click **Look up at the hub**.
 
-Fal AI integration enhances the following Aikeedo tool:
+    Aikeedo reads the model's details and parameters from fal.ai, and its price from fal.ai's pricing API. Change anything you need.
+  </Step>
+  <Step title="Add the model and switch it on">
+    Check the price on the **Pricing** tab, then save and switch the model on.
+  </Step>
+</Steps>
 
-1. **Imagine**: Create unique and high-quality images from text descriptions using Fal AI's advanced image generation models.
+{/* SCREENSHOT: New model form filled in from a fal.ai lookup https://cdn.aikeedo.com/docs/v5.3/falai-lookup.png */}
 
-## Best Practices
+<Note>
+  The price lookup needs your fal.ai key. Without one, the model is added without a price, and users would use it for free until you set one.
+</Note>
 
-To make the most of your Fal AI integration:
+You can also add a fal.ai model by hand. See [Add a hub model](/advanced/models#add-a-hub-model).
 
-- Experiment with different models to find the best fit for your use case.
-- Provide clear and detailed text descriptions for optimal image generation results.
-- Consider the style and complexity requirements of your project when selecting models.
-- Monitor your API usage to manage costs effectively.
-- Regularly update your integration to access the latest models and features.
+## Pricing
+
+fal.ai bills each model in its own unit: an image, a megapixel, a second or a video. Aikeedo charges in the same unit:
+
+```text
+credits = units fal.ai reports × cost per unit × markup × credits per USD
+```
+
+The cost per unit is read from fal.ai when you look the model up or add it, and isn't refreshed on its own. When fal.ai changes a price, enter the new cost on the model's **Pricing** tab. For the catalog's fal.ai models, new prices arrive with Aikeedo updates under [Price updates](/billing/credit-pricing#price-updates).
+
+See [Credit Pricing](/billing/credit-pricing) for markup and credits per USD.
+
+## Safety settings
+
+fal.ai image models follow **Settings → Features → Privacy & safety**. When safety is off, Aikeedo asks fal.ai for its most permissive moderation for each model that supports it.
 
 ## Troubleshooting
 
-If you encounter issues with the Fal AI integration, try these steps:
-
-1. Verify that your API Secret is correct and active.
-2. Check your Fal AI account for any usage limits or restrictions.
-3. Ensure your Aikeedo platform is up to date.
-4. If you receive error messages related to model access or quotas, verify your account status with Fal AI.
-5. For model-specific issues, confirm that your account has access to the required models.
-6. If you experience slow response times, consider using a different model or optimizing your requests.
-
-<Tip>
-  Regularly review your Fal AI usage and available model options to ensure smooth integration with Aikeedo.
-</Tip>
-
-<Note>
-  Remember to review Fal AI's usage policies and pricing to ensure compliance and manage costs effectively as you scale your image generation integration.
-</Note>
+<AccordionGroup>
+  <Accordion title="The lookup finds no price">
+    Save your fal.ai key under **Settings → FalAI** first, then look the model up again.
+  </Accordion>
+  <Accordion title="Generations fail">
+    Check that the key is correct and that your fal.ai account has a balance. Some models need access to be granted in your fal.ai account first.
+  </Accordion>
+</AccordionGroup>

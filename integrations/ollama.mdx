@@ -98,21 +98,29 @@ For remote access, you'll need to:
 
 ## Integrating with Aikeedo
 
-### Step 1: Configure Aikeedo
+### Step 1: Set the server address
 
 1. Log in to your Aikeedo admin panel
-2. Navigate to Settings → Integrations → Ollama
-3. Enter your Ollama server address (e.g., `http://localhost:11434`)
-4. Add your models:
-   - **Key**: A unique identifier (e.g., `ollama/llama2:latest`)
-   - **Name**: Display name for the model
-   - **Provider**: Set as "Meta" for Llama models, or appropriate provider
-5. Click "Save changes"
+2. Navigate to **Settings → Ollama**
+3. Enter your Ollama **Server address** (e.g., `http://localhost:11434`)
+4. Click **Save changes**
 
 <Note>
-  The server address must include the scheme (http/https), host, and port number.
+  The server address must include the scheme (http/https), host, and port number. Aikeedo calls the address you set here.
 </Note>
 
+### Step 2: Add your models
+
+Ollama models are added on the [Models](/advanced/models) page. Click **Manage models** on the Ollama settings page, or go to **Settings → Models**.
+
+1. Click **Add model** and choose **Ollama** as the provider.
+2. Choose the **Model type**: **Text** for chat models, or **Embedding**.
+3. Enter the **API model id** exactly as Ollama names it, such as `llama3.3:70b`.
+4. Enter the **Name** users see and the **Developer**, such as Meta for Llama models.
+5. Set its capabilities, such as **Vision** and **Tool calling**, and its context window.
+6. Save, then switch the model on.
+
+Catalog Ollama models can also be added with **More → Import models**. Models you run on your own hardware cost you nothing per request, so you can leave their price empty to offer them for free, or charge [fixed credits](/billing/credit-pricing#fixed-credits).
 
 ## Model Configuration
 

@@ -89,6 +89,10 @@
     {
       "source": "/development/themes/objects",
       "destination": "/development/themes/template-objects"
+    },
+    {
+      "source": "/billing/credit-ratios",
+      "destination": "/billing/credit-pricing"
     }
   ],
   "navigation": {
@@ -137,6 +141,7 @@
                 ]
               },
               "setup/initial-setup",
+              "setup/system-health",
               "setup/configuration",
               "setup/troubleshooting"
             ]
@@ -213,6 +218,8 @@
                   "integrations/gcp",
                   "integrations/azure",
                   "integrations/falai",
+                  "integrations/wavespeed",
+                  "integrations/luma",
                   "integrations/stabilityai",
                   "integrations/clipdrop",
                   "integrations/serper",
@@ -281,12 +288,14 @@
               "billing/invoicing",
               "billing/exchange-rates",
               "billing/unified-credit-system",
+              "billing/credit-pricing",
               "billing/plans-snapshots-subscriptions"
             ]
           },
           {
             "group": "Advanced",
             "pages": [
+              "advanced/models",
               "advanced/localization",
               "advanced/email-templates",
               "advanced/prompt-templates",

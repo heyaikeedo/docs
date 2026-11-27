@@ -14,11 +14,12 @@ This is the complete set of data a theme template can read. Availability matters
 | `locale` | When the resolved language has a theme catalog; otherwise `null` |
 | `theme_locale` | Always, but deprecated. Use `locale.code`. |
 | `user`, `workspace` | Only when a visitor is signed in |
-| `plans` | Only on the landing page |
+| `plans`, `models` | Only on the landing page. `models` since Aikeedo 5.3. |
 
 ```twig
 {% if user is defined %}…{% endif %}
 {{ plans|default([]) }}
+{{ models|default([]) }}
 {{ locale.code|default('en-US') }}
 ```
 
@@ -34,7 +35,7 @@ This is the complete set of data a theme template can read. Availability matters
 </ResponseField>
 
 <ResponseField name="config" type="object">
-  Application configuration. Most themes only need `config.model.registry`, which lists AI services and models for pricing or capability tables.
+  Application configuration. `config.model.registry` holds the full model registry, which the admin templates read. On the landing page, prefer the `models` variable: it lists only what users can pick. Neither carries the credits users pay, which themes aren't given.
 </ResponseField>
 
 <ResponseField name="version" type="string">
@@ -64,6 +65,36 @@ This is the complete set of data a theme template can read. Availability matters
     This contains database credentials and secret keys. Never print or serialize the whole object.
   </Warning>
 </ResponseField>
+
+## Models
+
+<ResponseField name="models" type="array">
+  Only on the landing page, since Aikeedo 5.3. Every AI model users can pick: models that are switched on, of tools that are enabled, without web search and other capability entries. Each item carries no prices.
+
+  <Expandable title="Model fields">
+    <ResponseField name="key" type="string">The model's public slug.</ResponseField>
+    <ResponseField name="name" type="string">The display name.</ResponseField>
+    <ResponseField name="type" type="string | null">`llm`, `image`, `video`, `tts`, `transcription`, `embedding` and so on.</ResponseField>
+    <ResponseField name="developer" type="string">Who made the model, rather than the hub or server serving it.</ResponseField>
+    <ResponseField name="icon" type="string | null">The developer's icon.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+```twig
+{% set models = models|default([]) %}
+
+{% if models|length > 0 %}
+	<p>{{ dp__('theme', 'landing', 'Powered by %d AI models')|format(models|length) }}</p>
+
+	<ul>
+		{% for developer in models|map(m => m.developer)|reduce((carry, d) => d in carry ? carry : carry|merge([d]), []) %}
+			<li>{{ developer }}</li>
+		{% endfor %}
+	</ul>
+{% endif %}
+```
+
+On versions before 5.3 the variable is undefined, so guard it as above. Themes get no price data: the credits each model costs are shown on the app's **Pricing** page, at `/app/billing/pricing`, which you can link to.
 
 ## Currency
 
@@ -239,7 +270,7 @@ This is the complete set of data a theme template can read. Availability matters
     <ResponseField name="voiceover" type="object">Voice-over settings.</ResponseField>
     <ResponseField name="voice_isolator" type="object">Voice isolation settings.</ResponseField>
     <ResponseField name="classifier" type="object">Classification settings.</ResponseField>
-    <ResponseField name="models" type="array | null">Allowed model keys; `null` means all.</ResponseField>
+    <ResponseField name="models" type="array | null">Allowed model slugs; `null` means all.</ResponseField>
     <ResponseField name="tools" type="object">Tool switches, keyed by capability.</ResponseField>
     <ResponseField name="assistants" type="array | null">Allowed assistants; `null` means all.</ResponseField>
     <ResponseField name="presets" type="array | null">Allowed templates; `null` means all.</ResponseField>

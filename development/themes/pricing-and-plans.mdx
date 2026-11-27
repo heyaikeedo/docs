@@ -164,20 +164,25 @@ Check the global feature flag as well as the plan, so a capability the administr
 
 Signed-out visitors are sent to sign in first, and return to checkout afterwards, so you don't need to branch on `user`.
 
-## Credit pricing pages
+## Models and model prices
 
-Because the model registry and credit rates are exposed to templates, you can build a calculator that shows what credits buy:
+Since Aikeedo 5.3 the landing page gets a `models` variable: every model users can pick, with its slug, name, type, developer and icon. Use it for a model count or a "Powered by" strip:
 
 ```twig
-{% for service in config.model.registry.directory|default([]) %}
-	{% for rate in service.rates|default([]) %}
-		<tr>
-			<td>{{ service.name }}</td>
-			<td>{{ option.credit_rate[rate.key]|default('—') }}</td>
-		</tr>
-	{% endfor %}
-{% endfor %}
+{% set models = models|default([]) %}
+
+{% if models|length > 0 %}
+	<p>{{ dp__('theme', 'pricing', 'Access to %d AI models')|format(models|length) }}</p>
+{% endif %}
 ```
+
+Themes get no price data. What each model costs in credits depends on the administrator's credit pricing and the model's discount, and is shown in the app at `/app/billing/pricing`. Link there rather than building a price table:
+
+```twig
+<a href="/app/billing/pricing">{{ dp__('theme', 'pricing', 'See what each model costs') }}</a>
+```
+
+The page needs a signed-in user. See [Template objects](/development/themes/template-objects#models) for the fields.
 
 ## Related
 

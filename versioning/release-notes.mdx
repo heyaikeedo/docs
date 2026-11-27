@@ -11,6 +11,148 @@ description: Learn about the latest changes, breaking updates, and migration ins
   releases.
 </Note>
 
+## v5.3
+
+v5.3 brings credit pricing: you set credits per US dollar and a markup once, and every model is priced from what its provider charges you. It adds a Models page where you add your own models, hub models from fal.ai and WaveSpeed, and several providers per model, a Pricing page for users, a system health check with a guided setup, and upgrade prompts when users reach a limit. Luma moves to its Agents API with Ray 3.2 and Uni-1.
+
+<Warning>
+  **Back up your files and database before updating.** The standard update
+  process works and database migrations run automatically. After the update,
+  [set credits per USD](#credits-per-usd-is-not-set-after-updating): until
+  you do, only your 5.2 credit ratios charge users and new models are free.
+  Check that [cron is running](#luma-needs-the-cron-job), switch on the
+  successors of the [removed models](#retired-models-are-switched-off), and
+  update every installed plugin.
+</Warning>
+
+### What's new in v5.3
+
+- **Credit pricing** — set **Credits per USD** and a default markup once, and every model's price follows its provider cost. Give any model its own markup, or charge fixed credits that don't follow the cost. New provider prices wait under **Price updates** until you apply them. **Settings → Finance → Credit ratios** is now **Credit pricing**. See [Credit Pricing](/billing/credit-pricing).
+- **Models page** — **Settings → Models** is now a full page: filter, sort and switch models on and off in bulk, add your own text, embedding, image and video models, and edit each model's capabilities, parameters, prices, media and providers. See [Models](/advanced/models).
+- **Hub models** — add any fal.ai or WaveSpeed image or video model by its id or page link, with **Look up at the hub** filling in its parameters and price. See [fal.ai](/integrations/falai).
+- **WaveSpeed** — a second model hub, priced per run from WaveSpeed's own quote. See [WaveSpeed](/integrations/wavespeed).
+- **Several providers per model** — serve one model from more than one provider, and switch which one takes the requests without users noticing. **Merge** combines models that were added twice. See [Several providers for one model](/advanced/models#several-providers-for-one-model).
+- **Model discounts** — take a percentage off a model on every plan. Users see the full price struck through. See [Discounts](/advanced/models#discounts).
+- **Import models** — add the catalog models your installation doesn't have yet from the Models page. See [Import models](/advanced/models#import-models).
+- **Pricing page for users** — `/app/billing/pricing` lists what each model costs, by type, and the Plans page links to it. See [What users see](/billing/credit-pricing#what-users-see).
+- **Plan credit hint** — the plan editor shows the most credits a plan's price covers at your markup. See [Setting a plan's credit limit](/billing/plans-snapshots-subscriptions#setting-a-plans-credit-limit).
+- **Upgrade prompts at limits** — when a request hits a limit, users see a popup that offers the next plan and usage credits, instead of an error. Workspace members are asked to contact the workspace owner. The Plans page lists what each plan includes. See [What Users See at Their Limits](/billing/overview#what-users-see-at-their-limits).
+- **Balance check before chat** — a chat request is refused before it's sent when the workspace can't afford the most it could cost. See [The balance check before a chat request](/billing/unified-credit-system#the-balance-check-before-a-chat-request).
+- **Order confirmation** — a new page after checkout, and clearer order details and trial wording.
+- **System health and Getting started** — the dashboard shows a setup checklist and a **System health** card, and the **Status** page lists every problem with a fix, plus **Copy system report** for support requests. See [System Health & Status](/setup/system-health).
+- **Luma Agents API** — Luma models move to Luma's Agents API, with **Ray 3.2** for video and **Uni-1** and **Uni-1 Max** for images. See [Luma AI](/integrations/luma).
+- **Model catalog refresh** — adds GPT 6.2 Astra, GPT 6.2 Sol, GPT Image 2.6 Sunburst, GPT Image 2.6 Flare, Fable 5.2, Gemini 4 Carbon, Gemini 4 Neon, Gemini 4 Hydrogen, Command A Translate, Veo 3.1, Veo 3.1 Fast, Veo 3.1 Lite, Gemini Omni Flash 1.2, Seedance 2.5 Flash, Seedream 5.5, FLUX.2 [flash], Kimi K3.1 Pro, GLM 5.3 Flash, Nemotron 3 Ultra, Qwen4 Max and MiniMax M3.1 Flash. Most arrive in **Import models**.
+- **Default theme 3.0** — a new landing page with a live preview of your app, a strip of the model developers you offer, and pricing that matches the in-app Plans page. See [The Default Theme](/website-basics/landing-page#the-default-theme).
+- **Embedding models on OpenAI-compatible servers** — add embedding models to your own servers.
+- **fal.ai safety** — fal.ai image models now follow **Settings → Features → Privacy & safety**.
+- **PHP version policy** — Aikeedo still runs on PHP 8.2 to 8.5, and recommends 8.5. Aikeedo 6 will need PHP 8.4 or newer. See [PHP version policy](/overview/server-requirements#php-version-policy).
+
+### Changes to be aware of in v5.3
+
+#### Credits per USD is not set after updating
+
+On an installation that had 5.2 credit ratios, **Credits per USD** is empty after the update. Until you set it, rates priced by cost charge nothing: only fixed credits charge users. The default markup is 1.25× (a 20% margin).
+
+Set it under **Settings → Finance → Credit pricing → Pricing settings**. The dashboard shows **Credit pricing not set** until you do. See [Pricing settings](/billing/credit-pricing#pricing-settings).
+
+#### 5.2 credit ratios become fixed credits
+
+Every credit ratio you set in 5.2 is kept as **fixed credits** on the matching rate, so your installation charges exactly what it did before. ElevenLabs, Speechify and ClipDrop had one ratio for the whole service: each of their models now gets its own rate with that value. Your old ratios are also saved as a backup.
+
+Fixed credits don't follow provider costs or credits per USD. Switch rates to **Cost-based** on each model's **Pricing** tab when you're ready. Models added in 5.3 have only cost-based prices.
+
+#### The Aikeedo Price Calculator is retired
+
+Credit pricing replaces the calculator spreadsheet. The calculator is frozen at the 5.2 model list. See [Commercial Resources](/overview/commercial-resources#on-v5-2-or-older).
+
+#### Retired models are switched off
+
+These models are removed from the catalog. On your installation they're switched off, not deleted, so library items made with them stay. Old model ids now lead to the successor, and saved items, voices, presets and plans that used them are moved to it.
+
+| Removed | Successor |
+| --- | --- |
+| Opus 4.5 | Opus 5.5 |
+| GPT Image 2 | GPT Image 2.6 Sunburst |
+| Mistral Medium | Mistral Large |
+| Simba Turbo | Simba 3.5 |
+| Luma Ray 2, Ray Flash 2 and Ray 1.6 | Ray 3.2 |
+| Luma Photon Flash 1 | Uni-1 |
+| Luma Photon 1 | Uni-1 Max |
+| fal.ai Hunyuan Video, Wan 2.1 Pro and Reve | — |
+| MiniMax M3 on DeepInfra, Hugging Face and Together AI | — |
+| Llama 3.3 70B (Nebius), Llama 3.3 70B Turbo (Together AI) | — |
+| Qwen3.5 397B (Nebius) | — |
+
+#### Imported models the catalog dropped are switched off once
+
+The first update to 5.3 switches off every imported model the catalog no longer lists, such as server models you imported from **Starter content**. They're kept, not deleted. If you switch one back on, it stays on. Models you created yourself are never changed.
+
+#### New models arrive switched off
+
+Updates add each provider's default models switched off, so nothing new reaches your users before you've checked its price. Other new catalog models wait in **More → Import models** on the Models page.
+
+#### Luma needs the cron job
+
+Luma's Agents API sends no callbacks, so a scheduled task reads Luma results every minute. Without cron, Luma generations never finish. The Luma webhook route, `/webhooks/luma/{id}`, is removed. Enter a key from [platform.lumalabs.ai](https://platform.lumalabs.ai/): these keys start with `luma-api-`. See [Luma AI](/integrations/luma).
+
+#### Models moved off Settings
+
+The models list is now its own page at `/admin/models`, opened from **Settings → Models**. The old `/admin/settings/models` address redirects to it. Models no longer have families or a version label, and links use each model's short id, such as `veo-3`. Old `?model=` links redirect.
+
+#### Hosted price checks are gone
+
+Installations no longer fetch models or prices from Aikeedo. The **Catalog updates** page, **Open calculator** and **Pull ratios** are removed. New models and prices arrive with Aikeedo updates.
+
+#### Affiliate commission excludes coupons and tax
+
+Commission is now worked out on the subtotal minus any coupon discount, without tax. Commissions already recorded don't change.
+
+#### Order receipts are now order confirmations
+
+`/app/billing/orders/{id}/receipt` redirects to the new order confirmation page.
+
+#### For developers
+
+The model registry moves from `config/registry/registry.json` into database tables, and the catalog that ships with Aikeedo is `config/registry/catalog.json`. Your `registry.json` is copied into the tables once and moved to `var/backups/`. `CostCalculator::calculate()` is replaced. Plugins that add AI services or read model prices need updating. See [AI Subsystem](/development/core/ai-subsystem) and [AI Models & Credits](/development/plugins/ai-models-and-credits).
+
+### Upgrading to v5.3
+
+<Steps>
+  <Step title="Back up">Back up your files and database.</Step>
+  <Step title="Update the core">
+    Follow the standard [How to Update](/versioning/how-to-update) process.
+    Database migrations run automatically, and your models move into the
+    database on the first page load.
+  </Step>
+  <Step title="Update every plugin">
+    Update all installed plugins from the marketplace.
+  </Step>
+  <Step title="Check cron">
+    Open the dashboard and check the **System health** card, or the **Status**
+    page. Luma results, WaveSpeed runs, renewals and resets need the cron job.
+  </Step>
+  <Step title="Set credit pricing">
+    Under **Settings → Finance → Credit pricing**, click **Pricing settings**,
+    set **Credits per USD** and review the default markup. Then decide for
+    each model whether to keep its fixed credits or switch to cost-based
+    prices, and check **Price updates**.
+  </Step>
+  <Step title="Review your models">
+    - On the Models page, filter by **Status › Without a price**, and set a price for or switch off each model listed.
+    - Switch on the successors of [retired models](#retired-models-are-switched-off): they arrive switched off. Check models that were switched off.
+    - Add new catalog models you want with **More → Import models**.
+    - Luma users: enter a new key and switch on Ray 3.2, Uni-1 and Uni-1 Max.
+  </Step>
+  <Step title="Review plans and setup">
+    - Check each plan's credit limit against the new hint in the plan editor.
+    - Work through the **Getting started** checklist and any health alerts.
+    - If you use the default theme, expect a new landing page after updating it to 3.0.
+    - Move `var/backups/registry.json` somewhere safe: it holds your custom servers' API keys.
+  </Step>
+</Steps>
+
+---
+
 ## v5.2.1
 
 v5.2.1 fixes how fal.ai image and video models are charged.
@@ -36,7 +178,7 @@ Aikeedo charges fal.ai models by multiplying the usage fal.ai reports by your cr
 | Nano Banana 2.1 | image | USD |
 | Seedream 5.0 Pro | image | image (≤1536px), where a 2K image counts as 2 |
 
-If you set a ratio for one of these models for the old unit, enter it again for the new one. For example, a per-second ratio for Seedance charged about 20 times too much for a 720p video. The [Aikeedo Price Calculator](/overview/commercial-resources#using-the-price-calculator) gives the ratio for each of these units.
+If you set a ratio for one of these models for the old unit, enter it again for the new one. For example, a per-second ratio for Seedance charged about 20 times too much for a 720p video. The Aikeedo Price Calculator gives the ratio for each of these units. It's frozen at 5.2: see [Commercial Resources](/overview/commercial-resources#on-v5-2-or-older).
 
 The credits Aikeedo reserves before a generation starts use the new units too.
 

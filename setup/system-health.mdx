@@ -1,0 +1,78 @@
+---
+title: System Health & Status
+sidebarTitle: System Health
+description: Read the System health card on the admin dashboard and the checks on the Status page, fix what they report, and copy a system report for support.
+---
+
+Aikeedo checks your installation for problems that stop it from working well: a cron job that has stopped, missing PHP extensions, email that isn't set up, credit pricing that isn't set and more. The results show on the admin dashboard and on the **Status** page.
+
+<Info>
+  Health checks look only at your own installation. They don't call AI providers or other remote services, so they don't report provider outages.
+</Info>
+
+## The System health card
+
+The admin dashboard shows a **System health** card under **Getting started**.
+
+{/* SCREENSHOT: Dashboard System health card with check indicators https://cdn.aikeedo.com/docs/v5.3/dashboard-system-health.png */}
+
+- One coloured indicator per check. Hover over it to see the check's name and how many problems it found.
+- The single most urgent problem, with a **Fix** or **Learn more** button.
+- When nothing is wrong: **All systems normal**, or the number of suggestions on the Status page.
+
+Click **View all checks** to open the Status page.
+
+## The Status page
+
+Go to **Platform → Status** in the admin sidebar, or open `/admin/status`.
+
+{/* SCREENSHOT: Status page with health alerts and the System list https://cdn.aikeedo.com/docs/v5.3/status-page.png */}
+
+Problems come first, most urgent on top. Each has a severity:
+
+- **Critical**: something is broken or unsafe. Fix it now.
+- **Warning**: something will cause problems or is about to.
+- **Info**: a suggestion.
+
+Below them, the **System** list shows debug mode, caching, environment, PHP version, database, cron, queue, upload limits, memory limit, disk space, license and version. Rows a problem already covers are hidden.
+
+### Copy system report
+
+Click **Copy system report** to copy a plain-text summary of your installation: version, environment, PHP for the site and for cron, operating system, server, database, PHP settings, OPcache, missing extensions, cron, plugins, themes and the checks that failed. Paste it into a support request.
+
+The report holds no keys or passwords.
+
+## What is checked
+
+| Check | Problems it reports |
+| --- | --- |
+| **PHP** | **Upgrade PHP**, **Plan a PHP upgrade**, **Newer PHP than tested**, **Cron runs a different PHP**. See [PHP version policy](/overview/server-requirements#php-version-policy). |
+| **Server** | **Debug mode is on**, **Encryption key missing**, **File uploads are off**, **Low disk space**, **Low memory limit**, **Missing PHP extensions**, **OPcache is off**, **Small upload limit**. |
+| **Site and email** | **Site address not set**, **Site doesn't use HTTPS**, **Email isn't set up**, **SMTP server not set**. |
+| **Cron** | **Cron job isn't set up**, **Cron job stopped**, **Scheduled tasks are failing**. |
+| **Queue** | **Failed background jobs**. |
+| **Plugins** | **Plugin failed to start**. |
+| **AI providers** | **No AI provider connected**, **Credit pricing not set**. |
+| **Payments** | **No payment gateway is on**. |
+
+Plugins can add checks of their own.
+
+### Common fixes
+
+<AccordionGroup>
+  <Accordion title="Cron job isn't set up or stopped">
+    Add the cron job to run every minute. **Settings → System → Queue** shows its status and the exact command to use. See [Setting Up the Cron Job](/setup/initial-setup#setting-up-the-cron-job).
+  </Accordion>
+  <Accordion title="Cron runs a different PHP">
+    Your site and your cron job use different PHP versions, so background tasks may fail. Use the site's PHP binary in the cron command.
+  </Accordion>
+  <Accordion title="Credit pricing not set">
+    Set **Credits per USD** under **Settings → Finance → Credit pricing → Pricing settings**. Until you do, only fixed credits charge users. See [Credit Pricing](/billing/credit-pricing).
+  </Accordion>
+  <Accordion title="Failed background jobs">
+    Open **Settings → System → Queue** to see the failed jobs and retry them. See [Background Jobs & Queue](/advanced/queue).
+  </Accordion>
+  <Accordion title="Encryption key missing">
+    Run `php bin/console app:generate-key`, then back the key up with your database. See [Connectors](/advanced/connectors#encryption-key).
+  </Accordion>
+</AccordionGroup>

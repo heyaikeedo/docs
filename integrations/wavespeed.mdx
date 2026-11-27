@@ -1,0 +1,77 @@
+---
+title: WaveSpeed Integration
+sidebarTitle: WaveSpeed
+description: Connect WaveSpeed to Aikeedo and add image and video models from its hub by model id, priced per run from WaveSpeed's own quote.
+---
+
+[WaveSpeed](https://wavespeed.ai/) is a hub of image and video models from many developers. With a WaveSpeed API key, you add its models on the [Models](/advanced/models) page by their WaveSpeed model id, and users generate with them in **Imagine** and **Video**.
+
+<Info>
+  WaveSpeed is available from Aikeedo 5.3.
+</Info>
+
+## Connect WaveSpeed
+
+<Steps>
+  <Step title="Create an API key">
+    Sign in to your WaveSpeed account and create a key under **API keys**.
+  </Step>
+  <Step title="Enter the key in Aikeedo">
+    Go to **Settings → WaveSpeed**, paste the key into **API Secret** and click **Save changes**.
+  </Step>
+</Steps>
+
+{/* SCREENSHOT: WaveSpeed settings page with the API Secret field https://cdn.aikeedo.com/docs/v5.3/wavespeed-settings.png */}
+
+## Add WaveSpeed models
+
+WaveSpeed models aren't added automatically. Add the ones you want:
+
+<Steps>
+  <Step title="Start a new model">
+    Go to **Settings → Models** and click **Add model**. Choose **WaveSpeed** as the provider.
+  </Step>
+  <Step title="Look the model up">
+    Type the WaveSpeed model id, such as `bytedance/seedream-v4`, or paste the model's page link from WaveSpeed. Click **Look up at the hub**.
+
+    The form fills in with the model's type, parameters and base price. Change anything you need.
+  </Step>
+  <Step title="Add the model and switch it on">
+    Check the price on the **Pricing** tab, then save and switch the model on.
+  </Step>
+</Steps>
+
+Models whose ids differ only by role are combined into one model. For example, a `…/text-to-image` model and its `…/edit` sibling become one image model that can both create and edit, and `…/text-to-video` and `…/image-to-video` become one video model.
+
+See [Add a hub model](/advanced/models#add-a-hub-model) to add a model by hand instead.
+
+## Pricing
+
+WaveSpeed bills each run in US dollars, and the price can depend on the options a user picks. Aikeedo asks WaveSpeed's price API for a quote before each run starts, and charges:
+
+```text
+credits = quoted price (USD) × markup × credits per USD
+```
+
+If no quote is available, the model's base price is used. The estimate users see before a run is based on the base price.
+
+On the model's **Pricing** tab, WaveSpeed rates show **Billed in dollars**, with the option **Charge what the hub bills**. Set your markup and credits per USD on the [Credit Pricing](/billing/credit-pricing) page.
+
+## How results come back
+
+WaveSpeed sends the result to your site when a run finishes, at `/webhooks/wavespeed/{id}`. The address is signed with your installation's `JWT_TOKEN`, so no extra setup is needed. A scheduled task also checks unfinished runs every minute, so [cron](/setup/initial-setup#setting-up-the-cron-job) must be running.
+
+<Warning>
+  Your site must be reachable from the internet for WaveSpeed to call it back. On a local or private installation, results arrive only through the scheduled check.
+</Warning>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="The lookup finds nothing">
+    Check the model id against the model's page on WaveSpeed, or paste the page link instead. Make sure the API key is saved under **Settings → WaveSpeed**.
+  </Accordion>
+  <Accordion title="Runs stay in progress">
+    Check that the cron job runs every minute: the dashboard's **System health** card shows **Cron job stopped** if it doesn't. See [Background Jobs & Queue](/advanced/queue).
+  </Accordion>
+</AccordionGroup>

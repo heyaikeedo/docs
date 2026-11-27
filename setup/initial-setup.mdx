@@ -11,7 +11,7 @@ After successfully installing Aikeedo, complete these crucial technical setup st
 
 A cron job is essential for automating recurring tasks in Aikeedo, particularly for renewing subscription usages.
 
-Each run starts the scheduled tasks that are due, such as renewing subscriptions and keeping [connectors](/advanced/connectors) up to date. It also runs waiting background jobs, such as imports, when no background worker is running. You can follow every task and job under **Settings → System → Queue**. See [Background Jobs & Queue](/advanced/queue).
+Each run starts the scheduled tasks that are due, such as renewing subscriptions, keeping [connectors](/advanced/connectors) up to date and reading the results of [Luma AI](/integrations/luma) and [WaveSpeed](/integrations/wavespeed) generations. It also runs waiting background jobs, such as imports, when no background worker is running. You can follow every task and job under **Settings → System → Queue**. See [Background Jobs & Queue](/advanced/queue).
 
 ### Frequency and Interval
 
@@ -87,6 +87,8 @@ If you encounter problems with subscription renewals:
 3. Ensure the PHP path (`/usr/bin/php`) is correct for your server
 4. Verify file permissions are correct for the web server user
 
+**Settings → System → Queue** shows whether the cron job is running and the exact command to use for your installation. The dashboard's [System health](/setup/system-health) card warns when the cron job isn't set up, has stopped, or runs a different PHP version from your site.
+
 Consult with your server administrator for server-specific issues. For additional help, see the [Troubleshooting & FAQ](/setup/troubleshooting) page.
 
 ## Configuring Your Site Domain
@@ -125,11 +127,30 @@ If you haven't set up SSL yet, consider using a service like Let's Encrypt for a
 
 ## Completing the "Getting Started" Section
 
-After configuring your cron job and site domain, you'll want to complete the "Getting Started" section in your admin dashboard. 
+After configuring your cron job and site domain, work through the **Getting started** card on the admin dashboard. Until it's done, the dashboard reads "Finish setting up to open your platform to users."
+
+{/* SCREENSHOT: Dashboard Getting started checklist https://cdn.aikeedo.com/docs/v5.3/dashboard-getting-started.png */}
+
+Each step marks itself **Done** once Aikeedo sees it's set up, and its button opens the page where you do it:
+
+| Step | Button | Where it goes |
+| --- | --- | --- |
+| **Set your business details** | General settings | **Settings → General** |
+| **Set up email** | Mail settings | **Settings → Mail**. See [Mailer](/email/mailer). |
+| **Add the cron job** | Set up cron | **Settings → System → Queue**. See [Setting Up the Cron Job](#setting-up-the-cron-job). |
+| **Connect an AI provider** | AI providers | **Settings**. See [Integrations](/integrations/openai). |
+| **Set credit pricing** | Credit pricing | **Settings → Finance → Credit pricing**. See [Credit Pricing](/billing/credit-pricing). |
+| **Create a plan** | Add plan | **Billing → Plans**. See [Plans, Snapshots & Subscriptions](/billing/plans-snapshots-subscriptions). |
+| **Turn on a payment gateway** | Payment settings | **Settings → Payments**. Optional while you have no paid plan. |
+| **Try it yourself** | Open the app | The user app. |
+
+You can collapse the card, and dismiss it for good once every step is done.
 
 <Note>
 Completing the "Getting Started" section is crucial for ensuring all aspects of your Aikeedo installation are properly configured. Don't skip this step!
 </Note>
+
+Below it, the **System health** card shows problems with your installation, such as a stopped cron job or missing PHP extensions. See [System Health & Status](/setup/system-health).
 
 ## Next Steps
 

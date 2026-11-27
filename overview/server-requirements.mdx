@@ -1,6 +1,6 @@
 ---
 title: Server Requirements
-description: 'Complete server requirements for Aikeedo installation including PHP 8.2+, MySQL 8.0+, required extensions, and recommended hosting specifications.'
+description: 'Complete server requirements for Aikeedo installation including PHP 8.2+ (8.5 recommended), the PHP version policy, MySQL 8.0+, required extensions, and recommended hosting specifications.'
 ---
 
 This guide outlines the necessary components and configurations to ensure your server is ready to host Aikeedo efficiently.
@@ -13,7 +13,7 @@ Aikeedo requires up-to-date versions of PHP and MySQL to ensure optimal performa
 
 <CardGroup cols={2}>
   <Card title="PHP Version" icon="brand-php">
-    8.2 or later, up to 8.5
+    8.2 or later. 8.5 recommended
   </Card>
   <Card title="MySQL Version" icon="database">
     8.0 or later
@@ -23,6 +23,42 @@ Aikeedo requires up-to-date versions of PHP and MySQL to ensure optimal performa
 <Note>
   Using the latest stable versions is recommended for the best experience and to take advantage of the newest features and security updates.
 </Note>
+
+### PHP version policy
+
+Aikeedo 5.3 runs on PHP 8.2 to 8.5 and is tested up to PHP 8.5, which we recommend. **Aikeedo 6 will need PHP 8.4 or newer**, with 8.5 recommended.
+
+Each PHP version gets security fixes for a limited time. These dates come from [php.net](https://www.php.net/supported-versions.php):
+
+| PHP version | Security fixes until |
+| --- | --- |
+| 8.1 | December 31, 2025 |
+| 8.2 | December 31, 2026 |
+| 8.3 | December 31, 2027 |
+| 8.4 | December 31, 2028 |
+| 8.5 | December 31, 2029 |
+
+Aikeedo checks the PHP version your site and your cron job run on. The admin dashboard and the **Status** page show:
+
+- **Upgrade PHP** when the version is no longer supported.
+- **Plan a PHP upgrade** when the version is older than 8.4, or within 90 days of the end of its security fixes.
+- **Newer PHP than tested** when the version is newer than the one Aikeedo is tested with.
+- **Cron runs a different PHP** when the cron job uses a different PHP version from your site.
+
+See [System Health](/setup/system-health) for the other checks.
+
+#### Upgrading PHP
+
+1. Check that your PHP extensions are installed for the new version too.
+2. Switch the PHP version for your site in your hosting control panel, or install the new version on your server.
+3. Point your [cron job](/setup/initial-setup#setting-up-the-cron-job) at the same PHP binary.
+4. Open the admin **Status** page and check the PHP version for the site and for cron.
+
+Most hosting control panels let you change the PHP version per site. On a VPS, your distribution's packages or a PHP repository provide newer versions.
+
+<Tip>
+  Need help? See [Aikeedo support](https://aikeedo.com/support/?utm_source=docs&utm_medium=content) for setup and upgrade help.
+</Tip>
 
 ### Essential PHP Extensions
 

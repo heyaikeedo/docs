@@ -35,7 +35,7 @@ Reserving before the call stops a workspace from starting more work than its bal
 use Ai\Domain\Exceptions\ModelNotAccessibleException;
 use Ai\Domain\ValueObjects\Model;
 
-$model = new Model('gpt-5.4-mini');
+$model = new Model('acme-large'); // a model's slug
 
 if (!$workspace->isModelGranted($model)) {
     throw new ModelNotAccessibleException($model->value);
@@ -85,13 +85,14 @@ The factory returns the first registered service that implements the interface a
 
 ```php
 use Ai\Infrastructure\Services\CostCalculator;
+use Billing\Domain\Services\BillingService;
 
 public function __construct(
     private CostCalculator $calculator,
     private BillingService $billing,
 ) {}
 
-$estimate = $this->calculator->estimate($model);
+$estimate = $this->calculator->estimate($model, $params);
 
 $this->billing->reserve($workspace, $estimate, $model);
 
@@ -110,6 +111,7 @@ Most service responses carry the cost the provider service already calculated, s
 | Method | Effect |
 | --- | --- |
 | `assertCanConsume(WorkspaceEntity, ?Model)` | Throws if the workspace can't spend right now |
+| `assertCanAfford(WorkspaceEntity, CreditCount $worstCase, ?Model)` | Throws `Ai\Domain\Exceptions\InsufficientBalanceForRequestException` if the available credits can't cover the worst-case cost |
 | `reserve(WorkspaceEntity, CreditCount, ?Model)` | Holds an estimated amount for the duration of the call |
 | `release(WorkspaceEntity, CreditCount, ?Model)` | Returns the held amount |
 | `consume(WorkspaceEntity, CreditCount, ?Model)` | Charges the real cost and dispatches `CreditUsageEvent` |
@@ -118,14 +120,56 @@ Most service responses carry the cost the provider service already calculated, s
   Always pass the `Model`. The billing service uses it to decide whether credits apply at all: when the workspace brings its own provider key, nothing is charged.
 </Note>
 
-### Cost calculation
+### Check the worst case for open-ended work
 
-Use the calculator when you bill something the core doesn't price for you. `CostCalculator::estimate($model)` returns the model's configured multiplier as a rough pre-flight number, and `CostCalculator::calculate($amount, $model, $opt)` converts real usage into credits using the installation's configured rates. The optional bitmask selects a rate variant, such as `CostCalculator::INPUT`, `CostCalculator::OUTPUT`, `CostCalculator::IMAGE`, `CostCalculator::QUALITY_HD` and the `SIZE_*` constants.
+Text is billed after the provider answers, and a balance that can't cover the bill is cut to zero rather than taken below it. For work whose cost you only know afterwards, price the worst case first, the way the core does for chat:
 
 ```php
-$inputCost = $this->calculator->calculate($inputTokens, $model, CostCalculator::INPUT);
-$outputCost = $this->calculator->calculate($outputTokens, $model, CostCalculator::OUTPUT);
+use Ai\Domain\ValueObjects\Usage;
+
+$worstCase = $this->calculator->cost(
+    $model,
+    Usage::tokens(intdiv(mb_strlen($prompt), 4), 4096)
+);
+
+$this->billing->assertCanAfford($workspace, $worstCase, $model);
 ```
+
+It returns without checking when negative balances are allowed, when the worst case is zero (the model has no price), when the workspace isn't charged, and on unlimited plans. `InsufficientBalanceForRequestException` extends `InsufficientCreditsException`, so the exception middleware turns it into a `403`.
+
+### Cost calculation
+
+Use the calculator when you bill something the core doesn't price for you. Describe what the request used as a `Usage`, in the `RateType` units the model's rates are declared in, and `cost()` prices each line at the matching rate:
+
+```php
+use Ai\Domain\ValueObjects\Usage;
+use Model\Domain\ValueObjects\RateType;
+
+// A chat turn
+$cost = $this->calculator->cost($model, Usage::tokens($inputTokens, $outputTokens));
+
+// Two images at a requested resolution; rates with conditions match $params
+$cost = $this->calculator->cost($model, Usage::units(2), ['resolution' => '2k']);
+
+// Mixed usage
+$cost = $this->calculator->cost(
+    $model,
+    Usage::of(RateType::IMAGE, $inputImages)->add(RateType::OUTPUT, $outputTokens)
+);
+```
+
+| Method | Returns |
+| --- | --- |
+| `cost(string\|Model $model, Usage $usage, array $params = []): CreditCount` | Credits for what a request used, after the model's discount |
+| `estimate(string\|Model $model, array $params = [], RateType $type = RateType::DEFAULT, bool $discounted = true): CreditCount` | The expected cost before a request runs, for reserving and for display |
+| `discount(string\|Model $model): float` | The model's discount, in percent |
+| `rate(string\|Model $model, RateType $type, array $params = []): ?Rate` | The rate a line of that type is priced at |
+
+The credits come from the prices administrators set: the provider cost times the markup times credits per US dollar, or fixed credits. A model with no price costs nothing. See [Credit pricing](/billing/credit-pricing).
+
+<Warning>
+  `CostCalculator::calculate()` and the bitmask constants (`INPUT`, `OUTPUT`, `IMAGE`, `QUALITY_HD`, `SIZE_*`) were removed in 5.3. Replace `calculate($tokens, $model, CostCalculator::INPUT)` with `cost($model, Usage::of(RateType::INPUT, $tokens))`.
+</Warning>
 
 ## Streaming chat
 
@@ -157,7 +201,7 @@ To forward that stream to a browser, see [Streaming responses](/development/plug
 
 ## Which models exist
 
-The model registry holds every service and model the installation knows about, including admin customizations:
+The model registry holds every provider and model the installation knows about, including the administrator's own. Since 5.3 it lives in the database, and `ModelRegistry` exposes it in the same array shape:
 
 ```php
 use Shared\Infrastructure\Services\ModelRegistry;
@@ -166,11 +210,18 @@ public function __construct(
     private ModelRegistry $registry,
 ) {}
 
-foreach ($this->registry['directory'] as $service) {
-    foreach ($service['models'] as $model) {
-        // $model['key'], $model['name'], $model['type'], $model['enabled']
+foreach ($this->registry['directory'] as $provider) {
+    foreach ($provider['models'] ?? [] as $model) {
+        // $model['key'] is the slug, $model['route_key'] the provider's id,
+        // plus $model['name'], $model['type'] and $model['enabled']
     }
 }
+```
+
+Models are known by their slug. To store a model a user or administrator picked, store its slug, and normalize keys from older data with `canonical()`:
+
+```php
+$slug = $this->registry->canonical($savedKey); // null when no model answers to it
 ```
 
 Let administrators pick a model in your settings page rather than hardcoding one, and fall back to a related global setting, such as `option.embeddings.model`, where one exists.

@@ -1,84 +1,82 @@
 ---
 title: Unified Credit System
-description: 'Understand Aikeedo credit management system for AI operations including credit conversion ratios, usage tracking, and allocation across subscription plans.'
+description: 'How Aikeedo turns every token, image, second and character into credits: how models are priced, how credits are reserved and charged, the balance check before a chat request, and what users see when they run out.'
 ---
 
-## Introduction
+Aikeedo measures all AI usage in one unit: **credits**. Tokens, images, seconds of video or audio, characters of speech and web searches all cost credits, so plans, top-ups and limits work the same way for every tool.
 
-The Unified Credit System simplifies usage management by replacing multiple unit types (tokens, image counts, audio seconds) with a single universal unit: credits.
+## How usage becomes credits
 
-## Key Features
+Every model has one or more **rates**: a price per input token, per image, per second and so on. Each rate is priced from what the provider charges you:
 
-- **Simplified Usage Tracking**: All usage is now measured in credits, making it easier to manage and understand user consumption.
-- **Flexible Credit Conversion**: Administrators can define custom credit conversion ratios for different features and AI providers.
-- **Flexible Credit Purchases**: Users can buy exact credits needed with better spending control and upfront usage estimates.
-- **Improved Plan Management**: Simplifies the process of creating and managing subscription plans with a unified credit allocation.
+```text
+credits per unit = provider cost (USD) × markup × credits per USD
+```
 
-## How It Works
+You set **credits per USD** and your **markup** once, and every model follows. A rate can also charge **fixed credits** that don't follow the cost. A model can have its own markup and a discount.
 
-### Credit Conversion
+See [Credit Pricing](/billing/credit-pricing) to set these up.
 
-Credits are used as a universal currency within the Aikeedo platform. Each action (text generation, image creation, audio processing etc.) consumes a specific number of credits based on the defined conversion ratios.
+<Warning>
+  A model or rate with no price is free for your users. The Models page marks these models, and turning one on asks you first. See [Models](/advanced/models#the-models-list).
+</Warning>
 
-### Setting Conversion Ratios
+## When credits are charged
 
-1. Log in to your Aikeedo admin panel.
-2. Navigate to Settings in the left sidebar.
-3. Under the Finance section, click on "Credit ratios".
-4. Here, you'll find options to set credit costs for various AI models.
-5. For each AI model, you can set the credit cost for their specific models or actions.
-6. Ensure all fields are filled with appropriate values.
-7. The Save button will only become active once all fields have been filled.
-8. After filling in all fields and reviewing your changes, click the now-active Save button to apply the new ratios.
+- **Chat and text** are charged after the reply, for the tokens the provider reports.
+- **Images, video and other generations** reserve their estimated credits when they start. When the result comes back, Aikeedo charges what the provider reports and releases the rest. If a generation fails, the reservation is released.
+- **Web searches, page reads and file reading** are charged at their own rates. See [Web Search & Web Pages](/advanced/web-search-and-reading) and [File Reading](/advanced/file-reading).
+
+Users see an estimate before they generate images and videos. Discounted models show the full price struck through.
+
+## The balance check before a chat request
+
+Before a chat request goes to the provider, Aikeedo works out what it could cost at most: the prompt and conversation history (counted as one token per four characters) plus a reply of 4,096 tokens. The workspace's available credits must cover it.
+
+If they don't, the request isn't sent, and the user sees **Not enough credits for this request**: "Your balance is too low for this request with this model. Please top up." Workspace members are asked to get the workspace owner to add credits instead.
+
+The check is skipped when:
+
+- [Credit overuse allowance](/billing/overview#credit-overuse-allowance) is enabled, so negative balances are allowed.
+- The model has no price.
+- The workspace uses its own API key for the provider ([BYOK](/advanced/byok)), so it isn't charged.
+- The plan has unlimited credits.
+
+In [session-based usage mode](/billing/overview#session-based-usage), once the session cap is reached, only add-on credits count towards the check.
 
 <Note>
-  The Save button remains inactive until all credit ratio fields are filled. This ensures that no incomplete or potentially erroneous configurations are saved.
+  The check applies to chat. Images, video and other generations reserve their estimated credits before they start instead.
 </Note>
 
-## Flexible Credit Purchases
+## Where credits come from
 
-Aikeedo now supports flexible credit purchasing, allowing users to buy exactly the credits they need:
+- **Plan credits** renew every 30 days, for monthly, yearly and lifetime plans alike.
+- **Add-on credits** (shown to users as **usage credits**) are bought separately, don't expire, and are used after the plan's credits run out.
 
-### Upfront Usage Estimates
-- **Image Tasks**: See estimated credits before generating images
-- **Video Tasks**: Preview credit cost before video generation
-- **Text Tasks**: Estimate costs for long-form content
-- **Real-time Updates**: Estimates adjust based on selected models and parameters
+See [Plans, Snapshots & Subscriptions](/billing/plans-snapshots-subscriptions) and [Custom Credit Purchases](/billing/overview#custom-credit-purchases).
 
-### Custom Credit Amounts
-- **Exact Purchases**: Buy any amount of credits, not just predefined packages
-- **Better Control**: Spend only what you need for your projects
-- **No Waste**: Avoid unused credits from large packages
-- **Instant Access**: Credits are available immediately after purchase
+## When users run out
 
-### Negative Balance Handling
-- **Overuse Protection**: Overused credits are recorded as negative balance
-- **Automatic Deduction**: Negative balance is deducted from your next top-up
-- **Transparent Tracking**: Clear visibility of your credit usage and balance
+When a request hits a limit, the app opens a limit popup instead of an error:
 
-## Credit Calculator
+- **Workspace owners** see an upgrade to the next plan with its features, **Buy usage credits** where you sell them, **Compare all plans** and **Model pricing**. On the top plan, the popup says so.
+- **Workspace members** see the same plan, without buy buttons, and are asked to have the workspace owner upgrade or add credits.
+- A model that isn't in the user's plan shows "This model isn't included in your current plan."
+- In session-based usage mode, the popup shows when the session resets.
 
-To assist with setting up your credit system, we provide the Aikeedo Price Calculator:
+A banner at the top of the app says when the workspace has run out of credits, with a **Get more** link. Users can close it for the rest of the day.
 
-- A Google Sheet that lists every model on the Credit ratios page, with what the provider charges per unit
-- Included with your Commercial License, available from the Orders page at [my.aikeedo.com](https://my.aikeedo.com/orders)
-- Works out each credit ratio from the number of credits you sell per US dollar and your profit margin, and the most credits each plan can include
+The sidebar shows a usage meter: in credit mode from 80% used on paid plans, and always in session mode, with a countdown to the reset.
 
-<Tip>
-  See [Using the Price Calculator](/overview/commercial-resources#using-the-price-calculator) for a step-by-step guide.
-</Tip>
+{/* SCREENSHOT: Limit popup offering an upgrade and usage credits https://cdn.aikeedo.com/docs/v5.3/limit-modal.png */}
 
-## Benefits of the Unified Credit System
+## What users see
 
-1. **Simplified User Experience**: Users deal with a single currency (credits) across all platform features.
-2. **Flexible Pricing Models**: Easily create varied plans with different credit allocations.
-3. **Easy Resource Management**: Monitor and control resource usage across all features from a single dashboard.
-4. **Adaptable to New Features**: As new AI capabilities are added, they can be easily integrated into the existing credit system.
+The **Pricing** page in the app lists what each model costs, in credits, by type. The Plans page links to it with **See what each model costs**. See [What users see](/billing/credit-pricing#what-users-see).
 
-## Best Practices
+## Best practices
 
-- Regularly review and adjust your credit conversion ratios to reflect changes in AI service costs.
-- Communicate clearly to users how credits are consumed for different actions.
-- Use the credit system to create tiered plans that cater to different user needs and usage patterns.
-
-By leveraging the Unified Credit System, you can create more flexible and user-friendly subscription plans while simplifying your platform's usage management. This system provides the foundation for scalable and adaptable pricing strategies as your Aikeedo platform grows and evolves.
+- Set credits per USD before you set plan credit limits, and don't change it often: it changes what every credit a user holds is worth.
+- Keep most models cost-based so they follow your markup, and use fixed credits where you want round, stable prices.
+- After each Aikeedo update, check **Price updates** on the Credit pricing page and the **Without a price** filter on the Models page.
+- Use the plan editor's hint to keep each plan's credit limit within what its price covers.

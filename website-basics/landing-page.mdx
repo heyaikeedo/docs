@@ -35,7 +35,7 @@ Install Aikeedo on a subdomain (`app.yourdomain.com`) and disable the default la
 **Best for:** Users who want complete design freedom with specialized landing page builders.
 
 <Tip>
-  Set the **Detailed pricing page URL** in [Billing settings](/billing/overview#detailed-pricing-page-url) so the in-app Plans page button links to your external pricing page instead of the default `/#pricing` anchor.
+  Set the **Detailed pricing page URL** in [Billing settings](/billing/overview#detailed-pricing-page-url) so the in-app Plans page's **Compare plans in detail** link goes to your external pricing page instead of the default `/#pricing` anchor.
 </Tip>
 </Accordion>
 
@@ -58,6 +58,58 @@ Create custom themes tailored to your specific needs. You can build themes yours
 **Best for:** Users who need unique designs or have specific branding requirements.
 </Accordion>
 </AccordionGroup>
+
+## The Default Theme
+
+Aikeedo ships with the default theme, version 3.0 from Aikeedo 5.3. Its landing page is built from your installation's settings, so most of it changes without editing the theme:
+
+1. **Hero**: "Your all-in-one AI workspace", with **Get started** (or **Go to app** for signed-in users) and **See pricing**.
+2. **Preview**: a live picture of your app, built from your logo and app navigation.
+3. **Powered by**: "Powered by the leading AI models", with a logo for each developer of the models your users can pick.
+4. **Tools**: one showcase for each tool you've turned on under **Settings → Features**: chat, Imagine, Video, Writer, transcription and voiceover. Tools you've turned off aren't shown.
+5. **How it works** and **Features**, including the number of AI models you offer.
+6. **Pricing**: "Simple, transparent pricing".
+7. **FAQ**: "Frequently asked questions".
+8. **Call to action**.
+
+{/* SCREENSHOT: Default theme 3.0 landing page hero and preview https://cdn.aikeedo.com/docs/v5.3/default-theme-landing.png */}
+
+<Note>
+  The model strip and model counts need Aikeedo 5.3. On older versions, the theme leaves them out.
+</Note>
+
+### Colors and modes
+
+The landing page uses the accent color from **Settings → Appearance**. The light and dark mode switch shows only when you offer more than one mode. See [Branding](/website-basics/branding).
+
+### Pricing section
+
+The pricing section shows the same plan details as the in-app Plans page:
+
+- **Monthly** and **Yearly** tabs. **Lifetime** plans show only when no monthly or yearly plan is on sale.
+- Three plans, centred on your featured plan, with **See all plans** when you offer more.
+- A single free plan shows as a **Start for free** link instead of a card.
+- With a trial period set under **Settings → Billing**, buttons read **Start N-day free trial**.
+
+Credit packs aren't shown on the landing page. Users buy them in the app.
+
+### FAQ
+
+Each question shows only when it applies:
+
+| Question | Shown when |
+| --- | --- |
+| What are credits? | You use credit metering |
+| How is usage measured? | You use [session-based usage](/billing/overview#session-based-usage) |
+| Which AI models can I use? | The installation has models to list |
+| Can I change or cancel my plan? | Always |
+| Is there a free trial? | A trial period is set |
+| Can I use it with my team? | Always |
+| What happens to what I create? | Private mode is on |
+
+<Info>
+  The AI Code section of earlier versions of the default theme is removed.
+</Info>
 
 ## Customize the Default Landing Page
 
@@ -178,23 +230,11 @@ Contains template files that generate the HTML structure.
 
 ## Quick Customizations
 
-### Updating the Hero Image
+### Updating the Hero Preview
 
-The hero image is located at:
+From version 3.0, the default theme's hero preview isn't an image. It's a live HTML picture of the app built from your installation: your logo, the app sidebar's sections (including the tools your plugins add), a greeting and a composer. It updates itself when you change your logo or turn tools on and off. It's decorative and can't be clicked.
 
-```
-/public/e/heyaikeedo/default/assets/preview.webp
-```
-
-To update the hero image:
-
-1. Replace the existing `preview.webp` file with your new image
-2. Keep the same filename (`preview.webp`)
-3. Clear your browser cache to see the changes
-
-<Tip>
-For best results, use WebP format for optimal performance and loading speed.
-</Tip>
+To change it, edit `sections/preview.twig` in your duplicated theme.
 
 ### Updating Text Content
 

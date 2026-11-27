@@ -149,6 +149,73 @@ $service = $this->factory->create(SummaryServiceInterface::class, $model);
 
 Implementations still provide `supportsModel()` and `getSupportedModels()` from `Ai\Domain\Services\AiServiceInterface`, which is how the factory picks one.
 
+## Health checks
+
+The admin dashboard's **System health** card and the **Status** page list problems found by health checks. A plugin can add its own, for example to warn that its API key is missing. Implement `Shared\Infrastructure\Health\HealthCheckInterface`:
+
+```php src/Health/AcmeHealthCheck.php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Alerts\Health;
+
+use Easy\Container\Attributes\Inject;
+use Override;
+use Shared\Infrastructure\Health\Alert;
+use Shared\Infrastructure\Health\AlertAction;
+use Shared\Infrastructure\Health\HealthCheckInterface;
+use Shared\Infrastructure\Health\Severity;
+
+class AcmeHealthCheck implements HealthCheckInterface
+{
+    public function __construct(
+        #[Inject('option.acme.api_key')]
+        private ?string $apiKey = null,
+    ) {}
+
+    #[Override]
+    public function getName(): string
+    {
+        return __('Acme Alerts');
+    }
+
+    #[Override]
+    public function check(): iterable
+    {
+        if (!$this->apiKey) {
+            yield new Alert(
+                'acme.api_key',
+                Severity::WARNING,
+                __('Acme API key missing'),
+                __('Alerts are not sent until you add an API key.'),
+                new AlertAction(__('Fix'), 'admin/settings/acme'),
+            );
+        }
+    }
+}
+```
+
+Register it in `boot()` through the service collection, under a key in your own namespace:
+
+```php src/Plugin.php
+use Acme\Alerts\Health\AcmeHealthCheck;
+use Shared\Infrastructure\Health\HealthCheckInterface;
+
+$this->services->add('acme.api', AcmeHealthCheck::class, HealthCheckInterface::class);
+```
+
+| Class | Purpose |
+| --- | --- |
+| `HealthCheckInterface` | `getName(): string` is the short, translated name shown next to the check's indicator. `check(): iterable` yields `Alert`s, and nothing when all is well. |
+| `Alert(string $id, Severity $severity, string $title, string $message, AlertAction ...$actions)` | One problem. Give it a stable `id`, such as `acme.api_key`. The title and message are translated plain text. The first action is the main one. |
+| `AlertAction(string $label, string $url, bool $external = false)` | A link that helps fix the alert: an absolute URL, or an app path such as `admin/settings/acme` |
+| `Severity` | `CRITICAL` (broken or unsafe now), `WARNING` (will break, or works only partly) or `INFO` (worth knowing) |
+
+<Warning>
+  Checks run while admin pages render. Keep them local and cheap: read options, files and the database, but never call a remote service.
+</Warning>
+
 ## Document the contract
 
 An extension point is an API. Ship it like one:
