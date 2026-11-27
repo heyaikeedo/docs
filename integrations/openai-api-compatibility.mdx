@@ -108,13 +108,24 @@ Value: Your Application Name
   If you need to override the default Content-Type or Authorization headers, simply add them with your desired values in the custom headers section.
 </Tip>
 
-#### Models Configuration
-For each model you want to use:
-- **Key**: Unique identifier for the model (e.g., `gpt-3.5-turbo`)
-- **Name**: Display name shown to users
-- **Provider**: The model provider's name
-- **Vision**: Toggle if the model supports image analysis
-- **Tools**: Toggle if the model supports function calling
+### Adding models
+
+Models aren't configured on the server page. After you save the server, click **Manage models**, or go to **Settings → Models**, and add them there. See [Models](/advanced/models).
+
+1. Click **Add model** and choose your server as the provider.
+2. Choose the **Model type**: **Text** for chat models, or **Embedding**.
+3. Enter the **API model id** exactly as the provider names it, for example `llama-3.3-70b-versatile`.
+4. Enter the **Name** users see and the **Developer** who made the model, for example Meta.
+5. On the **Capabilities** tab, turn on **Vision** and **Tool calling** if the model supports them, and set its context window.
+6. Set its prices on the **Pricing** tab, then save and switch the model on.
+
+<Note>
+  OpenAI-compatible servers run text and embedding models. For image and video models from many developers, use [fal.ai](/integrations/falai) or [WaveSpeed](/integrations/wavespeed).
+</Note>
+
+If the same model is already on your installation from another provider, Aikeedo offers to add your server to that model as another provider instead. See [Several providers for one model](/advanced/models#several-providers-for-one-model).
+
+For servers imported from **Starter content**, add their catalog models with **More → Import models** on the Models page.
 
 ## Provider-Specific Setup
 
@@ -268,7 +279,7 @@ For each model you want to use:
 
 ## Tools Compatibility
 
-When configuring models for your custom LLM server, you can enable them for:
+Text models on your custom LLM server can be used for:
 
 1. **Chat**: Interactive conversations and assistance
 2. **Writer**: Template-driven writing that continues in chat
@@ -276,7 +287,7 @@ When configuring models for your custom LLM server, you can enable them for:
 4. **Prompt Enhancement**: Rewriting and generating prompts in the Imagine and Video composers
 
 <Note>
-  Make sure to enable only the capabilities that your chosen model actually supports. Enabling unsupported features may result in unexpected behavior.
+  Turn on only the capabilities that your chosen model actually supports, on the model's **Capabilities** tab. Enabling unsupported features may result in unexpected behavior.
 </Note>
 
 

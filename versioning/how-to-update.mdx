@@ -7,6 +7,16 @@ description: Stay up-to-date with the latest features and improvements by follow
 Keeping your Aikeedo installation current ensures you benefit from the latest features, security patches, and performance enhancements. This guide provides a comprehensive, step-by-step process for updating Aikeedo, suitable for users of all technical levels.
 
 <Note>
+  **Upgrading to v5.3?** Credit ratios become credit pricing. Your 5.2 ratios
+  are kept as fixed credits, but **Credits per USD** is empty after the
+  update: set it under **Settings → Finance → Credit pricing → Pricing
+  settings**, or new and cost-based models charge nothing. Retired models are
+  switched off and their successors arrive switched off, so check the Models
+  page. Luma needs the cron job and a new key. See the [v5.3
+  notes](/versioning/release-notes#upgrading-to-v5-3).
+</Note>
+
+<Note>
   **Upgrading to v5.2?** Updating from 5.1 may end with an error once: reload
   the page, or open any admin page, and the update finishes on its own. Web
   search was renamed and its settings were not carried over, so choose a

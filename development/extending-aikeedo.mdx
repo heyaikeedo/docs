@@ -76,7 +76,7 @@ An update extracts the new release archive over the installation root, runs data
 | --- | --- |
 | `src/`, `resources/views/` (except `overrides/`), `resources/assets/`, `bootstrap/`, `config/*.php`, `migrations/`, `public/assets/` | Replaced with the new release |
 | `vendor/` | Replaced, then plugin dependencies are reinstalled |
-| `config/registry/base.json` | Replaced. Model customizations live in `config/registry/registry.json`, which the release doesn't include |
+| `config/registry/catalog.json` | Replaced with the new model catalog. Your models, prices and settings live in the database and are kept |
 | `extra/extensions/heyaikeedo/default`, `public/e/heyaikeedo/default` | Replaced with the new default theme |
 | `extra/extensions/{your-vendor}/*` | Kept, and reinstalled from its package |
 | `resources/views/overrides/` | Kept |

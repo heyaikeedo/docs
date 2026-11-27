@@ -65,6 +65,17 @@ All nine gettext helpers are available as both functions and filters. Themes use
   ```
 </ResponseField>
 
+## Filters
+
+<ResponseField name="model_key" type="filter">
+  `key|model_key` returns the slug a model goes by now, for a key that may be one it had before, such as a model id saved in a setting before 5.3. It returns `null` for a key no model answers to, so you never print a key for a model that is gone.
+
+  ```twig
+  {% set slug = option.acme.default_model|default('')|model_key %}
+  {% if slug %}<a href="/app/chat?model={{ slug }}">…</a>{% endif %}
+  ```
+</ResponseField>
+
 ## Tests
 
 <ResponseField name="builtin" type="test">
@@ -89,7 +100,7 @@ All nine gettext helpers are available as both functions and filters. Themes use
 | Variable | Contents |
 | --- | --- |
 | `option` | Every setting, as a nested object |
-| `config` | Application configuration, including the model registry |
+| `config` | Application configuration, including the model registry (`config.model.registry`) |
 | `version` | The application version |
 | `license` | The license string, or null |
 | `theme` | The active theme's package name |
@@ -102,6 +113,7 @@ All nine gettext helpers are available as both functions and filters. Themes use
 | `env` | The raw environment |
 | `user`, `workspace` | Only when a visitor is signed in |
 | `plans` | Only on the landing page |
+| `models` | Only on the landing page, since 5.3: the models users can pick, without prices |
 
 See [Template objects](/development/themes/template-objects) for the full shape of each object.
 

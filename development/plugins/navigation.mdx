@@ -93,6 +93,7 @@ new Item(string $url, string $label, ?string $icon = null)
 | `admin.platform` | Admin sidebar, "Platform" group |
 | `admin.settings.common` | Cards on the admin **Settings** index |
 | `admin.settings.features` | Cards on **Settings → Features** |
+| `admin.dashboard.sections` | Cards on the admin **Dashboard**, after the built-in ones. Items need a `template`. |
 
 <Tip>
   Put an integration's configuration under `admin.settings.common`, and a feature that users interact with under `admin.settings.features`. Use the app sections for pages your users open every day.
@@ -105,6 +106,20 @@ $this->nav->section('app.apps', p__('nav', 'Apps'), true);
 ```
 
 The third argument makes the group collapsible.
+
+## Add a dashboard card
+
+The admin **Dashboard** renders a card for each item in `admin.dashboard.sections` that has a `template`. The item's URL can be empty: items with an empty URL are exempt from the duplicate check, so several plugins can each add a card.
+
+```php src/Plugin.php
+$card = new Item('', p__('nav', 'Acme alerts'));
+$card->template = '@acme-alerts/admin/dashboard-card.twig';
+$card->isBuiltIn = false;
+
+$this->nav->item('admin.dashboard.sections', $card);
+```
+
+The section is created by the first `item()` call. In the template, keep to the dashboard's card markup, and don't call remote services while the page renders.
 
 ## Show items conditionally
 

@@ -50,9 +50,7 @@ See [Modules and layers](/development/core/modules-and-layers).
 | `config/bootstrappers.php` | Module bootstrappers, in order |
 | `config/commands.php` | The console command map |
 | `config/migrations.php` | Doctrine Migrations configuration |
-| `config/registry/base.json` | The AI model catalog shipped with the release |
-| `config/registry/registry.json` | Per-installation model customizations. Not shipped, so updates preserve it. |
-| `config/registry/import.json`, `servers.json` | Importable models and OpenAI-compatible servers |
+| `config/registry/catalog.json` | The AI model catalog shipped with the release: providers, models and listed provider prices. The installation's own models live in the database. |
 
 ## Views and frontend
 
@@ -101,6 +99,7 @@ Both are referenced as Composer path repositories, which is how a locally placed
 | `var/imports`, `var/tmp` | Working files |
 | `var/plugin-backup` | Backups taken before a plugin reinstall |
 | `var/plugin-health.json` | Recorded plugin boot failures |
+| `var/backups` | One-time backups, such as the 5.2 model registry file moved here on the first load after updating to 5.3 |
 
 <Warning>
   `var/` must be writable by the web server user, and so must the storage directory when the local adapter is used. A cron job running as a different user is a common cause of permission problems.
@@ -112,7 +111,7 @@ Both are referenced as Composer path repositories, which is how a locally placed
 | --- | --- |
 | `src/`, `resources/` (except `overrides/`), `bootstrap/`, `config/*.php`, `migrations/`, `public/assets/` | Replaced |
 | `vendor/` | Replaced, then plugin dependencies reinstalled |
-| `config/registry/base.json` | Replaced. Customizations live in `registry.json`. |
+| `config/registry/catalog.json` | Replaced. Model customizations live in the database. |
 | `extra/extensions/heyaikeedo/*` | Replaced with the bundled versions |
 | `extra/extensions/{your-vendor}/*` | Kept and reinstalled |
 | `resources/views/overrides/`, `locale/`, `.env`, `public/uploads/`, `var/` | Kept |

@@ -1,18 +1,10 @@
 ---
 title: Commercial License Resources
 sidebarTitle: Commercial Resources
-description: Get the Figma design file and the Aikeedo Price Calculator with your Commercial License, and use the calculator to set your credit ratios and plan credits.
+description: Get the Figma design file that comes with your Aikeedo Commercial License, find out where credit pricing lives in 5.3, and use the retired Price Calculator on 5.2 or older.
 ---
 
-Here, you'll find tools and assets that come with your Aikeedo Commercial License. They help you run Aikeedo as a business: design your landing page and price your plans and credits.
-
-## Who are these resources for?
-
-These resources are most useful if you run Aikeedo as a SaaS (Software as a Service) platform and charge your users for access:
-
-1. **Pricing**: The price calculator turns what AI providers charge you into credit ratios and plan credits that keep your margin.
-
-2. **Design**: The Figma file gives you a starting point for your own landing page and branding.
+The Aikeedo Commercial License comes with resources to help you run Aikeedo as a business: a Figma design file for your own landing page and branding and, for Aikeedo 5.2 and older, the Aikeedo Price Calculator.
 
 <Note>
 These resources do not affect any functionality within the Aikeedo app itself. They are complementary tools for setting up and running your Aikeedo business.
@@ -26,17 +18,19 @@ The commercial resources come with your Commercial License, and you can open the
 2. Open the [Orders](https://my.aikeedo.com/orders) page.
 3. Find your license order and open the commercial resources from there.
 
-## Available Resources
+## Figma Design File
 
-### 1. Figma Design File
+Get access to our professionally crafted Figma design file for the Aikeedo landing page. Use it to customize your Aikeedo instance, or to draw inspiration for your own AI-powered projects.
 
-Get access to our professionally crafted Figma design file for the Aikeedo landing page. This resource is perfect for customizing your Aikeedo instance or drawing inspiration for your own AI-powered projects.
+## Pricing your credits
 
-### 2. Aikeedo Price Calculator
+From Aikeedo 5.3, you price credits inside Aikeedo. Set how many credits a US dollar is worth and your markup once, and every model follows what its provider charges you. See [Credit Pricing](/billing/credit-pricing).
 
-The Aikeedo Price Calculator is a Google Sheet that turns what each AI provider charges you into the credit ratios you enter in Aikeedo. You set how many credits you sell per US dollar and the profit margin you want. The calculator then works out how many credits each token, image, second or character should cost, and how many credits each of your plans can include.
+## On v5.2 or older?
 
-## Using the Price Calculator
+Aikeedo 5.2 and older use credit ratios that you enter by hand, and the **Aikeedo Price Calculator** Google Sheet works them out. The calculator is retired: it's frozen at the Aikeedo 5.2 model list, with provider costs last checked on 3 November 2026, and it's no longer updated. You can still open it from your license order at [my.aikeedo.com](https://my.aikeedo.com/orders) and use it as described below.
+
+It turns what each AI provider charges you into the credit ratios you enter in Aikeedo. You set how many credits you sell per US dollar and the profit margin you want. The calculator then works out how many credits each token, image, second or character should cost, and how many credits each of your plans can include.
 
 ### How the calculator is organized
 
@@ -79,7 +73,7 @@ Green cells are the ones you can change. Orange cells are the results you copy i
   </Step>
 
   <Step title="Set your default profit margin">
-    Enter it in **Profit margin** at the top. The margin is the share of the price your users pay that you keep after paying the provider. With a 20% margin, $0.20 of every dollar a user spends is your profit and $0.80 pays the provider.
+    Enter it in **Profit margin** at the top. The margin is the share of the price your users pay that you keep after paying the provider. With a 20% margin, \$0.20 of every dollar a user spends is your profit and \$0.80 pays the provider.
   </Step>
 
   <Step title="Adjust margins for individual models (optional)">
@@ -134,13 +128,8 @@ Copy the rows if you need more of them.
 ### Keep your ratios up to date
 
 <AccordionGroup>
-  <Accordion title="After you update Aikeedo">
-    New Aikeedo releases often add models and remove old ones. After updating:
-
-    1. Open the shared calculator again and check that **Matches Aikeedo** shows your new version.
-    2. Open **Credit ratios** in your admin panel. Fields for newly added models are empty.
-    3. Find those models in the shared calculator. Copy their rows into your copy, or make a fresh copy and enter your settings and margins again.
-    4. Enter the new ratios and save.
+  <Accordion title="When you update to 5.3">
+    The calculator stops at 5.2: it has no 5.3 rows and won't get any. When you update, Aikeedo keeps each of your ratios as that model's fixed credits, so your installation charges exactly what it did before. Then move to [Credit Pricing](/billing/credit-pricing) and let costs drive your prices from there.
   </Accordion>
 
   <Accordion title="When a model moves to Legacy models">
@@ -148,7 +137,7 @@ Copy the rows if you need more of them.
   </Accordion>
 
   <Accordion title="When a provider changes its prices">
-    Update that row's **Cost** cell in your copy and enter the new result in Aikeedo. Check **Costs last updated** in the shared calculator now and then to see when we last reviewed prices.
+    The shared calculator is no longer updated, so check the provider's pricing page yourself. Update that row's **Cost** cell in your copy and enter the new result in Aikeedo.
   </Accordion>
 </AccordionGroup>
 
@@ -157,12 +146,3 @@ Some providers charge differently depending on resolution, quality or video leng
 
 A unit marked with `*` is the unit fal.ai reports that model's usage in, for example thousands of video tokens. Aikeedo multiplies what fal.ai reports by your ratio, so enter the calculator's value as it is, even if your **Credit ratios** page shows a different unit next to the field. The note on the **Cost** cell says which.
 </Note>
-
-## Best Practices
-
-- **Experiment with Different Scenarios**: Use the calculator to model various pricing strategies before implementing them in your Aikeedo instance.
-- **Regular Reviews**: Periodically revisit your pricing structure to ensure it aligns with your business goals and market conditions.
-- **Combine with Analytics**: Use the insights from the price calculator in conjunction with your user analytics for a comprehensive pricing strategy.
-- **Customize Your Design**: Leverage the Figma file to create a unique look for your Aikeedo instance that aligns with your brand identity.
-
-Thank you for choosing Aikeedo! We're excited to see how you'll leverage these resources to create an outstanding AI-powered content creation platform.

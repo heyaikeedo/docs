@@ -102,11 +102,13 @@ Click **Configure selected provider** to enter the provider's settings, or **Set
 
 ### Detailed Pricing Page URL
 
-Configure where the **Detailed pricing table** button on the in-app Plans page links.
+Configure where the **Compare plans in detail** link on the in-app Plans page goes.
 
 - Use `/#pricing` to point to the built-in landing page pricing section
 - Use a full URL (for example, `https://yoursite.com/pricing`) when you use an external marketing site
-- Leave empty to hide the button on the Plans page
+- Leave empty to hide the link on the Plans page
+
+The Plans page always links to the in-app **Pricing** page with **See what each model costs**. See [What users see](/billing/credit-pricing#what-users-see).
 
 <Tip>
   If you disable the built-in landing page and host pricing on WordPress, Webflow, or another external site, set this URL so the Plans page button does not link to a broken anchor. See [Landing Page Customization](/website-basics/landing-page).
@@ -125,6 +127,10 @@ Set how many credits equal one unit of your default currency. This setting is sh
 <Note>
   In session-based usage mode, this field appears under **Usage mode**. In credit metering mode, it appears under **Custom Credit Purchases** when add-on purchases are enabled.
 </Note>
+
+<Info>
+  **Credits per currency** sets what users pay for credits, in your default currency. It's separate from **Credits per USD** on the [Credit pricing](/billing/credit-pricing) page, which sets what credits are worth against your provider costs.
+</Info>
 
 ## Invoicing
 
@@ -258,9 +264,21 @@ Set the maximum amount users can spend in a single credit purchase.
   These limits help control credit purchase volumes and prevent potential abuse while providing flexibility for high-volume users.
 </Note>
 
+## What Users See at Their Limits
+
+When a workspace runs out of credits, or a request needs a plan it doesn't have, the app opens a limit popup instead of showing an error:
+
+- **Workspace owners** see an upgrade to the next plan, **Buy usage credits** when you sell add-on credits, **Compare all plans** and **Model pricing**.
+- **Workspace members** see the recommended plan without buy buttons, and are asked to have the workspace owner upgrade or add credits. Members can't open checkout: they're sent back to the Plans page.
+
+The billing overview shows **Buy usage credits** only when you sell credit packs or custom amounts, and **Upgrade for more usage** otherwise. Neither shows on your top plan.
+
+Before a chat request is sent, Aikeedo checks that the workspace can afford the most it could cost. See [The balance check before a chat request](/billing/unified-credit-system#the-balance-check-before-a-chat-request).
+
 ## Related Guides
 
 - [Unified Credit System](/billing/unified-credit-system) - Understand credit management
+- [Credit Pricing](/billing/credit-pricing) - Price models from provider costs
 - [Plans, Snapshots & Subscriptions](/billing/plans-snapshots-subscriptions) - Create and manage plans
 - [Invoicing](/billing/invoicing) - Invoices for paid orders
 - [Exchange Rates](/billing/exchange-rates) - Rate providers and custom rates

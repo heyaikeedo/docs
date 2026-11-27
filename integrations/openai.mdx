@@ -98,7 +98,7 @@ OpenAI integration enhances the following Aikeedo tools:
 - **Voiceover** generates OpenAI speech through OpenAI's Realtime API, with the **GPT Realtime 2.1 mini** model. It replaces TTS 1 and TTS 1 HD, which were removed in v5.2. The voices are Alloy, Ash, Ballad, Cedar, Coral, Echo, Marin, Sage, Shimmer and Verse. Voices created with the old models keep working: Fable, Nova and Onyx are now spoken by Ballad, Coral and Cedar.
 - **Transcriber** uses **GPT Transcribe**, which replaces Whisper (`whisper-1`), removed in v5.2. Transcripts made with GPT Transcribe have no timestamps, so the SRT and VTT downloads are available only for transcriptions made earlier with Whisper.
 
-Set a credit rate for both models under **Settings → Finance → Credit ratios**. GPT Realtime 2.1 mini is charged per character and GPT Transcribe per second of audio.
+Check the price of both models on the [Credit pricing](/billing/credit-pricing) page (**Settings → Finance → Credit pricing**). GPT Realtime 2.1 mini is charged per character and GPT Transcribe per second of audio.
 
 <Note>
   The Realtime API runs over a secure WebSocket connection. Your server must be able to open outbound connections to `api.openai.com` on port 443.
